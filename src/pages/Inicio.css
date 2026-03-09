@@ -1,0 +1,10 @@
+.inicio {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.inicio p {
+  font-size: 16px;
+  line-height: 1.6;
+}
