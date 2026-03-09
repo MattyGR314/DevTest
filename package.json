@@ -2,28 +2,40 @@
   "name": "devtest",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MattyGR314/DevTest.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/MattyGR314/DevTest/issues"
-  },
-  "homepage": "https://github.com/MattyGR314/DevTest#readme",
+  "private": true,
   "dependencies": {
-    "ejs": "^5.0.1",
-    "express": "^5.2.1"
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "mysql2": "^3.11.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "dev": "node app.js"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "react-scripts": "5.0.1"
   }
 }
