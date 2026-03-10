@@ -23,35 +23,10 @@ function SubirCodigo() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Formulario enviado:', formData);
-
-  // Crear FormData para enviar archivo y campos
-    const data = new FormData();
-    data.append('nombre', formData.nombre);
-    if (formData.archivo) {
-      data.append('archivo', formData.archivo);
-    }
-
-    try {
-      const response = await fetch('http://localhost:3000/api/submit', {
-        method: 'POST',
-        body: data,
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        alert('Archivo subido');
-        handleReset();
-      } else {
-        alert(`Error: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Error al subir:', error);
-      alert('Error de conexión con el servidor');
-    }
-  
+    // Aquí puedes enviar los datos al servidor
   };
 
   const handleReset = () => {
