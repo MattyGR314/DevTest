@@ -6,6 +6,7 @@ node_modules
 # Production
 /build
 /dist
+/uploads
 
 # Misc
 .DS_Store
@@ -17,3 +18,4 @@ yarn-error.log*
 #docker
 Dockerfile
 .dockerignore
+
