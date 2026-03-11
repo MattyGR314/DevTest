@@ -18,7 +18,10 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 app.use(express.json());
@@ -73,22 +76,42 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ===== RUTA PARA SUBIR ARCHIVOS =====
-app.post('/api/submit', upload.single('archivo'), async (req, res) => {
+app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
   try {
+    console.log('📝 Inicio de subida de archivo...');
+    console.log('Body recibido:', req.body);
+    console.log('Archivo recibido:', req.file ? req.file.filename : 'ninguno');
+
     const { nombre } = req.body;
     if (!nombre) {
+      console.warn('⚠️  Nombre no proporcionado');
       return res.status(400).json({ error: 'El nombre del proyecto es obligatorio' });
     }
 
     const archivo = req.file;
     const filePath = archivo ? archivo.path : null;
 
-    // Insertar en la base de datos (tabla proyectos)
+    // Intentar conectar a la base de datos
+    console.log('🔄 Intentando conexión a BD...');
     const connection = await pool.getConnection();
+    console.log('✓ Conexión obtenida');
+
+    // Verificar que la tabla existe
+    console.log('🔍 Verificando tabla proyectos...');
+    const [tableCheck] = await connection.query('SHOW TABLES LIKE "proyectos"');
+    if (tableCheck.length === 0) {
+      throw new Error('La tabla "proyectos" no existe. Ejecuta: node infra/setup_database.js');
+    }
+    console.log('✓ Tabla proyectos existe');
+
+    // Insertar en la base de datos
+    console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
       'INSERT INTO proyectos (nombre, archivo_path) VALUES (?, ?)',
       [nombre, filePath]
     );
+    console.log('✓ Datos insertados. ID:', result.insertId);
+
     connection.release();
 
     res.json({ 
@@ -97,8 +120,15 @@ app.post('/api/submit', upload.single('archivo'), async (req, res) => {
       archivo: archivo ? archivo.filename : null
     });
   } catch (error) {
-    console.error('Error al guardar proyecto:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+    console.error('❌ Error al guardar proyecto:', error.message);
+    console.error('Error completo:', error);
+    
+    // Enviar respuesta con detalles del error
+    res.status(500).json({ 
+      error: 'Error al guardar proyecto',
+      detalles: error.message,
+      codigo: error.code
+    });
   }
 });
 

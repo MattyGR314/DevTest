@@ -35,7 +35,7 @@ function SubirCodigo() {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/submit', {
+      const response = await fetch('/subircodigo', {
         method: 'POST',
         body: data,
       });
