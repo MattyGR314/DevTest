@@ -54,7 +54,7 @@ Haz clic en **+ Agregar variable** y crea estas 4 variables:
 | `DB_HOST` | `devttest-db.mysql.database.azure.com` |
 | `DB_USER` | `devttestadmin` |
 | `DB_PASSWORD` | `TurrasPaga100$` |
-| `DB_NAME` | `devttest-db` |
+| `DB_NAME` | `devtest` |
 
 ### 3. Guardar Cambios
 
