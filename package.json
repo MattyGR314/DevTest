@@ -4,13 +4,14 @@
   "description": "",
   "private": true,
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "dotenv": "^16.4.5",
     "express": "^5.2.1",
+    "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.0.0",
-    "multer": "^1.4.5-lts.1"
+    "react-router-dom": "^7.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
