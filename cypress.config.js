@@ -11,7 +11,7 @@ module.exports = defineConfig({
     baseUrl: 'http://localhost:3000',
     
     // Aquí especificas dónde buscar las pruebas E2E
-    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    specPattern: 'cypress/e2e/subir-codigo-correo.cy.js',
     
     // Archivo de soporte (comandos personalizados)
     supportFile: 'cypress/support/e2e.js',

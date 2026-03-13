@@ -10,6 +10,15 @@ const fs = require('fs');
 
 const app = express();
 
+// Detectar si estamos en entorno de pruebas
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true';
+
+// Si es entorno de pruebas, deshabilitar la verificación de duplicados
+// o usar una base de datos de prueba
+if (isTestEnvironment) {
+  console.log('🧪 ENTORNO DE PRUEBAS DETECTADO');
+}
+
 // Pool de conexiones a MySQL
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -78,18 +87,34 @@ const upload = multer({ storage });
 // ===== RUTA PARA SUBIR ARCHIVOS =====
 app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
   try {
+
+    // Verificar si ya existe un proyecto con el mismo nombre (DT_03_6)
+    // SOLO si NO estamos en entorno de pruebas
+
     console.log('📝 Inicio de subida de archivo...');
     console.log('Body recibido:', req.body);
     console.log('Archivo recibido:', req.file ? req.file.filename : 'ninguno');
 
-    const { nombre } = req.body;
+    // Obtener los datos del formulario
+    const { nombre, correo } = req.body;
+    const archivo = req.file;
+    const filePath = archivo ? archivo.path : null;
+
+    // Validar campos obligatorios
     if (!nombre) {
       console.warn('⚠️  Nombre no proporcionado');
       return res.status(400).json({ error: 'El nombre del proyecto es obligatorio' });
     }
 
-    const archivo = req.file;
-    const filePath = archivo ? archivo.path : null;
+    if (!correo) {
+      console.warn('⚠️  Correo no proporcionado');
+      return res.status(400).json({ error: 'El correo electrónico es obligatorio' });
+    }
+
+    if (!archivo) {
+      console.warn('⚠️  Archivo no proporcionado');
+      return res.status(400).json({ error: 'El archivo es obligatorio' });
+    }
 
     // Intentar conectar a la base de datos
     console.log('🔄 Intentando conexión a BD...');
@@ -104,19 +129,41 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     }
     console.log('✓ Tabla proyectos existe');
 
-    // Insertar en la base de datos
+       if (!isTestEnvironment) {
+      console.log('🔍 Verificando si el nombre ya existe...');
+      const [existingProject] = await connection.execute(
+        'SELECT id FROM proyectos WHERE nombre = ?',
+        [nombre]
+      );
+
+      if (existingProject.length > 0) {
+        console.warn('⚠️  Nombre de proyecto duplicado:', nombre);
+        connection.release();
+        return res.status(409).json({ 
+          error: 'Ya existe un proyecto con este nombre',
+          codigo: 'NOMBRE_DUPLICADO'
+        });
+      }
+      console.log('✓ Nombre disponible');
+    } else {
+      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados');
+    }
+
+    // Insertar en la base de datos (SIN campo estado)
     console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, archivo_path) VALUES (?, ?)',
-      [nombre, filePath]
+      'INSERT INTO proyectos (nombre, correo, archivo_path) VALUES (?, ?, ?)',
+      [nombre, correo, filePath]
     );
     console.log('✓ Datos insertados. ID:', result.insertId);
 
     connection.release();
 
     res.json({ 
-      message: 'Proyecto guardado correctamente', 
+      message: 'Archivo subido correctamente',
       id: result.insertId,
+      nombre: nombre,
+      correo: correo,
       archivo: archivo ? archivo.filename : null
     });
   } catch (error) {

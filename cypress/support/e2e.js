@@ -41,7 +41,7 @@ describe('Componente SubirCodigo - Pruebas', () => {
 
     // Llenar el formulario
     cy.get('input#nombre').clear().type('Proyecto Test');
-    cy.get('input#archivo').selectFile('cypress/fixtures/test-instalador.exe', { force: true });
+    cy.get('input#archivo').selectFile('cypress/fixtures/programa.exe', { force: true });
     
     // Enviar el formulario
     cy.contains('button', 'Aceptar').click();
