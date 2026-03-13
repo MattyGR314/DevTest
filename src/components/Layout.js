@@ -12,7 +12,7 @@ function Layout({ children }) {
           </div>
           
 
-          <button class="navbar-toggler me-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <button class="navbar-toggler mt-4 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     
               <img src="img/user_img.PNG" alt=""></img>
                     
@@ -32,8 +32,7 @@ function Layout({ children }) {
           <p> Plataforma académica. Todos los derechos reservados</p>
         </div>
 
-
-        <div className="offcanvas offcanvas-end"tabIndex="-1"id="menuRight">
+      <div className="offcanvas offcanvas-end"tabIndex="-1"id="menuRight">
 
           <div className="offcanvas-header">
 
@@ -56,7 +55,6 @@ function Layout({ children }) {
         </div>
 
       </div>
-
     </div>
 
     

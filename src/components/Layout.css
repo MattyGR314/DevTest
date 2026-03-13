@@ -20,6 +20,15 @@
   width: 50px;
 }
 
+.encabezado button{
+  height: 60px;
+  max-width: 60px;
+}
+
+.btn-close{
+  max-width: 40px;
+}
+
 .Test {
   color: #ffffff;
   font-size: 100px;
@@ -48,10 +57,6 @@
 
 
 
-.encabezado img {
-  max-width: 100%;
-  height: auto;
-}
 
 .navegacion {
   background-color: var(--panel);
