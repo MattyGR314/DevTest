@@ -38,6 +38,8 @@
     ]
   },
   "devDependencies": {
+    "@cypress/webpack-dev-server": "^4.1.1",
+    "cypress": "^15.11.0",
     "react-scripts": "5.0.1"
   }
 }
