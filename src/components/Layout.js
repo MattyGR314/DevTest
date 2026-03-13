@@ -14,7 +14,7 @@ function Layout({ children }) {
 
           <button class="navbar-toggler me-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     
-              <img src="img/user_img.PNG"></img>
+              <img src="img/user_img.PNG" alt=""></img>
                     
           </button>
         </div>
