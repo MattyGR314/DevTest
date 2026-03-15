@@ -15,7 +15,7 @@ function SubirCodigo() {
   const validarNombre = (nombre) => {
     if (!nombre || nombre.trim() === '') return true; // El vacío se valida aparte
     // Solo letras, números y espacios (sin caracteres especiales)
-    const regex = /^[a-zA-Z0-9\s]+$/;
+    const regex = /^[a-zA-Z0-9\s.]+$/;
     return regex.test(nombre);
   };
 
