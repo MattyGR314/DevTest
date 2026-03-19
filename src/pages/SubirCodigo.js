@@ -5,29 +5,25 @@ function SubirCodigo() {
   const [formData, setFormData] = useState({
     nombre: '',
     archivo: null,
-    correo: '', // DT_03_1: Añadimos campo correo
+    correo: '',
   });
 
-  const [errores, setErrores] = useState({}); // Para mostrar errores en la UI
-  const [enviando, setEnviando] = useState(false); // Para evitar envíos múltiples
-
-  // DT_03_3: Validar nombre sin caracteres especiales
+  const [errores, setErrores] = useState({});
+  const [enviando, setEnviando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  
   const validarNombre = (nombre) => {
-    if (!nombre || nombre.trim() === '') return true; // El vacío se valida aparte
-    // Solo letras, números y espacios (sin caracteres especiales)
+    if (!nombre || nombre.trim() === '') return true;
     const regex = /^[a-zA-Z0-9\s.]+$/;
     return regex.test(nombre);
   };
 
-  // DT_03_2: Validar formato de correo
   const validarCorreo = (correo) => {
-    if (!correo || correo.trim() === '') return true; // El vacío se valida aparte
-    // Formato estándar de email
+    if (!correo || correo.trim() === '') return true;
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(correo);
   };
 
-  // DT_03_4: Validar que sea archivo ejecutable
   const esEjecutable = (archivo) => {
     if (!archivo) return false;
     const extension = archivo.name.split('.').pop().toLowerCase();
@@ -40,10 +36,12 @@ function SubirCodigo() {
       ...prev,
       [name]: value,
     }));
-    // Limpiar error del campo cuando el usuario empieza a escribir
+
     if (errores[name]) {
       setErrores(prev => ({ ...prev, [name]: '' }));
     }
+
+    if (mensaje) setMensaje('');
   };
 
   const handleFileChange = (e) => {
@@ -52,21 +50,21 @@ function SubirCodigo() {
       ...prev,
       archivo: files[0],
     }));
+
     if (errores.archivo) {
       setErrores(prev => ({ ...prev, archivo: '' }));
     }
+    if (mensaje) setMensaje('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prevenir envíos múltiples
     if (enviando) return;
     
-    // Limpiar errores anteriores
     const nuevosErrores = {};
+    setMensaje('');
 
-    // DT_03_5: Validar que ningún campo esté vacío
     if (!formData.nombre || formData.nombre.trim() === '') {
       nuevosErrores.nombre = 'El nombre del proyecto es obligatorio';
     }
@@ -79,40 +77,30 @@ function SubirCodigo() {
       nuevosErrores.archivo = 'Debes seleccionar un archivo';
     }
 
-    // Si hay campos vacíos, mostrar errores y no continuar
     if (Object.keys(nuevosErrores).length > 0) {
       setErrores(nuevosErrores);
-      // DT_03_5: Notificar al developer
-      alert('Todos los campos han de estar completos');
+      setMensaje('Todos los campos deben estar completos');
       return;
     }
 
-    // DT_03_3: Validar nombre sin caracteres especiales
     if (!validarNombre(formData.nombre)) {
       setErrores({ nombre: 'El nombre no puede contener caracteres especiales' });
-      alert('El nombre no puede contener caracteres especiales');
       return;
     }
 
-    // DT_03_4: Validar que sea archivo ejecutable
     if (!esEjecutable(formData.archivo)) {
       setErrores({ archivo: 'El archivo debe ser ejecutable (.exe o .bat)' });
-      alert('El código subido no es un fichero ejecutable');
       return;
     }
 
-    // DT_03_2: Validar formato de correo
     if (!validarCorreo(formData.correo)) {
       setErrores({ correo: 'El correo no sigue los estándares establecidos' });
-      alert('El correo no sigue los estándares establecidos');
       return;
     }
 
-    // Si llegamos aquí, todas las validaciones pasaron
     setEnviando(true);
     console.log('Formulario enviado:', formData);
 
-    // Crear FormData para enviar archivo y campos
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
@@ -128,24 +116,20 @@ function SubirCodigo() {
 
       const result = await response.json();
       
-      // DT_03_6: Verificar si el nombre ya existe (código 409 Conflict)
       if (response.status === 409) {
         setErrores({ nombre: 'Ya existe un proyecto con este nombre' });
-        alert('Ya existe un proyecto con este nombre');
         setEnviando(false);
         return;
       }
 
       if (response.ok) {
-        // DT_03_2: Proyecto registrado con éxito
-        alert('Archivo subido correctamente');
+        setMensaje('Archivo subido correctamente');
         handleReset();
       } else {
-        alert(`Error: ${result.error || 'Error desconocido'}`);
+        setMensaje('Error al subir el archivo');
       }
     } catch (error) {
-      console.error('Error al subir:', error);
-      alert('Error de conexión con el servidor');
+      console.error('Error al subir el archivo:', error);
     } finally {
       setEnviando(false);
     }
@@ -162,8 +146,15 @@ function SubirCodigo() {
 
   return (
     <div className="subir-codigo">
+
+      {mensaje && (
+        <div className="mensaje-global mensaje-separado">
+          {mensaje}
+        </div>
+      )}
+
       <form id="uploadCode" onSubmit={handleSubmit} noValidate>
-        {/* Campo: Nombre del proyecto */}
+
         <div className="form-group">
           <label htmlFor="nombre">
             Escriba el nombre de su proyecto: <span className="required">*</span>
@@ -172,6 +163,7 @@ function SubirCodigo() {
             type="text"
             name="nombre"
             id="nombre"
+            inputMode="text"
             placeholder="Ej: Mi Juego Increíble"
             value={formData.nombre}
             onChange={handleInputChange}
@@ -186,15 +178,15 @@ function SubirCodigo() {
           <small>Solo letras, números y espacios (sin caracteres especiales)</small>
         </div>
 
-        {/* DT_03_1: Nuevo campo: Correo electrónico */}
         <div className="form-group">
           <label htmlFor="correo">
             Correo electrónico: <span className="required">*</span>
           </label>
           <input
-            type="email"
+            type="text"
             name="correo"
             id="correo"
+            inputMode="text"
             placeholder="tu@email.com"
             value={formData.correo}
             onChange={handleInputChange}
@@ -207,7 +199,6 @@ function SubirCodigo() {
           )}
         </div>
 
-        {/* Campo: Archivo ejecutable */}
         <div className="form-group">
           <label htmlFor="archivo">
             Selecciona un archivo ejecutable: <span className="required">*</span>
@@ -217,6 +208,7 @@ function SubirCodigo() {
             name="archivo"
             id="archivo"
             accept=".exe, .bat"
+            inputMode="none"
             onChange={handleFileChange}
             className={errores.archivo ? 'error' : ''}
           />
@@ -247,7 +239,6 @@ function SubirCodigo() {
           </button>
         </div>
 
-        {/* Indicador de campos obligatorios */}
         <div className="required-note">
           <span className="required">*</span> Campos obligatorios
         </div>
