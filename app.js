@@ -9,6 +9,7 @@ const multer = require('multer');
 const fs = require('fs');
 
 const app = express();
+const { dbErrorHandler, genericErrorHandler } = require("./middleware/errorHandler");
 
 // Detectar si estamos en entorno de pruebas
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true';
@@ -39,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 // ===== RUTAS API (ANTES de archivos estáticos) =====
 
 // Ruta para verificar estado de conexión a BD
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
@@ -47,12 +48,12 @@ app.get('/api/health', async (req, res) => {
     res.json({ status: 'ok', message: 'Aplicación y BD conectadas correctamente' });
   } catch (error) {
     console.error('Error de conexión a BD:', error);
-    res.status(500).json({ status: 'error', message: 'Error en conexión a BD', error: error.message });
+    next(error);
   }
 });
 
 // Ruta de prueba - obtener datos de la BD
-app.get('/api/test', async (req, res) => {
+app.get('/api/test', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.query('SELECT DATABASE() as current_database;');
@@ -60,7 +61,7 @@ app.get('/api/test', async (req, res) => {
     res.json({ message: 'Conectado a la BD', data: rows });
   } catch (error) {
     console.error('Error en query:', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
@@ -85,7 +86,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ===== RUTA PARA SUBIR ARCHIVOS =====
-app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
+app.post('/subircodigo', upload.single('archivo'), async (req, res, next) => {
   try {
 
     // Verificar si ya existe un proyecto con el mismo nombre (DT_03_6)
@@ -169,13 +170,7 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);
     console.error('Error completo:', error);
-    
-    // Enviar respuesta con detalles del error
-    res.status(500).json({ 
-      error: 'Error al guardar proyecto',
-      detalles: error.message,
-      codigo: error.code
-    });
+    next(error);
   }
 });
 
@@ -189,10 +184,8 @@ app.use((req, res) => {
 });
 
 // Manejo de errores
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Error del servidor');
-});
+app.use(dbErrorHandler);
+app.use(genericErrorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function (error) {
