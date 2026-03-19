@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import './SubirCodigo.css';
 
 function SubirCodigo() {
@@ -11,6 +11,7 @@ function SubirCodigo() {
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const fileInputRef = useRef(null);
   
   const validarNombre = (nombre) => {
     if (!nombre || nombre.trim() === '') return true;
@@ -73,7 +74,11 @@ function SubirCodigo() {
       nuevosErrores.correo = 'El correo electrónico es obligatorio';
     }
     
-    if (!formData.archivo) {
+    // Si no hay archivo en el state, intentar leer directamente del input (puede pasar si el usuario clicó muy rápido)
+    const archivoDesdeInput = fileInputRef.current?.files?.[0];
+    const archivoAUsar = formData.archivo || archivoDesdeInput;
+
+    if (!archivoAUsar) {
       nuevosErrores.archivo = 'Debes seleccionar un archivo';
     }
 
@@ -88,7 +93,7 @@ function SubirCodigo() {
       return;
     }
 
-    if (!esEjecutable(formData.archivo)) {
+    if (!esEjecutable(archivoAUsar)) {
       setErrores({ archivo: 'El archivo debe ser ejecutable (.exe o .bat)' });
       return;
     }
@@ -98,14 +103,19 @@ function SubirCodigo() {
       return;
     }
 
+    // Asegurarse de que el state tenga el archivo correcto
+    if (archivoAUsar && !formData.archivo) {
+      setFormData(prev => ({ ...prev, archivo: archivoAUsar }));
+    }
+
     setEnviando(true);
-    console.log('Formulario enviado:', formData);
+    console.log('Formulario enviado:', { ...formData, archivo: archivoAUsar });
 
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
-    if (formData.archivo) {
-      data.append('archivo', formData.archivo);
+    if (archivoAUsar) {
+      data.append('archivo', archivoAUsar);
     }
 
     try {
@@ -115,9 +125,32 @@ function SubirCodigo() {
       });
 
       const result = await response.json();
-      
+
       if (response.status === 409) {
-        setErrores({ nombre: 'Ya existe un proyecto con este nombre' });
+        // Error de duplicidad en la base de datos
+        setErrores({ nombre: result.message || 'Ya existe un proyecto con este nombre' });
+        setMensaje(`${result.error}: ${result.message}`);
+        setEnviando(false);
+        return;
+      }
+
+      if (response.status === 400) {
+        // Error de validación en el servidor (ej: campo inválido)
+        setMensaje(`${result.error}: ${result.message}`);
+        setEnviando(false);
+        return;
+      }
+
+      if (response.status === 500) {
+        // Error interno del servidor
+        setMensaje(`Error del servidor: ${result.message}`);
+        setEnviando(false);
+        return;
+      }
+
+      if (response.status === 503) {
+        // Base de datos no disponible
+        setMensaje(`${result.error}: ${result.message}`);
         setEnviando(false);
         return;
       }
@@ -126,10 +159,11 @@ function SubirCodigo() {
         setMensaje('Archivo subido correctamente');
         handleReset();
       } else {
-        setMensaje('Error al subir el archivo');
+        setMensaje(`Error desconocido: ${result.message || 'Inténtalo de nuevo'}`);
       }
     } catch (error) {
       console.error('Error al subir el archivo:', error);
+      setMensaje('Error de conexión. Verifica tu internet e intenta de nuevo.');
     } finally {
       setEnviando(false);
     }
@@ -142,6 +176,9 @@ function SubirCodigo() {
       correo: '',
     });
     setErrores({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -172,7 +209,7 @@ function SubirCodigo() {
           />
           {errores.nombre && (
             <span className="error-message" role="alert">
-              ⚠️ {errores.nombre}
+              {errores.nombre}
             </span>
           )}
           <small>Solo letras, números y espacios (sin caracteres especiales)</small>
@@ -194,7 +231,7 @@ function SubirCodigo() {
           />
           {errores.correo && (
             <span className="error-message" role="alert">
-              ⚠️ {errores.correo}
+              {errores.correo}
             </span>
           )}
         </div>
@@ -204,6 +241,7 @@ function SubirCodigo() {
             Selecciona un archivo ejecutable: <span className="required">*</span>
           </label>
           <input
+            ref={fileInputRef}
             type="file"
             name="archivo"
             id="archivo"
@@ -214,7 +252,7 @@ function SubirCodigo() {
           />
           {errores.archivo && (
             <span className="error-message" role="alert">
-              ⚠️ {errores.archivo}
+              {errores.archivo}
             </span>
           )}
           {formData.archivo && (
