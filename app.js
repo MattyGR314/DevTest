@@ -160,12 +160,13 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res, next) => {
 
     connection.release();
 
-    res.json({ 
+    return res.json({ 
       message: 'Archivo subido correctamente',
       id: result.insertId,
       nombre: nombre,
       correo: correo,
-      archivo: archivo ? archivo.filename : null
+      archivo: archivo ? archivo.filename : null,
+      redirectTo: '/confirmacion'  // El cliente navega en JavaScript
     });
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);

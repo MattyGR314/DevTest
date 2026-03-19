@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './SubirCodigo.css';
 
 function SubirCodigo() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: '',
     archivo: null,
@@ -158,6 +160,7 @@ function SubirCodigo() {
       if (response.ok) {
         setMensaje('Archivo subido correctamente');
         handleReset();
+        navigate('/confirmacion');
       } else {
         setMensaje(`Error desconocido: ${result.message || 'Inténtalo de nuevo'}`);
       }
