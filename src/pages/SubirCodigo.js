@@ -40,6 +40,13 @@ function SubirCodigo() {
       ...prev,
       [name]: value,
     }));
+    
+    // Ajustar altura del textarea automáticamente
+    if (name === 'descripcion' && e.target.tagName === 'TEXTAREA') {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.max(150, e.target.scrollHeight) + 'px';
+    }
+    
     // Limpiar error del campo cuando el usuario empieza a escribir
     if (errores[name]) {
       setErrores(prev => ({ ...prev, [name]: '' }));
@@ -116,6 +123,7 @@ function SubirCodigo() {
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
+    data.append('descripcion', formData.descripcion ? formData.descripcion.trim() : '');
     if (formData.archivo) {
       data.append('archivo', formData.archivo);
     }
@@ -232,6 +240,24 @@ function SubirCodigo() {
             </small>
           )}
           <small>Formatos permitidos: .exe, .bat</small>
+        </div>
+        <div className="form-group">
+          <label htmlFor="descripcion">Descripción del proyecto:</label>
+          <textarea
+            name="descripcion"
+            id="descripcion"
+            placeholder="Cuéntanos un poco sobre tu proyecto..."
+            value={formData.descripcion || ''}
+            onChange={handleInputChange}
+            maxLength="500"
+            className={errores.descripcion ? 'error' : ''}
+          />
+          {errores.descripcion && (
+            <span className="error-message" role="alert">
+              ⚠️ {errores.descripcion}
+            </span>
+          )}
+          <small>Máximo 500 caracteres</small>
         </div>
 
         <div className="form-buttons">

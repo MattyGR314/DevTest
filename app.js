@@ -99,6 +99,7 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     const { nombre, correo } = req.body;
     const archivo = req.file;
     const filePath = archivo ? archivo.path : null;
+    const descripcion = req.body.descripcion || null;
 
     // Validar campos obligatorios
     if (!nombre) {
@@ -152,8 +153,8 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     // Insertar en la base de datos (SIN campo estado)
     console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, correo, archivo_path) VALUES (?, ?, ?)',
-      [nombre, correo, filePath]
+      'INSERT INTO proyectos (nombre, correo, archivo_path, descripcion) VALUES (?, ?, ?, ?)',
+      [nombre, correo, filePath, descripcion]
     );
     console.log('✓ Datos insertados. ID:', result.insertId);
 
@@ -164,7 +165,8 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
       id: result.insertId,
       nombre: nombre,
       correo: correo,
-      archivo: archivo ? archivo.filename : null
+      archivo: archivo ? archivo.filename : null,
+      descripcion: descripcion
     });
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);
