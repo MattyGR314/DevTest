@@ -6,16 +6,88 @@
  * - genericErrorHandler es el manejador de respaldo para cualquier otro error.
  */
 
+/**
+ * Middleware de manejo de errores para la aplicación.
+ */
+const multer = require('multer');
 const showStack = process.env.NODE_ENV !== 'production';
+
+/**
+ * Maneja el error 404 (Ruta no encontrada) para la API
+ */
+function notFoundHandler(req, res, next) {
+  res.status(404).json({
+    status: 'error',
+    message: `La ruta solicitada no existe: ${req.method} ${req.originalUrl}`
+  });
+}
+
+/**
+ * Maneja errores específicos de subida de archivos (Multer)
+ */
+function multerErrorHandler(err, req, res, next) {
+  if (err instanceof multer.MulterError) {
+    // Errores nativos de Multer (ej. LIMIT_FILE_SIZE)
+    return res.status(400).json({
+      status: 'error',
+      message: 'Error al procesar el archivo subido',
+      code: err.code,
+      details: err.message
+    });
+  } else if (err.message === 'File type not allowed') {
+    // Error personalizado si en el futuro filtras por extensión
+    return res.status(415).json({
+      status: 'error',
+      message: 'Tipo de archivo no soportado'
+    });
+  }
+  
+  // Si no es un error de Multer, pasamos al siguiente manejador
+  next(err);
+}
+
+/**
+ * Maneja errores de validación (estructurado para futuras librerías como Joi o express-validator)
+ */
+function validationErrorHandler(err, req, res, next) {
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Datos de entrada inválidos',
+      details: err.message,
+      // Si la librería envía un array de errores, lo pasamos
+      ...(err.errors ? { errores: err.errors } : {}) 
+    });
+  }
+  next(err);
+}
+
+/**
+ * Maneja errores de autenticación y autorización (preparado para el futuro)
+ */
+function authErrorHandler(err, req, res, next) {
+  if (err.name === 'UnauthorizedError' || err.code === 'credentials_required') {
+    return res.status(401).json({
+      status: 'error',
+      message: 'No autorizado. Se requiere iniciar sesión.'
+    });
+  }
+  
+  if (err.name === 'ForbiddenError') {
+    return res.status(403).json({
+      status: 'error',
+      message: 'No tienes permisos para realizar esta acción.'
+    });
+  }
+  next(err);
+}
 
 /**
  * Maneja errores específicos de la base de datos MySQL.
  */
 function dbErrorHandler(err, req, res, next) {
-  // mysql2 error object includes `code`, `errno`, `sqlState`, `sqlMessage`
   if (err && typeof err.code === 'string') {
-    console.error('💥 Error de BD detectado:', err.code, err.sqlMessage || err.message);
-
+    // ... (Mantén exactamente el mismo código que ya tenías en tu dbErrorHandler)
     switch (err.code) {
       case 'ER_DUP_ENTRY':
         return res.status(409).json({
@@ -56,13 +128,11 @@ function dbErrorHandler(err, req, res, next) {
         break;
     }
   }
-
-  // No es un error de base de datos conocido: delegar a un manejador general.
   next(err);
 }
 
 /**
- * Maneja errores genéricos que no fueron capturados por un middleware previo.
+ * Maneja errores genéricos (500)
  */
 function genericErrorHandler(err, req, res, next) {
   console.error('Error inesperado:', err);
@@ -79,7 +149,12 @@ function genericErrorHandler(err, req, res, next) {
   });
 }
 
+// Exportamos todos los middlewares
 module.exports = {
+  notFoundHandler,
+  multerErrorHandler,
+  validationErrorHandler,
+  authErrorHandler,
   dbErrorHandler,
   genericErrorHandler,
 };
