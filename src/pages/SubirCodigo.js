@@ -176,6 +176,10 @@ function SubirCodigo() {
     setErrores({});
   };
 
+  const descripcionError = errores.descripcion;
+  const descripcionValue = formData.descripcion || '';
+  const descripcionClassName = descripcionError ? 'error' : '';
+
   return (
     <div className="subir-codigo">
       <form id="uploadCode" onSubmit={handleSubmit} noValidate>
@@ -255,14 +259,14 @@ function SubirCodigo() {
             name="descripcion"
             id="descripcion"
             placeholder="Cuéntanos un poco sobre tu proyecto..."
-            value={formData.descripcion || ''}
+            value={descripcionValue}
             onChange={handleInputChange}
-            maxLength="500"
-            className={errores.descripcion ? 'error' : ''}
+            maxLength={500}
+            className={descripcionClassName}
           />
-          {errores.descripcion && (
+          {descripcionError && (
             <span className="error-message" role="alert">
-              ⚠️ {errores.descripcion}
+              ⚠️ {descripcionError}
             </span>
           )}
           <small>Máximo 500 caracteres</small>
