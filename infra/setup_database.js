@@ -33,15 +33,34 @@ async function setupDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
         archivo_path VARCHAR(500),
+        correo VARCHAR(255),
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✓ Tabla "proyectos" creada correctamente');
 
+    // Crear tabla inscripciones
+    console.log('📋 Creando tabla "inscripciones"...');
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS inscripciones (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_proyectos INT,
+        nombre VARCHAR(100) NOT NULL,
+        correo VARCHAR(150) NOT NULL,
+        CONSTRAINT fk_proyecto
+          FOREIGN KEY (id_proyectos)
+          REFERENCES proyectos(id)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE
+      )
+    `);
+    console.log('✓ Tabla "inscripciones" creada correctamente');
+
     console.log('\n✅ Base de datos configurada correctamente');
     console.log(`   Base de datos: ${dbName}`);
-    console.log('   Tabla: proyectos');
-    console.log('   Campos: id, nombre, archivo_path, fecha_creacion');
+    console.log('   Tablas: proyectos, inscripciones');
+    console.log('   Tabla proyectos - Campos: id, nombre, archivo_path, correo, fecha_creacion');
+    console.log('   Tabla inscripciones - Campos: id, nombre, correo, id_proyectos, fecha_inscripcion');
 
     await connection.end();
   } catch (error) {
