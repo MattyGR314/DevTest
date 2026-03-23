@@ -115,6 +115,14 @@ function SubirCodigo() {
       return;
     }
 
+    // DT_11_3: Validar que la descripción no exceda 500 caracteres
+    const descripcionValue = document.getElementById('descripcion').value;
+    if (descripcionValue && descripcionValue.length > 500) {
+      setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
+      alert('La descripción no puede exceder 500 caracteres');
+      return;
+    }
+
     // Si llegamos aquí, todas las validaciones pasaron
     setEnviando(true);
     console.log('Formulario enviado:', formData);
