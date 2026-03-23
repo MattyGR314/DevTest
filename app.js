@@ -129,7 +129,19 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     }
     console.log('✓ Tabla proyectos existe');
 
-       if (!isTestEnvironment) {
+    console.log('🔍 Verificando tabla inscripciones...');
+    const [inscripcionesTableCheck] = await connection.query('SHOW TABLES LIKE "inscripciones"');
+    if (inscripcionesTableCheck.length === 0) {
+      console.warn('⚠️  La tabla "inscripciones" no existe. No es posible verificar correo registrado.');
+      connection.release();
+      return res.status(500).json({
+        error: 'Tabla inscripciones no encontrada. Imposible validar correo de usuario registrado.',
+        codigo: 'INSCRIPCIONES_TABLE_NO_EXISTE'
+      });
+    }
+    console.log('✓ Tabla inscripciones existe');
+
+    if (!isTestEnvironment) {
       console.log('🔍 Verificando si el nombre ya existe...');
       const [existingProject] = await connection.execute(
         'SELECT id FROM proyectos WHERE nombre = ?',
@@ -145,8 +157,25 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
         });
       }
       console.log('✓ Nombre disponible');
+
+      // DT_XX: Verificar que el correo pertenece a una inscripción
+      console.log('🔍 Verificando si el correo está registrado en inscripciones...');
+      const [inscripcionCheck] = await connection.execute(
+        'SELECT id FROM inscripciones WHERE correo = ?',
+        [correo]
+      );
+
+      if (inscripcionCheck.length === 0) {
+        console.warn('⚠️  Correo no está vinculado a ninguna inscripción:', correo);
+        connection.release();
+        return res.status(400).json({ 
+          error: 'El correo debe estar vinculado a una inscripción registrada',
+          codigo: 'USUARIO_NO_REGISTRADO'
+        });
+      }
+      console.log('✓ Correo verificado como inscripción registrada');
     } else {
-      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados');
+      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados y usuarios');
     }
 
     // Insertar en la base de datos (SIN campo estado)

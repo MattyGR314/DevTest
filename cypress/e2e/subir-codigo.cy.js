@@ -95,4 +95,6 @@ describe('DT_03 - Publicar proyecto en la plataforma', () => {
     cy.contains('button', 'Aceptar').click();
     cy.get('@alert').should('have.been.calledWith', 'El correo no sigue los estándares establecidos');
   });
+
+
 });
