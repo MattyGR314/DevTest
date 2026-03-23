@@ -137,8 +137,7 @@ function SubirCodigo() {
       if (response.status === 409) {
         // Error de duplicidad en la base de datos
         setErrores({ nombre: result.message || 'Ya existe un proyecto con este nombre' });
-        setMensaje(`${result.error}: ${result.message}`);
-        setEnviando(false);
+        setMensaje(result.error || 'Ya existe un proyecto con este nombre');        setEnviando(false);
         return;
       }
 
