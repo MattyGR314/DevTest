@@ -2,18 +2,20 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SubirCodigo.css';
 
+const INITIAL_STATE = {
+  nombre: '',
+  archivo: null,
+  correo: '',
+};
+
 function SubirCodigo() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    nombre: '',
-    archivo: null,
-    correo: '',
-  });
+  const fileInputRef = useRef(null);
 
+  const [formData, setFormData] = useState(INITIAL_STATE);
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
-  const fileInputRef = useRef(null);
   
   const validarNombre = (nombre) => {
     if (!nombre || nombre.trim() === '') return true;
@@ -33,6 +35,13 @@ function SubirCodigo() {
     return extension === 'exe' || extension === 'bat';
   };
 
+  //Nueva función limpiarError
+  const limpiarError = (campo) => {
+    if (errores[campo]) {
+      setErrores(prev => ({ ...prev, [campo]: '' }));
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -40,9 +49,7 @@ function SubirCodigo() {
       [name]: value,
     }));
 
-    if (errores[name]) {
-      setErrores(prev => ({ ...prev, [name]: '' }));
-    }
+    limpiarError(name);
 
     if (mensaje) setMensaje('');
   };
@@ -54,9 +61,8 @@ function SubirCodigo() {
       archivo: files[0],
     }));
 
-    if (errores.archivo) {
-      setErrores(prev => ({ ...prev, archivo: '' }));
-    }
+    limpiarError('archivo');
+    
     if (mensaje) setMensaje('');
   };
 
@@ -172,16 +178,10 @@ function SubirCodigo() {
     }
   };
 
-  const handleReset = () => {
-    setFormData({
-      nombre: '',
-      archivo: null,
-      correo: '',
-    });
+ const handleReset = () => {
+    setFormData(INITIAL_STATE);
     setErrores({});
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
