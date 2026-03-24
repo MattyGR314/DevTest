@@ -33,3 +33,9 @@ npm run build
   - `pages/` - Páginas de la aplicación
   - `App.js` - Componente principal
 - `public/` - Archivos estáticos
+
+## Instalación para Docker
+
+docker build -t mi-app .
+
+docker run -p 3000:3000 --env-file .env --name my-app mi-app

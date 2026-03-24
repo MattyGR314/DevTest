@@ -16,7 +16,7 @@ function SubirCodigo() {
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
-  
+
   const validarNombre = (nombre) => {
     if (!nombre || nombre.trim() === '') return true;
     const regex = /^[a-zA-Z0-9\s.]+$/;
@@ -49,6 +49,16 @@ function SubirCodigo() {
       [name]: value,
     }));
 
+    // Ajustar altura del textarea automáticamente
+    if (name === 'descripcion' && e.target.tagName === 'TEXTAREA') {
+      e.target.style.height = 'auto';
+      e.target.style.height = Math.max(150, e.target.scrollHeight) + 'px';
+    }
+
+    // Limpiar error del campo cuando el usuario empieza a escribir
+    if (errores[name]) {
+      setErrores(prev => ({ ...prev, [name]: '' }));
+    }
     limpiarError(name);
 
     if (mensaje) setMensaje('');
@@ -62,26 +72,26 @@ function SubirCodigo() {
     }));
 
     limpiarError('archivo');
-    
+
     if (mensaje) setMensaje('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (enviando) return;
-    
+
     const nuevosErrores = {};
     setMensaje('');
 
     if (!formData.nombre || formData.nombre.trim() === '') {
       nuevosErrores.nombre = 'El nombre del proyecto es obligatorio';
     }
-    
+
     if (!formData.correo || formData.correo.trim() === '') {
       nuevosErrores.correo = 'El correo electrónico es obligatorio';
     }
-    
+
     // Si no hay archivo en el state, intentar leer directamente del input (puede pasar si el usuario clicó muy rápido)
     const archivoDesdeInput = fileInputRef.current?.files?.[0];
     const archivoAUsar = formData.archivo || archivoDesdeInput;
@@ -111,19 +121,21 @@ function SubirCodigo() {
       return;
     }
 
-    // Asegurarse de que el state tenga el archivo correcto
-    if (archivoAUsar && !formData.archivo) {
-      setFormData(prev => ({ ...prev, archivo: archivoAUsar }));
+    const descripcionValue = document.getElementById('descripcion').value;
+    if (descripcionValue && descripcionValue.length > 500) {
+      setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
+      return;
     }
-
     setEnviando(true);
     console.log('Formulario enviado:', { ...formData, archivo: archivoAUsar });
+
 
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
-    if (archivoAUsar) {
-      data.append('archivo', archivoAUsar);
+    data.append('descripcion', formData.descripcion ? formData.descripcion.trim() : '');
+    if (formData.archivo) {
+      data.append('archivo', formData.archivo);
     }
 
     try {
@@ -137,7 +149,7 @@ function SubirCodigo() {
       if (response.status === 409) {
         // Error de duplicidad en la base de datos
         setErrores({ nombre: result.message || 'Ya existe un proyecto con este nombre' });
-        setMensaje(result.error || 'Ya existe un proyecto con este nombre');        setEnviando(false);
+        setMensaje(result.error || 'Ya existe un proyecto con este nombre'); setEnviando(false);
         return;
       }
 
@@ -177,11 +189,15 @@ function SubirCodigo() {
     }
   };
 
- const handleReset = () => {
+  const handleReset = () => {
     setFormData(INITIAL_STATE);
     setErrores({});
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const descripcionError = errores.descripcion;
+  const descripcionValue = formData.descripcion || '';
+  const descripcionClassName = descripcionError ? 'error' : '';
 
   return (
     <div className="subir-codigo">
@@ -259,16 +275,34 @@ function SubirCodigo() {
           )}
           {formData.archivo && (
             <small className="file-info">
-              📁 Archivo seleccionado: {formData.archivo.name} 
+              📁 Archivo seleccionado: {formData.archivo.name}
               ({(formData.archivo.size / 1024).toFixed(2)} KB)
             </small>
           )}
           <small>Formatos permitidos: .exe, .bat</small>
         </div>
+        <div className="form-group">
+          <label htmlFor="descripcion">Descripción del proyecto:</label>
+          <textarea
+            name="descripcion"
+            id="descripcion"
+            placeholder="Cuéntanos un poco sobre tu proyecto..."
+            value={descripcionValue}
+            onChange={handleInputChange}
+            maxLength={500}
+            className={descripcionClassName}
+          />
+          {descripcionError && (
+            <span className="error-message" role="alert">
+              ⚠️ {descripcionError}
+            </span>
+          )}
+          <small>Máximo 500 caracteres</small>
+        </div>
 
         <div className="form-buttons">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={enviando}
             className={enviando ? 'enviando' : ''}
           >

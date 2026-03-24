@@ -137,6 +137,7 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     const { nombre, correo } = req.body;
     const archivo = req.file;
     const filePath = archivo ? archivo.path : null;
+    const descripcion = req.body.descripcion || null;
 
     // Validar campos obligatorios
     if (!nombre) {
@@ -190,8 +191,8 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     // Insertar en la base de datos (SIN campo estado)
     console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, correo, archivo_path) VALUES (?, ?, ?)',
-      [nombre, correo, filePath]
+      'INSERT INTO proyectos (nombre, correo, archivo_path, descripcion) VALUES (?, ?, ?, ?)',
+      [nombre, correo, filePath, descripcion]
     );
     console.log('✓ Datos insertados. ID:', result.insertId);
 
@@ -203,8 +204,10 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
       nombre: nombre,
       correo: correo,
       archivo: archivo ? archivo.filename : null,
-      redirectTo: '/confirmacion'  // El cliente navega en JavaScript
-    });
+      descripcion: descripcion,
+      redirectTo: '/confirmacion'
+      });
+    
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);
     console.error('Error completo:', error);
