@@ -49,6 +49,7 @@ function ResultadoConsulta() {
 	};
 
 	const descripcion = proyecto?.descripcion || proyecto?.description || 'Sin descripcion registrada';
+	const fichero = proyecto?.fichero || 'Sin fichero';
 
 	return (
 		<section className="resultado-consulta">
@@ -72,6 +73,9 @@ function ResultadoConsulta() {
 						</p>
 						<p>
 							<strong>Descripcion:</strong> {descripcion}
+						</p>
+						<p>
+							<strong>Fichero:</strong> {fichero}
 						</p>
 					</div>
 				</article>
