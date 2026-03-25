@@ -219,7 +219,60 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
 app.use('/api', notFoundHandler); 
 
-// ===== 2. ARCHIVOS ESTÁTICOS Y FRONTEND (React) =====
+// ===== DT_10_T1 RUTA PARA OBTENER PROYECTOS =====
+app.get('/api/proyectos', async (req, res) => {
+  try {
+    const termino = req.query.q;      // Término de búsqueda
+    const campo = req.query.campo;    // Campo a buscar: 'nombre', 'id', 'descripcion'
+
+    const connection = await pool.getConnection();
+
+    let query = '';
+    let params = [];
+
+    // Si hay término de búsqueda, construimos la consulta según el campo
+    if (termino && termino.trim() !== '') {
+      switch (campo) {
+        case 'id':
+          // Buscar por ID exacto (convertir a número si es posible)
+          const idBuscado = parseInt(termino, 10);
+          if (isNaN(idBuscado)) {
+            query = 'SELECT * FROM proyectos WHERE 1 = 0';
+          } else {
+            query = 'SELECT * FROM proyectos WHERE id = ?';
+            params = [idBuscado];
+          }
+          break;
+        case 'descripcion':
+          // Buscar por descripción (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE descripcion LIKE ?';
+          params = [`%${termino}%`];
+          break;
+        case 'nombre':
+        default:
+          // Buscar por nombre (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE nombre LIKE ?';
+          params = [`%${termino}%`];
+          break;
+      }
+    } else {
+      // Sin término: obtener todos los proyectos ordenados por fecha descendente
+      query = 'SELECT * FROM proyectos ORDER BY fecha_creacion DESC';
+    }
+
+    const [rows] = await connection.query(query, params);
+    connection.release();
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener proyectos:', error);
+    res.status(500).json({ error: 'Error al obtener proyectos', detalles: error.message });
+  }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== ARCHIVOS ESTÁTICOS (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
 app.use((req, res) => {
