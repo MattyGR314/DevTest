@@ -113,14 +113,6 @@ const Busqueda = () => {
         </div>
       </form>
 
-      {error && <div className="error-mensaje">{error}</div>}
-
-      {cargando && <div className="cargando">Cargando proyectos...</div>}
-
-      {!cargando && resultados.length === 0 && termino && (
-        <p className="no-resultados">No se encontraron proyectos.</p>
-      )}
-
     </div>
   );
 };
