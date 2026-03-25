@@ -76,7 +76,7 @@ const Busqueda = () => {
   };
 
   return (
-    <div className="contenedaor-busqueda">
+    <div className="contenedor-busqueda">
       <h2>Búsqueda de Proyectos</h2>
       <form onSubmit={handleSearch} className="formula-busqueda">
         <div className="formula-grupo">
