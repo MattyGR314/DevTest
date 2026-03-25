@@ -121,28 +121,6 @@ const Busqueda = () => {
         <p className="no-resultados">No se encontraron proyectos.</p>
       )}
 
-      {/* DT_10_T1 mostrar la tabla del resultado*/}
-      <div className="resultados-list">
-        {resultados.map((proyecto) => (
-          <div key={proyecto.id} className="proyecto-tabla">
-            <h3>{proyecto.nombre}</h3>
-            <p><strong>Correo:</strong> {proyecto.correo}</p>
-            {(proyecto.descripcion || proyecto.description) && (
-              <p><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
-            )}
-            <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
-            {proyecto.archivo_path && (
-              <a
-                href={`/uploads/${proyecto.archivo_path.split('/').pop()}`}
-                download
-                className="descarga-link"
-              >
-                Descargar archivo
-              </a>
-            )}
-          </div>
-        ))}
-      </div>
     </div>
   );
 };
