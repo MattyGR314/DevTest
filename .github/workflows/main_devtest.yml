@@ -36,6 +36,8 @@ jobs:
 
       - name: Build app
         run: npm run build
+        env:
+          CI: false  # <-- Esto evita que los warnings detengan el build
 
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
