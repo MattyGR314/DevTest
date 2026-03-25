@@ -1,5 +1,5 @@
 /// <reference types="cypress" />
-
+// test de pipeline
 describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
 
   beforeEach(() => {
