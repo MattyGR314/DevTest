@@ -22,9 +22,9 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      # ===================================================================
-      # PASO CLAVE: Aquí sucede la magia dinámica
-      # ===================================================================
+      - name: Construir la aplicación (Frontend)
+        run: npm run build
+
       - name: Determinar archivo de prueba según la rama
         id: set-target
         run: |
