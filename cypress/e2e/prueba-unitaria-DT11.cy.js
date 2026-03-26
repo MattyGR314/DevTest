@@ -5,10 +5,7 @@ describe('DT_11 - Agregar descripción a un proyecto', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000/subircodigo');
 
-    cy.window().then((win) => {
-      cy.stub(win, 'alert').as('alert');
-    });
-
+    // Ya no necesitamos el stub del alert, la app ahora usa mensajes en el DOM y redirecciones
     cy.get('form#uploadCode').should('be.visible');
   });
 
@@ -40,7 +37,9 @@ describe('DT_11 - Agregar descripción a un proyecto', () => {
     cy.contains('button', 'Aceptar').click();
 
     cy.wait('@postExito');
-    cy.get('@alert').should('have.been.calledWith', 'Archivo subido correctamente');
+    
+    // NUEVA ASERCIÓN: Verificamos que redirige a la página de confirmación como hace el código actual
+    cy.url().should('include', '/confirmacion');
   });
 
   // DT_11_3: Rechazar descripción con más de 500 caracteres
@@ -58,6 +57,11 @@ describe('DT_11 - Agregar descripción a un proyecto', () => {
 
     cy.contains('button', 'Aceptar').click();
 
-    cy.get('@alert').should('have.been.calledWith', 'La descripción no puede exceder 500 caracteres');
+    // NUEVA ASERCIÓN: Buscamos el mensaje de error específico debajo del textarea
+    cy.get('textarea#descripcion')
+      .parent()
+      .find('.error-message')
+      .should('be.visible')
+      .and('contain', 'La descripción no puede exceder 500 caracteres');
   });
 });

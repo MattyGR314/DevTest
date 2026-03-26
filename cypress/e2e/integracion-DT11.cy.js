@@ -632,16 +632,16 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
       cy.get('input#archivo').selectFile('cypress/fixtures/script.bat', { force: true });
       cy.contains('Archivo seleccionado: script.bat').should('be.visible');
 
-      // Forzar Descripcion de 501 caracteres usando invoke
+      // SOLUCIÓN: Removemos el maxlength del HTML y obligamos a Cypress a teclear 
+      // para que el estado de React (formData.descripcion) se actualice correctamente
       const desc501 = 'A'.repeat(501);
       cy.get('textarea#descripcion')
-        .invoke('val', desc501)
-        .trigger('input')
-        .trigger('change');
+        .invoke('removeAttr', 'maxlength')
+        .type(desc501, { delay: 0 });
 
       cy.get('button').contains('Aceptar').click();
 
-      // Debe mostrar error específico
+      // Debe mostrar error específico debajo del textarea
       cy.get('textarea#descripcion')
         .parent()
         .find('.error-message')
@@ -677,9 +677,11 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
       cy.get('input#archivo').selectFile('cypress/fixtures/script.bat', { force: true });
       cy.contains('Archivo seleccionado: script.bat').should('be.visible');
 
-      // Forzar error de Descripcion
+      // SOLUCIÓN: Aplicamos la misma técnica del type()
       const desc501 = 'A'.repeat(501);
-      cy.get('textarea#descripcion').invoke('val', desc501).trigger('input').trigger('change');
+      cy.get('textarea#descripcion')
+        .invoke('removeAttr', 'maxlength')
+        .type(desc501, { delay: 0 });
 
       cy.get('button').contains('Aceptar').click();
 
@@ -765,7 +767,7 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
         statusCode: 500,
         body: {
           error: 'Error del servidor',
-          message: 'No se pudo guardar el proyecto'
+          message: 'No se pudo guardar el proyecto' // <--- Este es el mensaje que lee React
         }
       }).as('uploadServerError');
 
@@ -778,9 +780,10 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
 
       cy.wait('@uploadServerError');
 
+      // SOLUCIÓN: Buscamos el texto exacto que enviamos en el mock
       cy.get('.mensaje-global')
         .should('be.visible')
-        .should('contain', 'Error');
+        .should('contain', 'No se pudo guardar el proyecto'); 
 
       cy.url().should('include', '/subircodigo');
     });
