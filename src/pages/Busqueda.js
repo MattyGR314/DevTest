@@ -133,13 +133,6 @@ const Busqueda = () => {
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
             {proyecto.archivo_path && (
-              <a
-                href={`/uploads/${proyecto.archivo_path.split('/').pop()}`}
-                download
-                className="descarga-link"
-              >
-                Descargar archivo
-              </a>
             )}
           </div>
         ))}
