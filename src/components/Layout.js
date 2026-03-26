@@ -22,6 +22,7 @@ function Layout({ children }) {
         <nav className="navegacion d-flex justify-content-center">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
+          <Link to="/registro">Registrarse</Link>
         </nav>
 
         <main className="contenido">
