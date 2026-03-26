@@ -118,7 +118,7 @@ const Busqueda = () => {
 
       {cargando && <div className="cargando">Cargando proyectos...</div>}
 
-      {!cargando && resultados.length === 0 && termino && (
+      {!cargando && resultados.length === 0 && (
         <p className="no-resultados">No se encontraron proyectos.</p>
       )}
 
