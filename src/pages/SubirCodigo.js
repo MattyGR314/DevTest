@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import './SubirCodigo.css';
 
 function SubirCodigo() {
+  const { usuario } = useAuth();
   const [formData, setFormData] = useState({
     nombre: '',
     archivo: null,
-    correo: '', // DT_03_1: Añadimos campo correo
+    correo: usuario || '', // DT_03_1: Añadimos campo correo
   });
 
   const [errores, setErrores] = useState({}); // Para mostrar errores en la UI

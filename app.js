@@ -65,6 +65,37 @@ app.get('/api/test', async (req, res) => {
 });
 
 
+// ===== RUTA DE INICIO DE SESIÓN =====
+app.post('/api/login', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT correo, password_hash FROM usuarios WHERE correo = ?',
+      [correo]
+    );
+    connection.release();
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no registrado' });
+    }
+
+    if (rows[0].password_hash !== contrasena) {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
+    }
+
+    res.json({ correo: rows[0].correo });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // ===== CONFIGURACIÓN DE SUBIDA DE ARCHIVOS =====
 // Asegurar que existe la carpeta uploads
 const uploadDir = 'uploads/';
