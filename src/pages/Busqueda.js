@@ -132,8 +132,6 @@ const Busqueda = () => {
               <p><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
-            {proyecto.archivo_path && (
-            )}
           </div>
         ))}
       </div>
