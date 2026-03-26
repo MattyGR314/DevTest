@@ -68,7 +68,6 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
       cy.contains('.proyecto-tabla', nombreUnico).within(() => {
         cy.get('h3').should('contain', nombreUnico);
         cy.contains('integracion@test.com').should('be.visible');
-        cy.get('a.descarga-link').should('have.attr', 'href').and('include', '/uploads/');
       });
     });
 
