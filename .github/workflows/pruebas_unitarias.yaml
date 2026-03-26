@@ -1,0 +1,61 @@
+name: Pruebas Unitarias Dinámicas
+
+on:
+  push:
+    # Se activará automáticamente con cualquier push a ramas como Dev_DT_05, Dev_DT_11, etc.
+    branches:
+      - 'Dev_DT_*'
+
+jobs:
+  cypress-dynamic-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Construir la aplicación (Frontend)
+        run: npm run build
+
+      - name: Determinar archivo de prueba según la rama
+        id: set-target
+        run: |
+          # 1. Obtenemos el nombre de la rama (ej. Dev_DT_05)
+          RAMA="${{ github.ref_name }}"
+          
+          # 2. Extraemos solo los números usando una expresión regular (ej. 05)
+          NUMERO=$(echo "$RAMA" | grep -oE '[0-9]+')
+          
+          # 3. Construimos la ruta del archivo basándonos en tu formato
+          ARCHIVO="cypress/e2e/prueba-unitaria-DT${NUMERO}.cy.js"
+          
+          echo "La rama actual es: $RAMA"
+          echo "Ejecutando exclusivamente: $ARCHIVO"
+          
+          # 4. Guardamos la ruta en una variable de salida para el siguiente paso
+          echo "test_file=$ARCHIVO" >> $GITHUB_OUTPUT
+
+      - name: Ejecutar prueba unitaria de la unidad
+        uses: cypress-io/github-action@v6
+        with:
+          start: node app.js
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          # Le pasamos a Cypress el archivo exacto que calculamos arriba
+          spec: ${{ steps.set-target.outputs.test_file }}
+        env:
+          NODE_ENV: test
+          CYPRESS: true
+          PORT: 3000
+          DB_HOST: localhost
+          DB_USER: root
+          DB_PASSWORD: password
+          DB_NAME: test_db

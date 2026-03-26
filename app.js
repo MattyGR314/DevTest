@@ -215,10 +215,6 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
   }
 });
 
-// ===== 1. MANEJO DE 404 PARA LA API =====
-// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
-app.use('/api', notFoundHandler); 
-
 // ===== DT_10_T1 RUTA PARA OBTENER PROYECTOS =====
 app.get('/api/proyectos', async (req, res) => {
   try {
@@ -272,6 +268,11 @@ app.get('/api/proyectos', async (req, res) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ===== 1. MANEJO DE 404 PARA LA API =====
+// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+// Movido a aquí en DT_5 como este orden impide los además a funcionar
+app.use('/api', notFoundHandler); 
+
 // ===== ARCHIVOS ESTÁTICOS (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
@@ -289,6 +290,7 @@ app.use(dbErrorHandler);         // error de MySQL
 app.use(genericErrorHandler);    // Si no fue ninguno de los anteriores, es un 500 genérico.
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, function (error) {
   if (error) {
     console.log('Error al iniciar servidor:', error);
