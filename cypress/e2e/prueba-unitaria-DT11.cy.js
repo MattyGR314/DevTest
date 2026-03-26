@@ -51,13 +51,16 @@ describe('DT_11 - Agregar descripción a un proyecto', () => {
     // Esperar confirmación visual de que React cargó el archivo
     cy.contains('Archivo seleccionado: programa.exe', { timeout: 10000 }).should('be.visible');
 
-    // Forzar descripción de 501 caracteres (maxLength lo previene, pero invoke permite)
+    // SOLUCIÓN: Removemos el maxlength del HTML y obligamos a Cypress a teclear 
+    // para que el estado de React se actualice correctamente
     const descripcionInvalida = 'A'.repeat(501);
-    cy.get('textarea#descripcion').invoke('val', descripcionInvalida).trigger('input').trigger('change');
+    cy.get('textarea#descripcion')
+      .invoke('removeAttr', 'maxlength')
+      .type(descripcionInvalida, { delay: 0 });
 
     cy.contains('button', 'Aceptar').click();
 
-    // NUEVA ASERCIÓN: Buscamos el mensaje de error específico debajo del textarea
+    // Verificamos que se muestra el mensaje de error específico debajo del textarea
     cy.get('textarea#descripcion')
       .parent()
       .find('.error-message')
