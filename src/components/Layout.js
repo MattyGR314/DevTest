@@ -13,19 +13,12 @@ function Layout({ children }) {
           <div>
               <span className="Dev">Dev</span><span className="Test">Test</span>
           </div>
-          
-
-          <button class="navbar-toggler mt-4 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    
-              <img src="img/user_img.PNG" alt=""></img>
-                    
-          </button>
         </div>
 
         <nav className="navegacion d-flex justify-content-center">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
-          <Link to="/iniciarsesion">Iniciar Sesión</Link>
+          <Link to="/iniciarSesion">Iniciar Sesión</Link>
         </nav>
 
         <main className="contenido">

@@ -7,8 +7,18 @@ const mysql = require('mysql2/promise');
 
 const multer = require('multer');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+const { 
+  notFoundHandler,
+  multerErrorHandler,
+  validationErrorHandler,
+  authErrorHandler,
+  dbErrorHandler, 
+  genericErrorHandler 
+} = require("./middleware/errorHandler");
+
 
 // Detectar si estamos en entorno de pruebas
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true';
@@ -18,6 +28,32 @@ const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS
 if (isTestEnvironment) {
   console.log('🧪 ENTORNO DE PRUEBAS DETECTADO');
 }
+
+// ===== CONFIGURACIÓN DE RATE LIMIT (ERROR 429) =====
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Ventana de 15 minutos
+  max: 30, // Límite estricto: máximo 30 subidas por IP cada 15 minutos
+  standardHeaders: true, 
+  legacyHeaders: false,
+  // Esta es la respuesta 429 que verá el cliente:
+  message: {
+    status: 'error',
+    message: 'Demasiadas peticiones desde esta IP. Por favor, intenta de nuevo en 15 minutos.',
+    code: 'TOO_MANY_REQUESTS'
+  },
+  skip: (req, res) => isTestEnvironment
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutos
+  max: 100, // 100 peticiones por IP a la API en general
+  message: {
+    status: 'error',
+    message: 'Has excedido el límite de peticiones a la API.',
+    code: 'TOO_MANY_REQUESTS'
+  },
+  skip: (req, res) => isTestEnvironment
+});
 
 // Pool de conexiones a MySQL
 const pool = mysql.createPool({
@@ -38,8 +74,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== RUTAS API (ANTES de archivos estáticos) =====
 
+app.use('/api', apiLimiter); // Aplica el limitador a todas las rutas que comienzan con /api
+
 // Ruta para verificar estado de conexión a BD
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
@@ -47,12 +85,12 @@ app.get('/api/health', async (req, res) => {
     res.json({ status: 'ok', message: 'Aplicación y BD conectadas correctamente' });
   } catch (error) {
     console.error('Error de conexión a BD:', error);
-    res.status(500).json({ status: 'error', message: 'Error en conexión a BD', error: error.message });
+    next(error);
   }
 });
 
 // Ruta de prueba - obtener datos de la BD
-app.get('/api/test', async (req, res) => {
+app.get('/api/test', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.query('SELECT DATABASE() as current_database;');
@@ -60,7 +98,7 @@ app.get('/api/test', async (req, res) => {
     res.json({ message: 'Conectado a la BD', data: rows });
   } catch (error) {
     console.error('Error en query:', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
@@ -116,7 +154,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ===== RUTA PARA SUBIR ARCHIVOS =====
-app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
+app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, res, next) => {
   try {
 
     // Verificar si ya existe un proyecto con el mismo nombre (DT_03_6)
@@ -191,41 +229,42 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
 
     connection.release();
 
-    res.json({ 
+    return res.json({ 
       message: 'Archivo subido correctamente',
       id: result.insertId,
       nombre: nombre,
       correo: correo,
       archivo: archivo ? archivo.filename : null,
-      descripcion: descripcion
-    });
+      descripcion: descripcion,
+      redirectTo: '/confirmacion'
+      });
+    
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);
     console.error('Error completo:', error);
-    
-    // Enviar respuesta con detalles del error
-    res.status(500).json({ 
-      error: 'Error al guardar proyecto',
-      detalles: error.message,
-      codigo: error.code
-    });
+    next(error);
   }
 });
 
+// ===== 1. MANEJO DE 404 PARA LA API =====
+// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+app.use('/api', notFoundHandler); 
 
-// ===== ARCHIVOS ESTÁTICOS (React) =====
+// ===== 2. ARCHIVOS ESTÁTICOS Y FRONTEND (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
-// Manejo de rutas SPA - servir index.html para todas las rutas no API
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// Manejo de errores
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Error del servidor');
-});
+// ===== 3. EMBUDO DE MANEJO DE ERRORES =====
+// Si cualquier ruta hace next(error), caerá por este embudo en orden:
+
+app.use(multerErrorHandler);     // error al subir un archivo
+app.use(validationErrorHandler); // error de datos mal formateados
+app.use(authErrorHandler);       // error de sesión o permisos
+app.use(dbErrorHandler);         // error de MySQL
+app.use(genericErrorHandler);    // Si no fue ninguno de los anteriores, es un 500 genérico.
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function (error) {
