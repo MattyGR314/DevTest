@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SubirCodigo.css';
 
@@ -12,13 +11,9 @@ const INITIAL_STATE = {
 
 function SubirCodigo() {
   const { usuario } = useAuth();
-  const [formData, setFormData] = useState({
-    nombre: '',
-    archivo: null,
-    correo: usuario || '', // DT_03_1: Añadimos campo correo
-  });
-
-  const [formData, setFormData] = useState(INITIAL_STATE);
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [formData, setFormData] = useState({ ...INITIAL_STATE, correo: usuario || '' });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
