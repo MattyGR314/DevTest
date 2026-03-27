@@ -126,7 +126,12 @@ describe('DT_10 - Consultar proyecto', () => {
     cy.get('button[type="submit"]').click();
     cy.wait('@searchProyectos');
 
-    // Verificar que aparecen resultados
+    // Verificar que se habilita el botón de detalle y navegar al resultado
+    cy.contains('button', 'Ver detalles').should('not.be.disabled').click();
+
+    // Verificar navegación y detalle del proyecto en la vista de resultado
+    cy.url().should('include', '/resultado-consulta/111');
+    cy.contains('Detalle del proyecto').should('be.visible');
     cy.contains('Proyecto Test').should('be.visible');
   });
 
