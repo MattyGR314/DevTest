@@ -10,8 +10,8 @@ module.exports = defineConfig({
     // URL base de tu aplicación (ajusta el puerto si es diferente)
     baseUrl: 'http://localhost:3000',
     
-    // Aquí especificas dónde buscar las pruebas E2E
-    specPattern: 'cypress/e2e/subir-codigo.cy.js',
+    // Aqui especificas donde buscar las pruebas E2E
+    specPattern: 'cypress/e2e/**/*.cy.js',
     
     // Archivo de soporte (comandos personalizados)
     supportFile: 'cypress/support/e2e.js',
