@@ -42,7 +42,7 @@ function SeleccionarProyecto() {
     if (!formData.nombre.trim()) {
       nuevosErrores.nombre = "El nombre es obligatorio";
     } else if (formData.nombre.trim().length < 2) {
-      nuevosErrores.nombre = "El nombre debe tener al menos 3 caracteres";
+      nuevosErrores.nombre = "El nombre debe tener al menos 2 caracteres";
     }
     
     if (!formData.correo.trim()) {
@@ -130,7 +130,7 @@ function SeleccionarProyecto() {
         <div className="error-message">{errores.general}</div>
       )}
 
-      <form id="inscripcion" onSubmit={handleSubmit}>
+      <form id="inscripcion" onSubmit={handleSubmit} noValidate>
         <div className="form-group">
           <label htmlFor="nombre">
             Nombre <span className="required">*</span>
