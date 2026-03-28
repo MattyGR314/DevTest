@@ -41,7 +41,7 @@ function SeleccionarProyecto() {
     
     if (!formData.nombre.trim()) {
       nuevosErrores.nombre = "El nombre es obligatorio";
-    } else if (formData.nombre.trim().length < 3) {
+    } else if (formData.nombre.trim().length < 2) {
       nuevosErrores.nombre = "El nombre debe tener al menos 3 caracteres";
     }
     

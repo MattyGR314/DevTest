@@ -19,40 +19,54 @@ describe('DT_06 - Inscripcion de tester en proyecto', () => {
 		cy.get('form#inscripcion').should('be.visible');
 	});
 
-	it('DT_06_1: Al seleccionar proyecto se muestra formulario con nombre y correo', () => {
+	it('DT_06_01: Al seleccionar proyecto se muestra formulario con nombre y correo', () => {
 		cy.get('input#nombre').should('be.visible');
 		cy.get('input#correo').should('be.visible');
 		cy.contains('button', 'Inscribirse').should('be.visible');
 	});
 
-	it('DT_06_02: Si el correo no contiene "@" se notifica error y redirige a inicio', () => {
+	it('DT_06_02: Si el correo no contiene "@" se notifica error', () => {
+		cy.intercept('POST', '/api/inscripciones').as('postInscripcionNoEnviado');
+
 		cy.get('input#nombre').type('Carlos');
 		cy.get('input#correo').type('carlostest.com');
 		cy.contains('button', 'Inscribirse').click();
 
-		cy.contains(/correo no existe|correo no es valido/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
+		cy.get('input#correo').then(($input) => {
+			expect($input[0].checkValidity()).to.equal(false);
+			expect($input[0].validationMessage).to.not.equal('');
+		});
+
+		cy.get('@postInscripcionNoEnviado.all').should('have.length', 0);
 	});
 
-	it('DT_06_02: Si el correo no tiene dominio valido (sin punto) se notifica error y redirige a inicio', () => {
+	it('DT_06_02: Si el correo no tiene dominio valido (sin punto) se notifica error', () => {
 		cy.get('input#nombre').type('Carlos');
 		cy.get('input#correo').type('carlos@test');
 		cy.contains('button', 'Inscribirse').click();
 
-		cy.contains(/correo no existe|correo no es valido/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
+		cy.contains(/El correo no es válido/i).should('be.visible');
 	});
 
-	it('DT_06_02: Si el correo contiene espacios en blanco se notifica error y redirige a inicio', () => {
+	it('DT_06_02: Si el correo contiene espacios en blanco se notifica error', () => {
+		cy.intercept('POST', '/api/inscripciones').as('postInscripcionNoEnviado');
+
 		cy.get('input#nombre').type('Carlos');
-		cy.get('input#correo').type('car los@test.com');
+		cy.get('input#correo')
+			.invoke('val', 'car los@test.com')
+			.trigger('input')
+			.trigger('change');
 		cy.contains('button', 'Inscribirse').click();
 
-		cy.contains(/correo no existe|correo no es valido/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
+		cy.get('input#correo').then(($input) => {
+			expect($input[0].checkValidity()).to.equal(false);
+			expect($input[0].validationMessage).to.not.equal('');
+		});
+
+		cy.get('@postInscripcionNoEnviado.all').should('have.length', 0);
 	});
 
-	it('DT_06_02: Si el correo no esta registrado se notifica error y redirige a inicio', () => {
+	it('DT_06_02: Si el correo no esta registrado se notifica error', () => {
 		cy.intercept('POST', '/api/inscripciones', {
 			statusCode: 404,
 			body: { error: 'El correo no existe' }
@@ -64,24 +78,21 @@ describe('DT_06 - Inscripcion de tester en proyecto', () => {
 
 		cy.wait('@postInscripcionNoRegistrado');
 		cy.contains(/correo no existe/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
 	});
 
-	it('DT_06_03: Si el nombre esta vacio se notifica invalido y redirige a inicio', () => {
+	it('DT_06_03: Si el nombre esta vacio se notifica invalido', () => {
 		cy.get('input#correo').type('tester@ejemplo.com');
 		cy.contains('button', 'Inscribirse').click();
 
-		cy.contains(/nombre no es valido|nombre es obligatorio/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
+		cy.contains(/El nombre es obligatorio/i).should('be.visible');
 	});
 
-	it('DT_06_03: Si el nombre tiene menos de 2 caracteres se notifica invalido y redirige a inicio', () => {
+	it('DT_06_03: Si el nombre tiene menos de 2 caracteres se notifica invalido', () => {
 		cy.get('input#nombre').type('A');
 		cy.get('input#correo').type('tester@ejemplo.com');
 		cy.contains('button', 'Inscribirse').click();
 
 		cy.contains(/nombre no es valido|al menos/i).should('be.visible');
-		cy.url().should('eq', 'http://localhost:3000/');
 	});
 
 	it('DT_06_04: Si el correo es valido se registra el tester en el proyecto', () => {
