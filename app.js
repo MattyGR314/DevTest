@@ -7,8 +7,18 @@ const mysql = require('mysql2/promise');
 
 const multer = require('multer');
 const fs = require('fs');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+const { 
+  notFoundHandler,
+  multerErrorHandler,
+  validationErrorHandler,
+  authErrorHandler,
+  dbErrorHandler, 
+  genericErrorHandler 
+} = require("./middleware/errorHandler");
+
 
 // Detectar si estamos en entorno de pruebas
 const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS === 'true';
@@ -18,6 +28,32 @@ const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.CYPRESS
 if (isTestEnvironment) {
   console.log('🧪 ENTORNO DE PRUEBAS DETECTADO');
 }
+
+// ===== CONFIGURACIÓN DE RATE LIMIT (ERROR 429) =====
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Ventana de 15 minutos
+  max: 30, // Límite estricto: máximo 30 subidas por IP cada 15 minutos
+  standardHeaders: true, 
+  legacyHeaders: false,
+  // Esta es la respuesta 429 que verá el cliente:
+  message: {
+    status: 'error',
+    message: 'Demasiadas peticiones desde esta IP. Por favor, intenta de nuevo en 15 minutos.',
+    code: 'TOO_MANY_REQUESTS'
+  },
+  skip: (req, res) => isTestEnvironment
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutos
+  max: 100, // 100 peticiones por IP a la API en general
+  message: {
+    status: 'error',
+    message: 'Has excedido el límite de peticiones a la API.',
+    code: 'TOO_MANY_REQUESTS'
+  },
+  skip: (req, res) => isTestEnvironment
+});
 
 // Pool de conexiones a MySQL
 const pool = mysql.createPool({
@@ -38,8 +74,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== RUTAS API (ANTES de archivos estáticos) =====
 
+app.use('/api', apiLimiter); // Aplica el limitador a todas las rutas que comienzan con /api
+
 // Ruta para verificar estado de conexión a BD
-app.get('/api/health', async (req, res) => {
+app.get('/api/health', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     await connection.ping();
@@ -47,12 +85,12 @@ app.get('/api/health', async (req, res) => {
     res.json({ status: 'ok', message: 'Aplicación y BD conectadas correctamente' });
   } catch (error) {
     console.error('Error de conexión a BD:', error);
-    res.status(500).json({ status: 'error', message: 'Error en conexión a BD', error: error.message });
+    next(error);
   }
 });
 
 // Ruta de prueba - obtener datos de la BD
-app.get('/api/test', async (req, res) => {
+app.get('/api/test', async (req, res, next) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.query('SELECT DATABASE() as current_database;');
@@ -60,7 +98,7 @@ app.get('/api/test', async (req, res) => {
     res.json({ message: 'Conectado a la BD', data: rows });
   } catch (error) {
     console.error('Error en query:', error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
@@ -205,7 +243,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ===== RUTA PARA SUBIR ARCHIVOS =====
-app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
+app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, res, next) => {
   try {
 
     // Verificar si ya existe un proyecto con el mismo nombre (DT_03_6)
@@ -219,6 +257,7 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     const { nombre, correo } = req.body;
     const archivo = req.file;
     const filePath = archivo ? archivo.path : null;
+    const descripcion = req.body.descripcion || null;
 
     // Validar campos obligatorios
     if (!nombre) {
@@ -272,49 +311,106 @@ app.post('/subircodigo', upload.single('archivo'), async (req, res) => {
     // Insertar en la base de datos (SIN campo estado)
     console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, correo, archivo_path) VALUES (?, ?, ?)',
-      [nombre, correo, filePath]
+      'INSERT INTO proyectos (nombre, correo, archivo_path, descripcion) VALUES (?, ?, ?, ?)',
+      [nombre, correo, filePath, descripcion]
     );
     console.log('✓ Datos insertados. ID:', result.insertId);
 
     connection.release();
 
-    res.json({ 
+    return res.json({ 
       message: 'Archivo subido correctamente',
       id: result.insertId,
       nombre: nombre,
       correo: correo,
-      archivo: archivo ? archivo.filename : null
-    });
+      archivo: archivo ? archivo.filename : null,
+      descripcion: descripcion,
+      redirectTo: '/confirmacion'
+      });
+    
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error.message);
     console.error('Error completo:', error);
-    
-    // Enviar respuesta con detalles del error
-    res.status(500).json({ 
-      error: 'Error al guardar proyecto',
-      detalles: error.message,
-      codigo: error.code
-    });
+    next(error);
   }
 });
 
+// ===== DT_10_T1 RUTA PARA OBTENER PROYECTOS =====
+app.get('/api/proyectos', async (req, res) => {
+  try {
+    const termino = req.query.q;      // Término de búsqueda
+    const campo = req.query.campo;    // Campo a buscar: 'nombre', 'id', 'descripcion'
+
+    const connection = await pool.getConnection();
+
+    let query = '';
+    let params = [];
+
+    // Si hay término de búsqueda, construimos la consulta según el campo
+    if (termino && termino.trim() !== '') {
+      switch (campo) {
+        case 'id':
+          // Buscar por ID exacto (convertir a número si es posible)
+          const idBuscado = parseInt(termino, 10);
+          if (isNaN(idBuscado)) {
+            query = 'SELECT * FROM proyectos WHERE 1 = 0';
+          } else {
+            query = 'SELECT * FROM proyectos WHERE id = ?';
+            params = [idBuscado];
+          }
+          break;
+        case 'descripcion':
+          // Buscar por descripción (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE descripcion LIKE ?';
+          params = [`%${termino}%`];
+          break;
+        case 'nombre':
+        default:
+          // Buscar por nombre (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE nombre LIKE ?';
+          params = [`%${termino}%`];
+          break;
+      }
+    } else {
+      // Sin término: obtener todos los proyectos ordenados por fecha descendente
+      query = 'SELECT * FROM proyectos ORDER BY fecha_creacion DESC';
+    }
+
+    const [rows] = await connection.query(query, params);
+    connection.release();
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener proyectos:', error);
+    res.status(500).json({ error: 'Error al obtener proyectos', detalles: error.message });
+  }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== 1. MANEJO DE 404 PARA LA API =====
+// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+// Movido a aquí en DT_5 como este orden impide los además a funcionar
+app.use('/api', notFoundHandler); 
 
 // ===== ARCHIVOS ESTÁTICOS (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
-// Manejo de rutas SPA - servir index.html para todas las rutas no API
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// Manejo de errores
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Error del servidor');
-});
+// ===== 3. EMBUDO DE MANEJO DE ERRORES =====
+// Si cualquier ruta hace next(error), caerá por este embudo en orden:
+
+app.use(multerErrorHandler);     // error al subir un archivo
+app.use(validationErrorHandler); // error de datos mal formateados
+app.use(authErrorHandler);       // error de sesión o permisos
+app.use(dbErrorHandler);         // error de MySQL
+app.use(genericErrorHandler);    // Si no fue ninguno de los anteriores, es un 500 genérico.
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, function (error) {
   if (error) {
     console.log('Error al iniciar servidor:', error);

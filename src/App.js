@@ -4,6 +4,9 @@ import Layout from './components/Layout';
 import Inicio from './pages/Inicio';
 import SubirCodigo from './pages/SubirCodigo';
 import SeleccionarProyecto from './pages/SeleccionarProyecto';
+import ConfirmacionSubida from './pages/confirmacionSubida';
+import Busqueda from './pages/Busqueda';  // DT_10_T1
+import ResultadoConsulta from './pages/ResultadoConsulta';
 import './App.css';
 
 function App() {
@@ -14,6 +17,9 @@ function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/subircodigo" element={<SubirCodigo />} />
           <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
+          <Route path="/confirmacion" element={<ConfirmacionSubida />} /> 
+          <Route path="/busqueda" element={<Busqueda />} /> {/*DT_10_T1*/}
+          <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
         </Routes>
       </Layout>
     </Router>
