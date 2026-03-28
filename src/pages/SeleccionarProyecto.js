@@ -97,7 +97,7 @@ function SeleccionarProyecto() {
         throw new Error(datos.error || "Error al guardar la inscripción");
       }
 
-      const datos = await respuesta.json();
+      await respuesta.json();
       setExito(true);
       // Limpiar formulario
       setFormData({ nombre: "", correo: "" });
@@ -130,7 +130,7 @@ function SeleccionarProyecto() {
         <div className="error-message">{errores.general}</div>
       )}
 
-      <form id="inscripcion" onSubmit={handleSubmit} noValidate>
+      <form id="inscripcion" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="nombre">
             Nombre <span className="required">*</span>
