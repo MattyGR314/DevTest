@@ -12,7 +12,7 @@ function Layout({ children }) {
           </div>
           
 
-          <button class="navbar-toggler mt-4 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <button className="navbar-toggler mt-4 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     
               <img src="img/user_img.PNG" alt=""></img>
                     
@@ -22,6 +22,7 @@ function Layout({ children }) {
         <nav className="navegacion d-flex justify-content-center">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
+          <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
         </nav>
 
         <main className="contenido">

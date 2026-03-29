@@ -69,3 +69,16 @@ curl http://localhost:3000/api/health
 - El directorio `uploads/` se crea automáticamente al subir archivos.
 - Mantén `.env` fuera del control de versiones; ya está ignorado por `.gitignore`.
 - Si despliegas, recuerda que `build/` debe copiarse junto con `app.js` y `.env`.
+
+- `src/` - Código fuente de React
+  - `components/` - Componentes reutilizables
+  - `pages/` - Páginas de la aplicación
+  - `App.js` - Componente principal
+- `public/` - Archivos estáticos
+
+## Instalación para Docker
+
+docker build -t mi-app .
+
+docker run -p 3000:3000 --env-file .env --name my-app mi-app
+
