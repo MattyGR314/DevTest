@@ -102,6 +102,10 @@ describe('DT_01 - Registro de usuario', () => {
 
 
   it('DT_01_8: Mostrar estado de envío y deshabilitar botones mientras se procesa el registro', () => {
+    cy.window().then((win) => {
+      cy.stub(win, 'alert').as('alertRegistroLento');
+    });
+
     cy.intercept('POST', '/api/registro', {
       delay: 1200,
       statusCode: 201,
@@ -115,7 +119,9 @@ describe('DT_01 - Registro de usuario', () => {
     cy.contains('button', 'Cancelar').should('be.disabled');
 
     cy.wait('@postRegistroLento');
-    cy.contains('button', 'Registrarse').should('be.visible').and('not.be.disabled');
+    cy.get('@postRegistroLento').its('response.statusCode').should('eq', 201);
+    cy.get('@alertRegistroLento')
+      .should('have.been.calledWith', 'Usuario registrado correctamente. Ya puedes iniciar sesión.');
   });
 
   it('DT_01_9: Enviar payload correcto, mostrar alerta y redirigir en registro exitoso', () => {
