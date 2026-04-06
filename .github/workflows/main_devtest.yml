@@ -32,7 +32,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build app
         run: npm run build
@@ -51,8 +51,10 @@ jobs:
       - name: Prepare deployment package
         if: success() && github.event_name == 'push'
         run: |
+          npm prune --omit=dev
           mkdir -p deploy-package
           cp -r build deploy-package/build
+          cp -r node_modules deploy-package/node_modules
           cp app.js deploy-package/app.js
           cp package.json deploy-package/package.json
           cp package-lock.json deploy-package/package-lock.json
@@ -85,19 +87,42 @@ jobs:
   deploy_azure:
     name: Deploy to Azure Web App
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: build_test
     if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'Dev')
+    concurrency:
+      group: deploy-devtest-${{ github.ref_name }}
+      cancel-in-progress: true
 
     steps:
       - name: Download deploy artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app-deploy
-          path: .
+          path: deploy-package
+
+      - name: Configure Azure app settings for prebuilt deploy
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: DevTest
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "false",
+                "slotSetting": false
+              },
+              {
+                "name": "ENABLE_ORYX_BUILD",
+                "value": "false",
+                "slotSetting": false
+              }
+            ]
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: DevTest
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          package: deploy-package
