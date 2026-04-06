@@ -32,7 +32,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build app
         run: npm run build
@@ -48,27 +48,6 @@ jobs:
           wait-on-timeout: 120
           browser: chrome
 
-      - name: Prepare deployment package
-        if: success() && github.event_name == 'push'
-        run: |
-          npm prune --omit=dev
-          mkdir -p deploy-package
-          cp -r build deploy-package/build
-          cp -r node_modules deploy-package/node_modules
-          cp app.js deploy-package/app.js
-          cp package.json deploy-package/package.json
-          cp package-lock.json deploy-package/package-lock.json
-          cp web.config deploy-package/web.config
-          cp -r middleware deploy-package/middleware
-
-      - name: Upload deploy artifact
-        if: success() && github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app-deploy
-          path: deploy-package
-          if-no-files-found: error
-
       # Estos pasos solo se ejecutan si lo de arriba falla o termina
       - name: Upload artifact
         if: always() 
@@ -83,46 +62,3 @@ jobs:
         with:
           name: cypress-screenshots
           path: cypress/screenshots
-
-  deploy_azure:
-    name: Deploy to Azure Web App
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: build_test
-    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'Dev')
-    concurrency:
-      group: deploy-devtest-${{ github.ref_name }}
-      cancel-in-progress: true
-
-    steps:
-      - name: Download deploy artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app-deploy
-          path: deploy-package
-
-      - name: Configure Azure app settings for prebuilt deploy
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: DevTest
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          app-settings-json: |
-            [
-              {
-                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-                "value": "false",
-                "slotSetting": false
-              },
-              {
-                "name": "ENABLE_ORYX_BUILD",
-                "value": "false",
-                "slotSetting": false
-              }
-            ]
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: DevTest
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: deploy-package
