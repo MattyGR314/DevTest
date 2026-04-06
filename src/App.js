@@ -6,6 +6,7 @@ import SubirCodigo from './pages/SubirCodigo';
 import ConfirmacionSubida from './pages/confirmacionSubida';
 import Busqueda from './pages/Busqueda';  // DT_10_T1
 import ResultadoConsulta from './pages/ResultadoConsulta';
+import Registro from './pages/Registro';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Inicio />} />
+          <Route path="/registro" element={<Registro />} />
           <Route path="/subircodigo" element={<SubirCodigo />} />
           <Route path="/confirmacion" element={<ConfirmacionSubida />} /> 
           <Route path="/busqueda" element={<Busqueda />} /> {/*DT_10_T1*/}
