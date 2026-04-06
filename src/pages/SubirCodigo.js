@@ -176,6 +176,13 @@ function SubirCodigo() {
         return;
       }
 
+      if (response.status === 400 && result.codigo === 'USUARIO_NO_REGISTRADO') {
+        setErrores({ correo: 'El correo debe corresponder a un usuario registrado' });
+        alert('Correo no vinculado a usuario registrado');
+        setEnviando(false);
+        return;
+      }
+
       if (response.ok) {
         setMensaje('Archivo subido correctamente');
         handleReset();
