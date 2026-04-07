@@ -1,27 +1,20 @@
 //creado en DT_10_T1
 import React, { useState, useEffect } from 'react';
-//para el boton de consultar detalles
 import { useNavigate } from 'react-router-dom';
-//
 import './Busqueda.css';
 
 const Busqueda = () => {
-  //para el boton de consultar detalles
   const navigate = useNavigate();
-  //
-  const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
-  const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
+  const [termino, setTermino] = useState('');
+  const [campo, setCampo] = useState('nombre');
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
-  //para el boton de consultar detalles
-  const [detalleProyectoId, setDetalleProyectoId] = useState(null);
-  //
 
   useEffect(() => {
     fetchProyectos();
   }, []);
-                    //DT_10_T1  termino         tipo
+
   const fetchProyectos = async (query = '', searchField = '') => {
     setCargando(true);
     setError('');
@@ -34,24 +27,8 @@ const Busqueda = () => {
       if (!response.ok) throw new Error('Error al cargar proyectos');
       const data = await response.json();
       setResultados(data);
-      
-      //para el boton de consultar detalles
-      const queryLimpia = query.trim();
-      if (searchField === 'nombre' && queryLimpia !== '' && data.length > 0) {
-        const exacto = data.find((proyecto) =>
-          (proyecto.nombre || '').toLowerCase() === queryLimpia.toLowerCase()
-        );
-        const proyectoDestino = exacto || data[0];
-        setDetalleProyectoId(proyectoDestino.id);
-      } else {
-        setDetalleProyectoId(null);
-      }
-      //
     } catch (err) {
       setError(err.message);
-      //para el boton de consultar detalles
-      setDetalleProyectoId(null);
-      //
     } finally {
       setCargando(false);
     }
@@ -62,25 +39,25 @@ const Busqueda = () => {
     fetchProyectos(termino, campo);
   };
 
-    const getPlaceholder = () => {
+  const getPlaceholder = () => {
     switch (campo) {
-      case 'nombre':
-        return 'Buscar por nombre...';
-      case 'id':
-        return 'Buscar por ID...';
-      case 'descripcion':
-        return 'Buscar por descripción...';
-      default:
-        return 'Buscar...';
+      case 'nombre': return 'Buscar por nombre...';
+      case 'id': return 'Buscar por ID...';
+      case 'descripcion': return 'Buscar por descripción...';
+      default: return 'Buscar...';
     }
   };
 
   return (
     <div className="contenedor-busqueda">
-      <h2>Búsqueda de Proyectos</h2>
+
+      <div className="busqueda-cabecera">
+        <h2>Búsqueda de Proyectos</h2>
+        <p className="busqueda-subtitulo">Encuentra proyectos por nombre, ID o descripción</p>
+      </div>
+
       <form onSubmit={handleSearch} className="formula-busqueda">
         <div className="formula-grupo">
-          {/* DT_5_T1 menu de seleccion*/}
           <select
             value={campo}
             onChange={(e) => setCampo(e.target.value)}
@@ -98,44 +75,66 @@ const Busqueda = () => {
             onChange={(e) => setTermino(e.target.value)}
             className="busqueda-input"
           />
+
           <button type="submit" disabled={cargando} className="busqueda-boton">
             {cargando ? 'Buscando...' : 'Buscar'}
-          </button>
-
-          <button
-            type="button" //para el boton de consultar detalles
-            className="detalle-directo-boton"   
-            disabled={cargando || !detalleProyectoId}
-            onClick={() => navigate(`/resultado-consulta/${detalleProyectoId}`)}
-          >
-            Ver detalles
           </button>
         </div>
       </form>
 
-      {/* DT_5_T1 infos de error*/}
       {error && <div className="error-mensaje">{error}</div>}
 
-      {cargando && <div className="cargando">Cargando proyectos...</div>}
-
-      {!cargando && resultados.length === 0 && (
-        <p className="no-resultados">No se encontraron proyectos.</p>
+      {cargando && (
+        <div className="cargando">
+          <div className="cargando-spinner"></div>
+          Cargando proyectos...
+        </div>
       )}
 
-      {/* DT_5_T1 mostrar la tabla del resultado*/}
+      {!cargando && resultados.length === 0 && !error && (
+        <div className="no-resultados">
+          <p>No se encontraron proyectos.</p>
+        </div>
+      )}
+
+      {!cargando && resultados.length > 0 && (
+        <p className="resultados-contador">
+          {resultados.length} proyecto{resultados.length !== 1 ? 's' : ''} encontrado{resultados.length !== 1 ? 's' : ''}
+        </p>
+      )}
+
       <div className="resultados-list">
         {resultados.map((proyecto) => (
-          <div key={proyecto.id} className="proyecto-tabla">
-            <h3>{proyecto.nombre}</h3>
-            <p><strong>Correo:</strong> {proyecto.correo}</p>
-            {(proyecto.descripcion || proyecto.description) && (
-              <p><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
-            )}
-            <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
+          <div key={proyecto.id} className="proyecto-card">
+            <div className="proyecto-card-info">
+              <div className="proyecto-card-id">#{proyecto.id}</div>
+              <h3 className="proyecto-card-nombre">{proyecto.nombre}</h3>
+              <p className="proyecto-card-dato">
+                <span className="proyecto-card-etiqueta">Correo:</span> {proyecto.correo}
+              </p>
+              {(proyecto.descripcion || proyecto.description) && (
+                <p className="proyecto-card-dato proyecto-card-descripcion">
+                  <span className="proyecto-card-etiqueta">Descripción:</span>{' '}
+                  {proyecto.descripcion || proyecto.description}
+                </p>
+              )}
+              <p className="proyecto-card-dato proyecto-card-fecha">
+                Subido el {new Date(proyecto.fecha_creacion).toLocaleDateString('es-ES', {
+                  day: '2-digit', month: 'long', year: 'numeric'
+                })}
+              </p>
+            </div>
+            <div className="proyecto-card-acciones">
+              <button
+                className="consulta-boton"
+                onClick={() => navigate(`/resultado-consulta/${proyecto.id}`)}
+              >
+                Ver consulta
+              </button>
+            </div>
           </div>
         ))}
       </div>
-
 
     </div>
   );
