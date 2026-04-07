@@ -9,7 +9,7 @@ import ConfirmacionSubida from './pages/confirmacionSubida';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
-import SeleccionarProyecto from './pages/SeleccionarProyecto';
+
 
 import './App.css';
 
