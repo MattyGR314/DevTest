@@ -1,21 +1,14 @@
 //creado en DT_10_T1
 import React, { useState, useEffect, useRef } from 'react';
-//para el boton de consultar detalles
-import { useNavigate } from 'react-router-dom';
-//
+import { Link } from 'react-router-dom';
 import './Busqueda.css';
 
 const Busqueda = () => {
-  //para el boton de consultar detalles
-  const navigate = useNavigate();
-  //
   const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
   const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
-  //para el boton de consultar detalles
-  const [detalleProyectoId, setDetalleProyectoId] = useState(null);
   const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
   const [descripcionEditada, setDescripcionEditada] = useState('');
   const [errorDescripcion, setErrorDescripcion] = useState('');
@@ -46,24 +39,9 @@ const Busqueda = () => {
       if (!response.ok) throw new Error('Error al cargar proyectos');
       const data = await response.json();
       setResultados(data);
-      
-      //para el boton de consultar detalles
-      const queryLimpia = query.trim();
-      if (searchField === 'nombre' && queryLimpia !== '' && data.length > 0) {
-        const exacto = data.find((proyecto) =>
-          (proyecto.nombre || '').toLowerCase() === queryLimpia.toLowerCase()
-        );
-        const proyectoDestino = exacto || data[0];
-        setDetalleProyectoId(proyectoDestino.id);
-      } else {
-        setDetalleProyectoId(null);
-      }
-      //
     } catch (err) {
+      setError(err.message);
       setError('Error al cargar proyectos');
-      //para el boton de consultar detalles
-      setDetalleProyectoId(null);
-      //
     } finally {
       setCargando(false);
     }
@@ -183,15 +161,6 @@ const Busqueda = () => {
           <button type="submit" disabled={cargando} className="busqueda-boton">
             {cargando ? 'Buscando...' : 'Buscar'}
           </button>
-
-          <button
-            type="button" //para el boton de consultar detalles
-            className="detalle-directo-boton"   
-            disabled={cargando || !detalleProyectoId}
-            onClick={() => navigate(`/resultado-consulta/${detalleProyectoId}`)}
-          >
-            Ver detalles
-          </button>
         </div>
       </form>
 
@@ -208,7 +177,11 @@ const Busqueda = () => {
       <div className="resultados-list">
         {resultados.map((proyecto) => (
           <div key={proyecto.id} className="proyecto-tabla">
-            <h3>{proyecto.nombre}</h3>
+            <h3>
+              <Link to={`/resultado-consulta/${proyecto.id}`} className="proyecto-link">
+                {proyecto.nombre}
+              </Link>
+            </h3>
             <p><strong>Correo:</strong> {proyecto.correo}</p>
             {(proyecto.descripcion || proyecto.description) && (
               <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
