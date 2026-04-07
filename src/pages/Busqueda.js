@@ -20,6 +20,13 @@ const Busqueda = () => {
     fetchProyectos();
   }, []);
 
+  useEffect(() => {
+    if (proyectoEnEdicion && textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.max(150, textareaRef.current.scrollHeight)}px`;
+    }
+  }, [descripcionEditada, proyectoEnEdicion]);
+                    //DT_10_T1  termino         tipo
   const fetchProyectos = async (query = '', searchField = '') => {
     setCargando(true);
     setError('');
@@ -45,25 +52,95 @@ const Busqueda = () => {
     fetchProyectos(termino, campo);
   };
 
-  const getPlaceholder = () => {
+  const abrirEditorDescripcion = (proyecto) => {
+    setProyectoEnEdicion(proyecto);
+    setDescripcionEditada(proyecto.descripcion || proyecto.description || '');
+    setErrorDescripcion('');
+  };
+
+  const cerrarEditorDescripcion = () => {
+    if (guardandoDescripcion) return;
+    setProyectoEnEdicion(null);
+    setDescripcionEditada('');
+    setErrorDescripcion('');
+  };
+
+  const handleDescripcionChange = (e) => {
+    const { value } = e.target;
+    setDescripcionEditada(value);
+
+    if (e.target.tagName === 'TEXTAREA') {
+      e.target.style.height = 'auto';
+      e.target.style.height = `${Math.max(150, e.target.scrollHeight)}px`;
+    }
+
+    if (errorDescripcion) {
+      setErrorDescripcion('');
+    }
+  };
+
+  const guardarDescripcion = async (e) => {
+    e.preventDefault();
+
+    if (!proyectoEnEdicion || guardandoDescripcion) return;
+
+    const descripcionNormalizada = descripcionEditada.trim();
+    if (descripcionNormalizada.length > 500) {
+      setErrorDescripcion('La descripción no puede exceder 500 caracteres');
+      return;
+    }
+
+    setGuardandoDescripcion(true);
+    setErrorDescripcion('');
+
+    try {
+      const response = await fetch(`/api/proyectos/${proyectoEnEdicion.id}/descripcion`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ descripcion: descripcionEditada }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'No se pudo actualizar la descripción');
+      }
+
+      setResultados((prev) => prev.map((proyecto) => (
+        proyecto.id === proyectoEnEdicion.id
+          ? { ...proyecto, descripcion: data.descripcion || '' }
+          : proyecto
+      )));
+      setProyectoEnEdicion(null);
+      setDescripcionEditada('');
+    } catch (err) {
+      setErrorDescripcion(err.message || 'No se pudo actualizar la descripción');
+    } finally {
+      setGuardandoDescripcion(false);
+    }
+  };
+
+    const getPlaceholder = () => {
     switch (campo) {
-      case 'nombre': return 'Buscar por nombre...';
-      case 'id': return 'Buscar por ID...';
-      case 'descripcion': return 'Buscar por descripción...';
-      default: return 'Buscar...';
+      case 'nombre':
+        return 'Buscar por nombre...';
+      case 'id':
+        return 'Buscar por ID...';
+      case 'descripcion':
+        return 'Buscar por descripción...';
+      default:
+        return 'Buscar...';
     }
   };
 
   return (
     <div className="contenedor-busqueda">
-
-      <div className="busqueda-cabecera">
-        <h2>Búsqueda de Proyectos</h2>
-        <p className="busqueda-subtitulo">Encuentra proyectos por nombre, ID o descripción</p>
-      </div>
-
+      <h2>Búsqueda de Proyectos</h2>
       <form onSubmit={handleSearch} className="formula-busqueda">
         <div className="formula-grupo">
+          {/* DT_5_T1 menu de seleccion*/}
           <select
             value={campo}
             onChange={(e) => setCampo(e.target.value)}
@@ -81,66 +158,87 @@ const Busqueda = () => {
             onChange={(e) => setTermino(e.target.value)}
             className="busqueda-input"
           />
-
           <button type="submit" disabled={cargando} className="busqueda-boton">
             {cargando ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
       </form>
 
+      {/* DT_5_T1 infos de error*/}
       {error && <div className="error-mensaje">{error}</div>}
 
-      {cargando && (
-        <div className="cargando">
-          <div className="cargando-spinner"></div>
-          Cargando proyectos...
-        </div>
+      {cargando && <div className="cargando">Cargando proyectos...</div>}
+
+      {!cargando && resultados.length === 0 && (
+        <p className="no-resultados">No se encontraron proyectos.</p>
       )}
 
-      {!cargando && resultados.length === 0 && !error && (
-        <div className="no-resultados">
-          <p>No se encontraron proyectos.</p>
-        </div>
-      )}
-
-      {!cargando && resultados.length > 0 && (
-        <p className="resultados-contador">
-          {resultados.length} proyecto{resultados.length !== 1 ? 's' : ''} encontrado{resultados.length !== 1 ? 's' : ''}
-        </p>
-      )}
-
+      {/* DT_5_T1 mostrar la tabla del resultado*/}
       <div className="resultados-list">
         {resultados.map((proyecto) => (
-          <div key={proyecto.id} className="proyecto-card">
-            <div className="proyecto-card-info">
-              <div className="proyecto-card-id">#{proyecto.id}</div>
-              <h3 className="proyecto-card-nombre">{proyecto.nombre}</h3>
-              <p className="proyecto-card-dato">
-                <span className="proyecto-card-etiqueta">Correo:</span> {proyecto.correo}
-              </p>
-              {(proyecto.descripcion || proyecto.description) && (
-                <p className="proyecto-card-dato proyecto-card-descripcion">
-                  <span className="proyecto-card-etiqueta">Descripción:</span>{' '}
-                  {proyecto.descripcion || proyecto.description}
-                </p>
-              )}
-              <p className="proyecto-card-dato proyecto-card-fecha">
-                Subido el {new Date(proyecto.fecha_creacion).toLocaleDateString('es-ES', {
-                  day: '2-digit', month: 'long', year: 'numeric'
-                })}
-              </p>
-            </div>
-            <div className="proyecto-card-acciones">
-              <button
-                className="consulta-boton"
-                onClick={() => navigate(`/resultado-consulta/${proyecto.id}`)}
-              >
-                Ver consulta
-              </button>
-            </div>
+          <div key={proyecto.id} className="proyecto-tabla">
+            <h3>
+              <Link to={`/resultado-consulta/${proyecto.id}`} className="proyecto-link">
+                {proyecto.nombre}
+              </Link>
+            </h3>
+            <p><strong>Correo:</strong> {proyecto.correo}</p>
+            {(proyecto.descripcion || proyecto.description) && (
+              <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
+            )}
+            <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
+            <button
+              type="button"
+              className="editar-descripcion-boton"
+              onClick={() => abrirEditorDescripcion(proyecto)}
+            >
+              Modificar descripción
+            </button>
           </div>
         ))}
       </div>
+
+      {proyectoEnEdicion && (
+        <div className="descripcion-modal-overlay" role="presentation" onClick={cerrarEditorDescripcion}>
+          <div
+            className="descripcion-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="descripcion-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="descripcion-modal-header">
+              <h3 id="descripcion-modal-title">Modificar descripción</h3>
+              <p>{proyectoEnEdicion.nombre}</p>
+            </div>
+
+            <form onSubmit={guardarDescripcion} className="descripcion-modal-form">
+              <label htmlFor="descripcion-edicion">Descripción del proyecto:</label>
+              <textarea
+                ref={textareaRef}
+                id="descripcion-edicion"
+                value={descripcionEditada}
+                onChange={handleDescripcionChange}
+                maxLength={500}
+                placeholder="Cuéntanos un poco sobre tu proyecto..."
+                className={errorDescripcion ? 'error' : ''}
+              />
+              {errorDescripcion && <span className="error-mensaje-descripcion">{errorDescripcion}</span>}
+              <small>Máximo 500 caracteres</small>
+
+              <div className="descripcion-modal-actions">
+                <button type="button" onClick={cerrarEditorDescripcion} disabled={guardandoDescripcion} className="modal-cancelar-boton">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={guardandoDescripcion} className="modal-guardar-boton">
+                  {guardandoDescripcion ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
