@@ -360,6 +360,57 @@ app.get('/api/proyectos', async (req, res) => {
   }
 });
 
+app.put('/api/proyectos/:id/descripcion', async (req, res) => {
+  let connection;
+
+  try {
+    const id = parseInt(req.params.id, 10);
+    const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion.trim() : '';
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'El ID del proyecto no es válido' });
+    }
+
+    if (descripcion.length > 500) {
+      return res.status(400).json({ error: 'La descripción no puede exceder 500 caracteres' });
+    }
+
+    connection = await pool.getConnection();
+
+    const [existingProject] = await connection.execute(
+      'SELECT id FROM proyectos WHERE id = ?',
+      [id]
+    );
+
+    if (existingProject.length === 0) {
+      connection.release();
+      connection = null;
+      return res.status(404).json({ error: 'No existe un proyecto con ese ID' });
+    }
+
+    await connection.execute(
+      'UPDATE proyectos SET descripcion = ? WHERE id = ?',
+      [descripcion || null, id]
+    );
+
+    connection.release();
+    connection = null;
+
+    return res.json({
+      message: 'Descripción actualizada correctamente',
+      id,
+      descripcion: descripcion || null,
+    });
+  } catch (error) {
+    console.error('Error al actualizar descripción:', error);
+    res.status(500).json({ error: 'Error al actualizar la descripción', detalles: error.message });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ===== 1. MANEJO DE 404 PARA LA API =====
