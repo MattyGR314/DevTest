@@ -1,5 +1,5 @@
 //creado en DT_10_T1
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Busqueda.css';
 
@@ -9,6 +9,12 @@ const Busqueda = () => {
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
+  const [descripcionEditada, setDescripcionEditada] = useState('');
+  const [errorDescripcion, setErrorDescripcion] = useState('');
+  const [guardandoDescripcion, setGuardandoDescripcion] = useState(false);
+  const textareaRef = useRef(null);
+  //
 
   useEffect(() => {
     fetchProyectos();
@@ -28,6 +34,7 @@ const Busqueda = () => {
       setResultados(data);
     } catch (err) {
       setError(err.message);
+      setError('Error al cargar proyectos');
     } finally {
       setCargando(false);
     }
