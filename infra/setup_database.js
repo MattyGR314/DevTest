@@ -35,6 +35,7 @@ async function setupDatabase() {
         archivo_path VARCHAR(500),
         correo VARCHAR(255),
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        correo VARCHAR(255)
       )
     `);
     console.log('✓ Tabla "proyectos" creada correctamente');

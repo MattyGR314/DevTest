@@ -68,9 +68,22 @@ describe('DT_03 - Publicar proyecto en la plataforma', () => {
   it('DT_03_5: Rechazar cuando faltan campos', () => {
     // Intentar enviar sin llenar nada
     cy.contains('button', 'Aceptar').click();
-    
-    // Texto corregido: "deben estar completos" en lugar de "han de estar completos"
-    cy.get('.mensaje-global').should('contain', 'Todos los campos deben estar completos');
+
+    // El formulario muestra errores por campo y no mensaje global en este caso
+    cy.get('input#nombre')
+      .parent()
+      .find('.error-message')
+      .should('contain', 'El nombre del proyecto es obligatorio');
+
+    cy.get('input#correo')
+      .parent()
+      .find('.error-message')
+      .should('contain', 'El correo electrónico es obligatorio');
+
+    cy.get('input#archivo')
+      .parent()
+      .find('.error-message')
+      .should('contain', 'Debes seleccionar un archivo');
   });
 
   // DT_03_6: Rechazar cuando el nombre ya existe
@@ -86,9 +99,12 @@ describe('DT_03 - Publicar proyecto en la plataforma', () => {
     
     cy.contains('button', 'Aceptar').click();
     cy.wait('@postConflicto');
-    
-    // El frontend muestra los errores de base de datos en el mensaje global superior
-    cy.get('.mensaje-global').should('contain', 'Ya existe un proyecto con este nombre');
+
+    // En 409 el frontend marca el campo nombre y muestra el error en ese campo
+    cy.get('input#nombre')
+      .parent()
+      .find('.error-message')
+      .should('contain', 'Ya existe un proyecto con este nombre');
   });
 
   // Prueba adicional: Validar que el correo no siga estándares
@@ -101,4 +117,6 @@ describe('DT_03 - Publicar proyecto en la plataforma', () => {
     
     cy.get('.error-message').should('contain', 'El correo no sigue los estándares establecidos');
   });
+
+
 });

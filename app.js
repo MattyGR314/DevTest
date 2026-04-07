@@ -223,6 +223,191 @@ app.post('/api/inscripciones', async (req, res) => {
 });
 
 
+// ===== RUTA DE REGISTRO =====
+app.post('/api/registro', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    const [existing] = await connection.execute(
+      'SELECT id FROM usuarios WHERE correo = ?',
+      [correo]
+    );
+
+    if (existing.length > 0) {
+      connection.release();
+      return res.status(409).json({ error: 'Ya existe un usuario con ese correo' });
+    }
+
+    await connection.execute(
+      'INSERT INTO usuarios (correo, password_hash) VALUES (?, ?)',
+      [correo, contrasena]
+    );
+    connection.release();
+
+    res.status(201).json({ message: 'Usuario registrado correctamente' });
+  } catch (error) {
+    console.error('Error en registro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ===== RUTA DE INICIO DE SESIÓN =====
+app.post('/api/login', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT correo, password_hash FROM usuarios WHERE correo = ?',
+      [correo]
+    );
+    connection.release();
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no registrado' });
+    }
+
+    if (rows[0].password_hash !== contrasena) {
+      return res.status(401).json({ error: 'Contraseña incorrecta' });
+    }
+
+    res.json({ correo: rows[0].correo });
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ===== RUTA PARA OBTENER UN PROYECTO POR ID =====
+app.get('/api/proyectos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validar que el ID sea un número
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'ID de proyecto inválido' });
+    }
+
+    const connection = await pool.getConnection();
+
+    // Consultar el proyecto por ID
+    const [proyecto] = await connection.execute(
+      'SELECT id, nombre, correo, archivo_path, fecha_creacion FROM proyectos WHERE id = ?',
+      [id]
+    );
+
+    connection.release();
+
+    if (proyecto.length === 0) {
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    res.json({
+      id: proyecto[0].id,
+      nombre: proyecto[0].nombre,
+      correo: proyecto[0].correo,
+      archivo_path: proyecto[0].archivo_path,
+      fecha_creacion: proyecto[0].fecha_creacion
+    });
+  } catch (error) {
+    console.error('Error al obtener proyecto:', error);
+    res.status(500).json({ error: 'Error al obtener proyecto', detalles: error.message });
+  }
+});
+
+// ===== RUTA PARA GUARDAR INSCRIPCIONES =====
+app.post('/api/inscripciones', async (req, res) => {
+  try {
+    console.log('📝 Registro de inscripción...');
+
+    const { nombre, correo, id_proyectos } = req.body;
+
+    // Validar campos obligatorios
+    if (!nombre || !nombre.trim()) {
+      console.warn('⚠️  Nombre no proporcionado');
+      return res.status(400).json({ error: 'El nombre es obligatorio' });
+    }
+
+    if (!correo || !correo.trim()) {
+      console.warn('⚠️  Correo no proporcionado');
+      return res.status(400).json({ error: 'El correo es obligatorio' });
+    }
+
+    if (!id_proyectos || isNaN(id_proyectos)) {
+      console.warn('⚠️  ID de proyecto inválido');
+      return res.status(400).json({ error: 'ID de proyecto inválido' });
+    }
+
+    // Validar formato de correo
+    const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regexCorreo.test(correo.trim())) {
+      console.warn('⚠️  Correo inválido:', correo);
+      return res.status(400).json({ error: 'El formato del correo no es válido' });
+    }
+
+    // Obtener conexión a BD
+    console.log('🔄 Conectando a BD...');
+    const connection = await pool.getConnection();
+
+    // Verificar que la tabla inscripciones existe
+    console.log('🔍 Verificando tabla inscripciones...');
+    const [tableCheck] = await connection.query('SHOW TABLES LIKE "inscripciones"');
+    if (tableCheck.length === 0) {
+      connection.release();
+      throw new Error('La tabla "inscripciones" no existe. Por favor, ejecuta: node infra/setup_database.js');
+    }
+
+    // Verificar que el proyecto existe
+    console.log('🔍 Verificando que el proyecto existe...');
+    const [proyectoExists] = await connection.execute(
+      'SELECT id FROM proyectos WHERE id = ?',
+      [id_proyectos]
+    );
+
+    if (proyectoExists.length === 0) {
+      connection.release();
+      console.warn('⚠️  Proyecto no encontrado:', id_proyectos);
+      return res.status(404).json({ error: 'El proyecto no existe' });
+    }
+
+    // Insertar la inscripción
+    console.log('📥 Insertando inscripción...');
+    const [result] = await connection.execute(
+      'INSERT INTO inscripciones (nombre, correo, id_proyectos) VALUES (?, ?, ?)',
+      [nombre.trim(), correo.trim(), id_proyectos]
+    );
+
+    connection.release();
+
+    console.log('✓ Inscripción guardada. ID:', result.insertId);
+
+    res.status(201).json({
+      message: 'Inscripción guardada exitosamente',
+      id: result.insertId,
+      nombre: nombre.trim(),
+      correo: correo.trim(),
+      id_proyectos: id_proyectos
+    });
+
+  } catch (error) {
+    console.error('❌ Error al guardar inscripción:', error.message);
+    res.status(500).json({
+      error: 'Error al guardar la inscripción',
+      detalles: error.message
+    });
+  }
+});
+
 // ===== CONFIGURACIÓN DE SUBIDA DE ARCHIVOS =====
 // Asegurar que existe la carpeta uploads
 const uploadDir = 'uploads/';
@@ -288,7 +473,7 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     }
     console.log('✓ Tabla proyectos existe');
 
-       if (!isTestEnvironment) {
+    if (!isTestEnvironment) {
       console.log('🔍 Verificando si el nombre ya existe...');
       const [existingProject] = await connection.execute(
         'SELECT id FROM proyectos WHERE nombre = ?',
@@ -383,6 +568,57 @@ app.get('/api/proyectos', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener proyectos:', error);
     res.status(500).json({ error: 'Error al obtener proyectos', detalles: error.message });
+  }
+});
+
+app.put('/api/proyectos/:id/descripcion', async (req, res) => {
+  let connection;
+
+  try {
+    const id = parseInt(req.params.id, 10);
+    const descripcion = typeof req.body.descripcion === 'string' ? req.body.descripcion.trim() : '';
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'El ID del proyecto no es válido' });
+    }
+
+    if (descripcion.length > 500) {
+      return res.status(400).json({ error: 'La descripción no puede exceder 500 caracteres' });
+    }
+
+    connection = await pool.getConnection();
+
+    const [existingProject] = await connection.execute(
+      'SELECT id FROM proyectos WHERE id = ?',
+      [id]
+    );
+
+    if (existingProject.length === 0) {
+      connection.release();
+      connection = null;
+      return res.status(404).json({ error: 'No existe un proyecto con ese ID' });
+    }
+
+    await connection.execute(
+      'UPDATE proyectos SET descripcion = ? WHERE id = ?',
+      [descripcion || null, id]
+    );
+
+    connection.release();
+    connection = null;
+
+    return res.json({
+      message: 'Descripción actualizada correctamente',
+      id,
+      descripcion: descripcion || null,
+    });
+  } catch (error) {
+    console.error('Error al actualizar descripción:', error);
+    res.status(500).json({ error: 'Error al actualizar la descripción', detalles: error.message });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 

@@ -150,9 +150,25 @@ describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
 
     it('IT_SC_005: Rechazar formulario completamente vacío', () => {
       cy.contains('button', 'Aceptar').click();
-      cy.get('.mensaje-global', { timeout: 2000 })
+
+      cy.get('input#nombre', { timeout: 2000 })
+        .parent()
+        .find('.error-message')
         .should('be.visible')
-        .should('contain', 'Todos los campos deben estar completos');
+        .should('contain', 'El nombre del proyecto es obligatorio');
+
+      cy.get('input#correo', { timeout: 2000 })
+        .parent()
+        .find('.error-message')
+        .should('be.visible')
+        .should('contain', 'El correo electrónico es obligatorio');
+
+      cy.get('input#archivo', { timeout: 2000 })
+        .parent()
+        .find('.error-message')
+        .should('be.visible')
+        .should('contain', 'Debes seleccionar un archivo');
+
       cy.url().should('include', '/subircodigo');
     });
 
@@ -518,7 +534,7 @@ describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
       cy.intercept('POST', '/subircodigo', {
         statusCode: 409,
         body: { 
-          error: 'Conflicto',
+          error: 'Ya existe un proyecto con este nombre',
           message: 'Ya existe un proyecto con este nombre'
         }
       }).as('uploadConflict');
@@ -530,9 +546,13 @@ describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
 
       cy.contains('button', 'Aceptar').click();
       cy.wait('@uploadConflict');
-      cy.get('.mensaje-global')
+
+      cy.get('input#nombre')
+        .parent()
+        .find('.error-message')
         .should('be.visible')
         .should('contain', 'Ya existe un proyecto con este nombre');
+
       cy.url().should('include', '/subircodigo');
     });
 
@@ -540,7 +560,6 @@ describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
       cy.intercept('POST', '/subircodigo', {
         statusCode: 400,
         body: { 
-          error: 'Bad Request',
           message: 'El archivo excede el tamaño máximo permitido'
         }
       }).as('uploadBadRequest');
@@ -587,8 +606,7 @@ describe('INTEGRACIÓN: Módulo Subir Código - Flujo Completo', () => {
       cy.intercept('POST', '/subircodigo', {
         statusCode: 503,
         body: { 
-          error: 'Service Unavailable',
-          message: 'La base de datos no está disponible en este momento'
+          message: 'La base de datos no está disponible'
         }
       }).as('uploadServiceUnavailable');
 

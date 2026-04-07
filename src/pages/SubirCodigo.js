@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './SubirCodigo.css';
 
@@ -10,10 +11,10 @@ const INITIAL_STATE = {
 };
 
 function SubirCodigo() {
+  const { usuario } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
-  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [formData, setFormData] = useState({ ...INITIAL_STATE, correo: usuario || '' });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -146,32 +147,33 @@ function SubirCodigo() {
       });
 
       const result = await response.json();
+      const errorMsg = result.error || result.message || 'Inténtalo de nuevo';
 
       if (response.status === 409) {
         // Error de duplicidad en la base de datos
-        setErrores({ nombre: result.message || 'Ya existe un proyecto con este nombre' });
-        setMensaje(result.message || 'Ya existe un proyecto con este nombre');
+        setErrores({ nombre: errorMsg || 'Ya existe un proyecto con este nombre' });
+        setMensaje(errorMsg || 'Ya existe un proyecto con este nombre');
         setEnviando(false);
         return;
       }
 
       if (response.status === 400) {
         // Error de validación en el servidor (ej: campo inválido)
-        setMensaje(result.message);
+        setMensaje(errorMsg);
         setEnviando(false);
         return;
       }
 
       if (response.status === 500) {
         // Error interno del servidor
-        setMensaje(result.message);
+        setMensaje(errorMsg);
         setEnviando(false);
         return;
       }
 
       if (response.status === 503) {
         // Base de datos no disponible
-        setMensaje(result.message);
+        setMensaje(errorMsg);
         setEnviando(false);
         return;
       }
@@ -181,7 +183,7 @@ function SubirCodigo() {
         handleReset();
         navigate('/confirmacion');
       } else {
-        setMensaje(`Error desconocido: ${result.message || 'Inténtalo de nuevo'}`);
+        setMensaje(`Error desconocido: ${errorMsg}`);
       }
     } catch (error) {
       console.error('Error al subir el archivo:', error);
@@ -199,12 +201,13 @@ function SubirCodigo() {
 
   const descripcionError = errores.descripcion;
   const descripcionClassName = descripcionError ? 'error' : '';
+  const mostrarMensajeGlobal = mensaje && Object.keys(errores).length === 0;
 
   return (
     <div className="subir-codigo">
 
-      {mensaje && (
-        <div className="mensaje-global mensaje-separado">
+      {mostrarMensajeGlobal && (
+        <div className="mensaje-global mensaje-separado" role="alert" aria-live="polite">
           {mensaje}
         </div>
       )}
