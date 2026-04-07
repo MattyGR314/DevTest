@@ -103,6 +103,40 @@ app.get('/api/test', async (req, res, next) => {
 });
 
 
+// ===== RUTA DE REGISTRO =====
+app.post('/api/registro', async (req, res) => {
+  const { correo, contrasena } = req.body;
+
+  if (!correo || !contrasena) {
+    return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    const [existing] = await connection.execute(
+      'SELECT id FROM usuarios WHERE correo = ?',
+      [correo]
+    );
+
+    if (existing.length > 0) {
+      connection.release();
+      return res.status(409).json({ error: 'Ya existe un usuario con ese correo' });
+    }
+
+    await connection.execute(
+      'INSERT INTO usuarios (correo, password_hash) VALUES (?, ?)',
+      [correo, contrasena]
+    );
+    connection.release();
+
+    res.status(201).json({ message: 'Usuario registrado correctamente' });
+  } catch (error) {
+    console.error('Error en registro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // ===== RUTA DE INICIO DE SESIÓN =====
 app.post('/api/login', async (req, res) => {
   const { correo, contrasena } = req.body;
@@ -199,7 +233,19 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     }
     console.log('✓ Tabla proyectos existe');
 
-       if (!isTestEnvironment) {
+    console.log('🔍 Verificando tabla inscripciones...');
+    const [inscripcionesTableCheck] = await connection.query('SHOW TABLES LIKE "inscripciones"');
+    if (inscripcionesTableCheck.length === 0) {
+      console.warn('⚠️  La tabla "inscripciones" no existe. No es posible verificar correo registrado.');
+      connection.release();
+      return res.status(500).json({
+        error: 'Tabla inscripciones no encontrada. Imposible validar correo de usuario registrado.',
+        codigo: 'INSCRIPCIONES_TABLE_NO_EXISTE'
+      });
+    }
+    console.log('✓ Tabla inscripciones existe');
+
+    if (!isTestEnvironment) {
       console.log('🔍 Verificando si el nombre ya existe...');
       const [existingProject] = await connection.execute(
         'SELECT id FROM proyectos WHERE nombre = ?',
@@ -215,8 +261,25 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
         });
       }
       console.log('✓ Nombre disponible');
+
+      // DT_XX: Verificar que el correo pertenece a una inscripción
+      console.log('🔍 Verificando si el correo está registrado en inscripciones...');
+      const [inscripcionCheck] = await connection.execute(
+        'SELECT id FROM inscripciones WHERE correo = ?',
+        [correo]
+      );
+
+      if (inscripcionCheck.length === 0) {
+        console.warn('⚠️  Correo no está vinculado a ninguna inscripción:', correo);
+        connection.release();
+        return res.status(400).json({ 
+          error: 'El correo debe estar vinculado a una inscripción registrada',
+          codigo: 'USUARIO_NO_REGISTRADO'
+        });
+      }
+      console.log('✓ Correo verificado como inscripción registrada');
     } else {
-      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados');
+      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados y usuarios');
     }
 
     // Insertar en la base de datos (SIN campo estado)
@@ -246,11 +309,65 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
   }
 });
 
+// ===== DT_10_T1 RUTA PARA OBTENER PROYECTOS =====
+app.get('/api/proyectos', async (req, res) => {
+  try {
+    const termino = req.query.q;      // Término de búsqueda
+    const campo = req.query.campo;    // Campo a buscar: 'nombre', 'id', 'descripcion'
+
+    const connection = await pool.getConnection();
+
+    let query = '';
+    let params = [];
+
+    // Si hay término de búsqueda, construimos la consulta según el campo
+    if (termino && termino.trim() !== '') {
+      switch (campo) {
+        case 'id':
+          // Buscar por ID exacto (convertir a número si es posible)
+          const idBuscado = parseInt(termino, 10);
+          if (isNaN(idBuscado)) {
+            query = 'SELECT * FROM proyectos WHERE 1 = 0';
+          } else {
+            query = 'SELECT * FROM proyectos WHERE id = ?';
+            params = [idBuscado];
+          }
+          break;
+        case 'descripcion':
+          // Buscar por descripción (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE descripcion LIKE ?';
+          params = [`%${termino}%`];
+          break;
+        case 'nombre':
+        default:
+          // Buscar por nombre (coincidencia parcial, insensible a mayúsculas)
+          query = 'SELECT * FROM proyectos WHERE nombre LIKE ?';
+          params = [`%${termino}%`];
+          break;
+      }
+    } else {
+      // Sin término: obtener todos los proyectos ordenados por fecha descendente
+      query = 'SELECT * FROM proyectos ORDER BY fecha_creacion DESC';
+    }
+
+    const [rows] = await connection.query(query, params);
+    connection.release();
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener proyectos:', error);
+    res.status(500).json({ error: 'Error al obtener proyectos', detalles: error.message });
+  }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ===== 1. MANEJO DE 404 PARA LA API =====
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+// Movido a aquí en DT_5 como este orden impide los además a funcionar
 app.use('/api', notFoundHandler); 
 
-// ===== 2. ARCHIVOS ESTÁTICOS Y FRONTEND (React) =====
+// ===== ARCHIVOS ESTÁTICOS (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
 app.use((req, res) => {
@@ -267,6 +384,7 @@ app.use(dbErrorHandler);         // error de MySQL
 app.use(genericErrorHandler);    // Si no fue ninguno de los anteriores, es un 500 genérico.
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, function (error) {
   if (error) {
     console.log('Error al iniciar servidor:', error);

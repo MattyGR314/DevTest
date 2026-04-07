@@ -7,6 +7,7 @@ const INITIAL_STATE = {
   nombre: '',
   archivo: null,
   correo: '',
+  descripcion: '',
 };
 
 function SubirCodigo() {
@@ -122,7 +123,7 @@ function SubirCodigo() {
       return;
     }
 
-    const descripcionValue = document.getElementById('descripcion').value;
+    const descripcionValue = formData.descripcion || '';
     if (descripcionValue && descripcionValue.length > 500) {
       setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
       return;
@@ -150,27 +151,35 @@ function SubirCodigo() {
       if (response.status === 409) {
         // Error de duplicidad en la base de datos
         setErrores({ nombre: result.message || 'Ya existe un proyecto con este nombre' });
-        setMensaje(result.error || 'Ya existe un proyecto con este nombre'); setEnviando(false);
+        setMensaje(result.message || 'Ya existe un proyecto con este nombre');
+        setEnviando(false);
         return;
       }
 
       if (response.status === 400) {
         // Error de validación en el servidor (ej: campo inválido)
-        setMensaje(`${result.error}: ${result.message}`);
+        setMensaje(result.message);
         setEnviando(false);
         return;
       }
 
       if (response.status === 500) {
         // Error interno del servidor
-        setMensaje(`Error del servidor: ${result.message}`);
+        setMensaje(result.message);
         setEnviando(false);
         return;
       }
 
       if (response.status === 503) {
         // Base de datos no disponible
-        setMensaje(`${result.error}: ${result.message}`);
+        setMensaje(result.message);
+        setEnviando(false);
+        return;
+      }
+
+      if (response.status === 400 && result.codigo === 'USUARIO_NO_REGISTRADO') {
+        setErrores({ correo: 'El correo debe corresponder a un usuario registrado' });
+        alert('Correo no vinculado a usuario registrado');
         setEnviando(false);
         return;
       }
@@ -197,7 +206,6 @@ function SubirCodigo() {
   };
 
   const descripcionError = errores.descripcion;
-  const descripcionValue = formData.descripcion || '';
   const descripcionClassName = descripcionError ? 'error' : '';
 
   return (
@@ -276,8 +284,7 @@ function SubirCodigo() {
           )}
           {formData.archivo && (
             <small className="file-info">
-              📁 Archivo seleccionado: {formData.archivo.name}
-              ({(formData.archivo.size / 1024).toFixed(2)} KB)
+              Archivo seleccionado: {formData.archivo.name}
             </small>
           )}
           <small>Formatos permitidos: .exe, .bat</small>
@@ -288,7 +295,7 @@ function SubirCodigo() {
             name="descripcion"
             id="descripcion"
             placeholder="Cuéntanos un poco sobre tu proyecto..."
-            value={descripcionValue}
+            value={formData.descripcion}
             onChange={handleInputChange}
             maxLength={500}
             className={descripcionClassName}

@@ -101,4 +101,6 @@ describe('DT_03 - Publicar proyecto en la plataforma', () => {
     
     cy.get('.error-message').should('contain', 'El correo no sigue los estándares establecidos');
   });
+
+
 });
