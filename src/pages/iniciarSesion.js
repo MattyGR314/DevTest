@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './IniciarSesion.css';
+import './iniciarSesion.css';
 
 function IniciarSesion() {
   const [formData, setFormData] = useState({ correo: '', contrasena: '' });
