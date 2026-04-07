@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import './Busqueda.css';
 
 const Busqueda = () => {
-  const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
-  const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
+  const [termino, setTermino] = useState('');
+  const [campo, setCampo] = useState('nombre');
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -14,7 +14,6 @@ const Busqueda = () => {
   const [errorDescripcion, setErrorDescripcion] = useState('');
   const [guardandoDescripcion, setGuardandoDescripcion] = useState(false);
   const textareaRef = useRef(null);
-  //
 
   useEffect(() => {
     fetchProyectos();
@@ -26,7 +25,7 @@ const Busqueda = () => {
       textareaRef.current.style.height = `${Math.max(150, textareaRef.current.scrollHeight)}px`;
     }
   }, [descripcionEditada, proyectoEnEdicion]);
-                    //DT_10_T1  termino         tipo
+
   const fetchProyectos = async (query = '', searchField = '') => {
     setCargando(true);
     setError('');
@@ -122,7 +121,7 @@ const Busqueda = () => {
     }
   };
 
-    const getPlaceholder = () => {
+  const getPlaceholder = () => {
     switch (campo) {
       case 'nombre':
         return 'Buscar por nombre...';
@@ -140,7 +139,6 @@ const Busqueda = () => {
       <h2>Búsqueda de Proyectos</h2>
       <form onSubmit={handleSearch} className="formula-busqueda">
         <div className="formula-grupo">
-          {/* DT_5_T1 menu de seleccion*/}
           <select
             value={campo}
             onChange={(e) => setCampo(e.target.value)}
@@ -164,7 +162,6 @@ const Busqueda = () => {
         </div>
       </form>
 
-      {/* DT_5_T1 infos de error*/}
       {error && <div className="error-mensaje">{error}</div>}
 
       {cargando && <div className="cargando">Cargando proyectos...</div>}
@@ -173,7 +170,6 @@ const Busqueda = () => {
         <p className="no-resultados">No se encontraron proyectos.</p>
       )}
 
-      {/* DT_5_T1 mostrar la tabla del resultado*/}
       <div className="resultados-list">
         {resultados.map((proyecto) => (
           <div key={proyecto.id} className="proyecto-tabla">
@@ -187,13 +183,19 @@ const Busqueda = () => {
               <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
-            <button
-              type="button"
-              className="editar-descripcion-boton"
-              onClick={() => abrirEditorDescripcion(proyecto)}
-            >
-              Modificar descripción
-            </button>
+            
+            <div className="acciones-proyecto">
+              <button
+                type="button"
+                className="editar-descripcion-boton"
+                onClick={() => abrirEditorDescripcion(proyecto)}
+              >
+                Modificar descripción
+              </button>
+              <Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-inscribirse-busqueda">
+                Inscribirse
+              </Link>
+            </div>
           </div>
         ))}
       </div>
@@ -238,8 +240,6 @@ const Busqueda = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };
