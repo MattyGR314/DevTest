@@ -274,3 +274,43 @@
     text-align: center;
   }
 }
+
+.acciones-proyecto {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.btn-inscribirse-busqueda {
+  padding: 0.75rem 1.2rem;
+  background-color: #007bff;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: normal;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-inscribirse-busqueda:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Ajuste para el botón existente dentro del nuevo contenedor flex */
+.proyecto-tabla .editar-descripcion-boton {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .acciones-proyecto {
+    flex-direction: column;
+    width: 100%;
+  }
+  .btn-inscribirse-busqueda {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
