@@ -4,7 +4,19 @@ describe('DT_06 - Integración: Inscripción de tester en proyecto', () => {
 	const proyectoId = 1;
 
 	beforeEach(() => {
+		cy.intercept('GET', `/api/proyectos/${proyectoId}`, {
+			statusCode: 200,
+			body: {
+				id: proyectoId,
+				nombre: 'Proyecto DT06',
+				correo: 'owner@test.com',
+				archivo_path: 'uploads/script.bat',
+				fecha_creacion: '2026-04-01T10:00:00Z'
+			}
+		}).as('proyectoDetalle');
+
 		cy.visit(`http://localhost:3000/seleccionarproyecto/${proyectoId}`);
+		cy.wait('@proyectoDetalle');
 	});
 
 	it('DT_06_01: Al seleccionar proyecto se muestra formulario con nombre y correo', () => {
@@ -62,9 +74,21 @@ describe('DT_06 - Integración: Inscripción de tester en proyecto', () => {
 	});
 
 	it('DT_06_04: Si el correo es válido, registra al tester en el proyecto', () => {
+		cy.intercept('POST', '/api/inscripciones', {
+			statusCode: 201,
+			body: {
+				message: 'Inscripción guardada exitosamente',
+				id: 123,
+				nombre: 'Tester Integración',
+				correo: 'tester_valido@ejemplo.com',
+				id_proyectos: proyectoId
+			}
+		}).as('inscripcionExitosa');
+
 		cy.get('input#nombre').type('Tester Integración');
 		cy.get('input#correo').type('tester_valido@ejemplo.com');
 		cy.contains('button', 'Inscribirse').click();
+		cy.wait('@inscripcionExitosa');
 
 		cy.contains(/inscripcion guardada exitosamente|guardada exitosamente/i).should('be.visible');
 	});

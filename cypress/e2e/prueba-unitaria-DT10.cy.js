@@ -3,6 +3,11 @@
 describe('DT_10 - Consultar proyecto', () => {
   
   beforeEach(() => {
+    cy.intercept('GET', '/api/proyectos', {
+      statusCode: 200,
+      body: []
+    }).as('cargaInicialProyectos');
+
     // Limpiar el almacenamiento local para evitar interferencias
     cy.clearLocalStorage();
     cy.clearCookies();
@@ -106,28 +111,55 @@ describe('DT_10 - Consultar proyecto', () => {
 
   // Test adicional: Validar navegación desde búsqueda
   it('DT_10_Adicional: Navegar a consulta desde búsqueda hacia resultado', () => {
-    cy.visit('http://localhost:3000/busqueda');
-    
-    // Interceptar la búsqueda
-    cy.intercept('GET', '/api/proyectos*', {
+    const proyectoBusqueda = {
+      id: '111',
+      nombre: 'Proyecto Test',
+      descripcion: 'Descripción de test',
+      fichero: 'test.exe',
+      fecha_creacion: '2025-03-20T10:30:00'
+    };
+
+    cy.intercept('GET', '/api/proyectos', {
       statusCode: 200,
-      body: [
-        {
-          id: '111',
-          nombre: 'Proyecto Test',
-          descripcion: 'Descripción de test',
-          fichero: 'test.exe'
-        }
-      ]
+      body: []
+    }).as('cargaInicialBusqueda');
+
+    // Interceptar la búsqueda
+    cy.intercept({
+      method: 'GET',
+      pathname: '/api/proyectos',
+      query: {
+        q: 'Proyecto Test',
+        campo: 'nombre'
+      }
+    }, {
+      statusCode: 200,
+      body: [proyectoBusqueda]
     }).as('searchProyectos');
+
+    cy.intercept({
+      method: 'GET',
+      pathname: '/api/proyectos',
+      query: {
+        q: '111',
+        campo: 'id'
+      }
+    }, {
+      statusCode: 200,
+      body: [proyectoBusqueda]
+    }).as('detalleProyecto111');
+
+    cy.visit('http://localhost:3000/busqueda');
+    cy.wait('@cargaInicialBusqueda');
 
     // Realizar búsqueda
     cy.get('input[placeholder*="Buscar"]').type('Proyecto Test');
     cy.get('button[type="submit"]').click();
     cy.wait('@searchProyectos');
 
-    // Verificar que se habilita el botón de detalle y navegar al resultado
-    cy.contains('button', 'Ver detalles').should('not.be.disabled').click();
+    // Navegar al detalle usando el enlace renderizado en la tarjeta
+    cy.contains('a.proyecto-link', 'Proyecto Test').should('be.visible').click();
+    cy.wait('@detalleProyecto111');
 
     // Verificar navegación y detalle del proyecto en la vista de resultado
     cy.url().should('include', '/resultado-consulta/111');
