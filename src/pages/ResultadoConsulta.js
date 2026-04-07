@@ -71,7 +71,7 @@ function ResultadoConsulta() {
 						<p>
 							<strong>Fecha:</strong> {formatearFecha(proyecto.fecha_creacion)}
 						</p>
-						<p>
+						<p className="resultado-descripcion-scroll">
 							<strong>Descripcion:</strong> {descripcion}
 						</p>
 						<p>

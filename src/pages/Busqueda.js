@@ -211,7 +211,7 @@ const Busqueda = () => {
             <h3>{proyecto.nombre}</h3>
             <p><strong>Correo:</strong> {proyecto.correo}</p>
             {(proyecto.descripcion || proyecto.description) && (
-              <p><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
+              <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
             <button

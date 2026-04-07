@@ -67,6 +67,15 @@
 	color: #2d3a44;
 }
 
+.resultado-descripcion-scroll {
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: normal;
+	overflow-wrap: normal;
+	word-break: normal;
+	scrollbar-width: thin;
+}
+
 @media (max-width: 640px) {
 	.resultado-consulta {
 		padding: 1rem;
