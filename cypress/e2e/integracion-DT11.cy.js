@@ -191,10 +191,21 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
       // Intentar enviar sin llenar nada
       cy.get('button').contains('Aceptar').click();
 
-      // Validar mensaje de error global
-      cy.get('.mensaje-global', { timeout: 5000 })
+      // El formulario muestra errores por campo cuando faltan obligatorios
+      cy.get('input#nombre')
+        .parent()
+        .find('.error-message')
         .should('be.visible')
-        .should('contain', 'Todos los campos deben estar completos');
+
+      cy.get('input#correo')
+        .parent()
+        .find('.error-message')
+        .should('be.visible');
+
+      cy.get('input#archivo')
+        .parent()
+        .find('.error-message')
+        .should('be.visible');
 
       // Validar que NO redirige
       cy.url().should('include', '/subircodigo');
@@ -727,8 +738,10 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
 
       cy.wait('@uploadDuplicate');
 
-      // Debe mostrar error en mensaje global
-      cy.get('.mensaje-global')
+      // En 409 se marca error en el campo nombre
+      cy.get('input#nombre')
+        .parent()
+        .find('.error-message')
         .should('be.visible')
         .should('contain', 'Ya existe un proyecto con este nombre');
 
@@ -766,8 +779,7 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
       cy.intercept('POST', '/subircodigo', {
         statusCode: 500,
         body: {
-          error: 'Error del servidor',
-          message: 'No se pudo guardar el proyecto' // <--- Este es el mensaje que lee React
+          message: 'No se pudo guardar el proyecto'
         }
       }).as('uploadServerError');
 

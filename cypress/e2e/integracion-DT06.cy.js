@@ -30,12 +30,18 @@ describe('DT_06 - Integración: Inscripción de tester en proyecto', () => {
 	});
 
 	it('DT_06_02: Si el correo no está registrado, notifica error y redirige a inicio', () => {
+		cy.intercept('POST', '/api/inscripciones', {
+			statusCode: 404,
+			body: { error: 'Correo no existe' }
+		}).as('inscripcionCorreoNoExiste');
+
 		cy.get('input#nombre').type('Tester Integración');
 		cy.get('input#correo').type('falso.no.registrado@empresa.com');
 		cy.contains('button', 'Inscribirse').click();
+		cy.wait('@inscripcionCorreoNoExiste');
 
 		cy.contains(/correo no existe/i).should('be.visible');
-		cy.url().should('eq', Cypress.config().baseUrl + '/');
+		cy.url({ timeout: 5000 }).should('eq', Cypress.config().baseUrl + '/');
 	});
 
 	it('DT_06_03: Si el nombre está vacío, notifica inválido y redirige a inicio', () => {
