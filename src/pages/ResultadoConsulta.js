@@ -49,7 +49,7 @@ function ResultadoConsulta() {
 	};
 
 	const descripcion = proyecto?.descripcion || proyecto?.description || 'Sin descripcion registrada';
-	const fichero = proyecto?.fichero || 'Sin fichero';
+	const fichero = proyecto?.nombre_fichero || proyecto?.fichero || 'Sin fichero';
 
 	return (
 		<section className="resultado-consulta">

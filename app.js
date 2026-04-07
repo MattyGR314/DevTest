@@ -442,6 +442,7 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     const { nombre, correo } = req.body;
     const archivo = req.file;
     const filePath = archivo ? archivo.path : null;
+    const nombreFichero = archivo ? archivo.originalname : null;
     const descripcion = req.body.descripcion || null;
 
     // Validar campos obligatorios
@@ -496,8 +497,8 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     // Insertar en la base de datos (SIN campo estado)
     console.log('📥 Insertando datos en BD...');
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, correo, archivo_path, descripcion) VALUES (?, ?, ?, ?)',
-      [nombre, correo, filePath, descripcion]
+      'INSERT INTO proyectos (nombre, correo, archivo_path, nombre_fichero, descripcion) VALUES (?, ?, ?, ?, ?)',
+      [nombre, correo, filePath, nombreFichero, descripcion]
     );
     console.log('✓ Datos insertados. ID:', result.insertId);
 
@@ -509,6 +510,7 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
       nombre: nombre,
       correo: correo,
       archivo: archivo ? archivo.filename : null,
+      nombre_fichero: nombreFichero,
       descripcion: descripcion,
       redirectTo: '/confirmacion'
       });
