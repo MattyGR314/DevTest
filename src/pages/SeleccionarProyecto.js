@@ -62,6 +62,7 @@ function SeleccionarProyecto() {
       ...formData,
       [name]: value
     });
+    // Limpiar error del campo cuando el usuario empieza a escribir
     if (errores[name]) {
       setErrores({
         ...errores,

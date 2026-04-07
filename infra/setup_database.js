@@ -33,13 +33,14 @@ async function setupDatabase() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
         archivo_path VARCHAR(500),
+        correo VARCHAR(255),
         fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         correo VARCHAR(255)
       )
     `);
     console.log('✓ Tabla "proyectos" creada correctamente');
 
-        // Crear tabla inscripciones
+    // Crear tabla inscripciones
     console.log('📋 Creando tabla "inscripciones"...');
     await connection.query(`
       CREATE TABLE IF NOT EXISTS inscripciones (

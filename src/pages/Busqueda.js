@@ -47,20 +47,21 @@ const Busqueda = () => {
 
   const getPlaceholder = () => {
     switch (campo) {
-      case 'nombre':
-        return 'Buscar por nombre...';
-      case 'id':
-        return 'Buscar por ID...';
-      case 'descripcion':
-        return 'Buscar por descripción...';
-      default:
-        return 'Buscar...';
+      case 'nombre': return 'Buscar por nombre...';
+      case 'id': return 'Buscar por ID...';
+      case 'descripcion': return 'Buscar por descripción...';
+      default: return 'Buscar...';
     }
   };
 
   return (
     <div className="contenedor-busqueda">
-      <h2>Búsqueda de Proyectos</h2>
+
+      <div className="busqueda-cabecera">
+        <h2>Búsqueda de Proyectos</h2>
+        <p className="busqueda-subtitulo">Encuentra proyectos por nombre, ID o descripción</p>
+      </div>
+
       <form onSubmit={handleSearch} className="formula-busqueda">
         <div className="formula-grupo">
           <select
@@ -80,6 +81,7 @@ const Busqueda = () => {
             onChange={(e) => setTermino(e.target.value)}
             className="busqueda-input"
           />
+
           <button type="submit" disabled={cargando} className="busqueda-boton">
             {cargando ? 'Buscando...' : 'Buscar'}
           </button>
@@ -88,28 +90,58 @@ const Busqueda = () => {
 
       {error && <div className="error-mensaje">{error}</div>}
 
-      {cargando && <div className="cargando">Cargando proyectos...</div>}
+      {cargando && (
+        <div className="cargando">
+          <div className="cargando-spinner"></div>
+          Cargando proyectos...
+        </div>
+      )}
 
-      {!cargando && resultados.length === 0 && (
-        <p className="no-resultados">No se encontraron proyectos.</p>
+      {!cargando && resultados.length === 0 && !error && (
+        <div className="no-resultados">
+          <p>No se encontraron proyectos.</p>
+        </div>
+      )}
+
+      {!cargando && resultados.length > 0 && (
+        <p className="resultados-contador">
+          {resultados.length} proyecto{resultados.length !== 1 ? 's' : ''} encontrado{resultados.length !== 1 ? 's' : ''}
+        </p>
       )}
 
       <div className="resultados-list">
         {resultados.map((proyecto) => (
-          <div key={proyecto.id} className="proyecto-tabla">
-            <h3>
-              <Link to={`/resultado-consulta/${proyecto.id}`} className="proyecto-link">
-                {proyecto.nombre}
-              </Link>
-            </h3>
-            <p><strong>Correo:</strong> {proyecto.correo}</p>
-            {(proyecto.descripcion || proyecto.description) && (
-              <p><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
-            )}
-            <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
+          <div key={proyecto.id} className="proyecto-card">
+            <div className="proyecto-card-info">
+              <div className="proyecto-card-id">#{proyecto.id}</div>
+              <h3 className="proyecto-card-nombre">{proyecto.nombre}</h3>
+              <p className="proyecto-card-dato">
+                <span className="proyecto-card-etiqueta">Correo:</span> {proyecto.correo}
+              </p>
+              {(proyecto.descripcion || proyecto.description) && (
+                <p className="proyecto-card-dato proyecto-card-descripcion">
+                  <span className="proyecto-card-etiqueta">Descripción:</span>{' '}
+                  {proyecto.descripcion || proyecto.description}
+                </p>
+              )}
+              <p className="proyecto-card-dato proyecto-card-fecha">
+                Subido el {new Date(proyecto.fecha_creacion).toLocaleDateString('es-ES', {
+                  day: '2-digit', month: 'long', year: 'numeric'
+                })}
+              </p>
+            </div>
+            <div className="proyecto-card-acciones">
+              <button
+                className="consulta-boton"
+                onClick={() => navigate(`/resultado-consulta/${proyecto.id}`)}
+              >
+                Ver consulta
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
     </div>
   );
 };

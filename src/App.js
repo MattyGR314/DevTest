@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
 import Inicio from './pages/Inicio';
 import SubirCodigo from './pages/SubirCodigo';
+import SeleccionarProyecto from './pages/SeleccionarProyecto';
 import ConfirmacionSubida from './pages/confirmacionSubida';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
