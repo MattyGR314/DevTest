@@ -11,6 +11,14 @@
   margin-bottom: 30px;
 }
 
+.mensaje-global {
+  padding: 0.85rem 1rem;
+  border-left: 4px solid #dc3545;
+  border-radius: 6px;
+  background-color: #fff5f5;
+  color: #a71d2a;
+}
+
 .form-group {
   margin-bottom: 1.5rem;
 }
