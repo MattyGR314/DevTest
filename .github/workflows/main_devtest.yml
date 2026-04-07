@@ -102,6 +102,8 @@ jobs:
         run: |
           mkdir -p deploy-package
           cp -r build deploy-package/build
+          cp -r public deploy-package/public
+          cp -r src deploy-package/src
           cp app.js deploy-package/app.js
           cp package.json deploy-package/package.json
           cp package-lock.json deploy-package/package-lock.json
