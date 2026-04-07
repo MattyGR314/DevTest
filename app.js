@@ -353,18 +353,6 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     }
     console.log('✓ Tabla proyectos existe');
 
-    console.log('🔍 Verificando tabla usuarios...');
-    const [usuariosTableCheck] = await connection.query('SHOW TABLES LIKE "usuarios"');
-    if (usuariosTableCheck.length === 0) {
-      console.warn('⚠️  La tabla "usuarios" no existe. No es posible verificar correo registrado.');
-      connection.release();
-      return res.status(500).json({
-        error: 'Tabla usuarios no encontrada. Imposible validar correo de usuario registrado.',
-        codigo: 'USUARIOS_TABLE_NO_EXISTE'
-      });
-    }
-    console.log('✓ Tabla usuarios existe');
-
     if (!isTestEnvironment) {
       console.log('🔍 Verificando si el nombre ya existe...');
       const [existingProject] = await connection.execute(
@@ -381,25 +369,8 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
         });
       }
       console.log('✓ Nombre disponible');
-
-      // DT_XX: Verificar que el correo pertenece a un usuario registrado
-      console.log('🔍 Verificando si el correo está registrado en usuarios...');
-      const [usuarioCheck] = await connection.execute(
-        'SELECT id FROM usuarios WHERE correo = ?',
-        [correo]
-      );
-
-      if (usuarioCheck.length === 0) {
-        console.warn('⚠️  Correo no está vinculado a ningún usuario registrado:', correo);
-        connection.release();
-        return res.status(400).json({ 
-          error: 'El correo debe corresponder a un usuario registrado',
-          codigo: 'USUARIO_NO_REGISTRADO'
-        });
-      }
-      console.log('✓ Correo verificado como usuario registrado');
     } else {
-      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados y usuarios');
+      console.log('🧪 Entorno de pruebas: omitiendo verificación de duplicados');
     }
 
     // Insertar en la base de datos (SIN campo estado)

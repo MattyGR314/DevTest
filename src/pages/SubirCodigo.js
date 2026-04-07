@@ -149,16 +149,6 @@ function SubirCodigo() {
       const result = await response.json();
       const errorMsg = result.error || result.message || 'Inténtalo de nuevo';
 
-      if (response.status === 400 && result.codigo === 'USUARIO_NO_REGISTRADO') {
-        setErrores((prev) => ({
-          ...prev,
-          correo: 'El correo debe corresponder a un usuario registrado',
-        }));
-        setMensaje(errorMsg);
-        setEnviando(false);
-        return;
-      }
-
       if (response.status === 409) {
         // Error de duplicidad en la base de datos
         setErrores({ nombre: errorMsg || 'Ya existe un proyecto con este nombre' });
