@@ -60,7 +60,7 @@ const Busqueda = () => {
       }
       //
     } catch (err) {
-      setError(err.message);
+      setError('Error al cargar proyectos');
       //para el boton de consultar detalles
       setDetalleProyectoId(null);
       //
