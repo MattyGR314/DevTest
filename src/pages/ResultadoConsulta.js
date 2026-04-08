@@ -49,7 +49,7 @@ function ResultadoConsulta() {
 	};
 
 	const descripcion = proyecto?.descripcion || proyecto?.description || 'Sin descripcion registrada';
-	const fichero = proyecto?.fichero || 'Sin fichero';
+	const fichero = proyecto?.nombre_fichero || proyecto?.fichero || 'Sin fichero';
 
 	return (
 		<section className="resultado-consulta">
@@ -71,12 +71,18 @@ function ResultadoConsulta() {
 						<p>
 							<strong>Fecha:</strong> {formatearFecha(proyecto.fecha_creacion)}
 						</p>
-						<p>
+						<p className="resultado-descripcion-scroll">
 							<strong>Descripcion:</strong> {descripcion}
 						</p>
 						<p>
 							<strong>Fichero:</strong> {fichero}
 						</p>
+					</div>
+					
+					<div className="resultado-acciones">
+						<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
+							Inscribirse como Tester
+						</Link>
 					</div>
 				</article>
 			)}

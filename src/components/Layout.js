@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Layout.css';
 
 function Layout({ children }) {
+  const { usuario, logout } = useAuth();
+
   return (
     <div className="layout">
 
@@ -10,19 +13,14 @@ function Layout({ children }) {
           <div>
               <span className="Dev">Dev</span><span className="Test">Test</span>
           </div>
-          
-
-          <button className="navbar-toggler mt-4 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuRight" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    
-              <img src="img/user_img.PNG" alt=""></img>
-                    
-          </button>
         </div>
 
         <nav className="navegacion d-flex justify-content-center">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
+
           <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
+
         </nav>
 
         <main className="contenido">
@@ -50,9 +48,16 @@ function Layout({ children }) {
           </div>
 
         <div className="offcanvas-body">
-
-          
-
+          {usuario ? (
+            <div>
+              <p>Hola, {usuario}</p>
+              <button type="button" onClick={logout} className="btn btn-outline-secondary btn-sm">
+                Cerrar sesión
+              </button>
+            </div>
+          ) : (
+            <p>No has iniciado sesión</p>
+          )}
         </div>
 
       </div>

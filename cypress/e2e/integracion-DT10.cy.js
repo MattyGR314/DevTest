@@ -10,6 +10,11 @@
 describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
 
   beforeEach(() => {
+    cy.intercept('GET', '/api/proyectos', {
+      statusCode: 200,
+      body: []
+    }).as('cargaInicialProyectos');
+
     cy.clearLocalStorage();
     cy.clearCookies();
     cy.window().then((win) => {
@@ -29,24 +34,39 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
         fecha_creacion: '2026-03-20T10:30:00Z'
       };
 
-      cy.intercept('GET', '/api/proyectos?q=Proyecto%20Integracion%20DT10&campo=nombre', {
+      cy.intercept({
+        method: 'GET',
+        pathname: '/api/proyectos',
+        query: {
+          q: 'Proyecto Integracion DT10',
+          campo: 'nombre'
+        }
+      }, {
         statusCode: 200,
         body: [proyecto]
       }).as('buscarPorNombre');
 
-      cy.intercept('GET', '/api/proyectos?q=111&campo=id', {
+      cy.intercept({
+        method: 'GET',
+        pathname: '/api/proyectos',
+        query: {
+          q: '111',
+          campo: 'id'
+        }
+      }, {
         statusCode: 200,
         body: [proyecto]
       }).as('consultarPorId');
 
       cy.visit('http://localhost:3000/busqueda');
+      cy.wait('@cargaInicialProyectos');
 
       cy.get('select.busqueda-seleccionar').select('nombre');
       cy.get('input.busqueda-input').clear().type('Proyecto Integracion DT10');
       cy.get('button.busqueda-boton').click();
       cy.wait('@buscarPorNombre');
 
-      cy.contains('button', 'Ver detalles').should('not.be.disabled').click();
+      cy.contains('a.proyecto-link', 'Proyecto Integracion DT10').should('be.visible').click();
 
       cy.wait('@consultarPorId');
       cy.url().should('include', '/resultado-consulta/111');
