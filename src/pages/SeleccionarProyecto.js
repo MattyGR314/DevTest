@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import "./SeleccionarProyecto.css";
 
 function SeleccionarProyecto() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [nombreProyecto, setNombreProyecto] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +74,6 @@ function SeleccionarProyecto() {
     e.preventDefault();
     
     if (!validarFormulario()) {
-      setTimeout(() => navigate("/"), 2500);
       return;
     }
 
@@ -106,7 +104,6 @@ function SeleccionarProyecto() {
       setTimeout(() => setExito(false), 5000);
     } catch (err) {
       setErrores({ general: err.message });
-      setTimeout(() => navigate("/"), 2500);
     } finally {
       setEnviando(false);
     }
