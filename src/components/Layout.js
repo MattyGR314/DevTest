@@ -21,6 +21,8 @@ function Layout({ children }) {
 
           <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
 
+          <Link to="/registro">Registrar</Link>  {/*DT_01_T1*/}
+
         </nav>
 
         <main className="contenido">
