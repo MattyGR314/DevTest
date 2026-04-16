@@ -1,210 +1,270 @@
-.subir-codigo {
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* ── Page header ── */
+.subir-codigo-header {
+  text-align: center;
+  padding: 48px 24px 32px;
 }
 
+.subir-codigo-header h2 {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 8px;
+}
+
+.subir-codigo-header p {
+  color: #9aa4b2;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Container ── */
+.subir-codigo {
+  max-width: 580px;
+  margin: 0 auto 3rem;
+  padding: 2rem;
+  background-color: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+/* ── Global message ── */
 .mensaje-separado {
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .mensaje-global {
   padding: 0.85rem 1rem;
-  border-left: 4px solid #dc3545;
+  border-left: 4px solid #f85149;
   border-radius: 6px;
-  background-color: #fff5f5;
-  color: #a71d2a;
+  background-color: rgba(248, 81, 73, 0.1);
+  color: #f85149;
+  font-size: 0.9rem;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
+/* ── Form groups ── */
+.subir-codigo .form-group {
+  margin-bottom: 1.4rem;
 }
 
-label {
+.subir-codigo label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
   font-weight: 600;
-  color: #333;
+  color: #e6edf3;
+  font-size: 0.9rem;
 }
 
-.required {
-  color: #dc3545;
+.subir-codigo .required {
+  color: #f85149;
   margin-left: 4px;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="file"] {
+/* ── Text inputs ── */
+.subir-codigo input[type="text"],
+.subir-codigo input[type="email"] {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #e6edf3;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="file"]:focus {
+.subir-codigo input[type="text"]::placeholder,
+.subir-codigo input[type="email"]::placeholder {
+  color: #4d5a6a;
+}
+
+/* ── File input ── */
+.subir-codigo input[type="file"] {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #9aa4b2;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+/* ── Focus states ── */
+.subir-codigo input[type="text"]:focus,
+.subir-codigo input[type="email"]:focus,
+.subir-codigo input[type="file"]:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
 }
 
-input.error {
-  border-color: #dc3545;
-  background-color: #fff8f8;
+/* ── Error input states ── */
+.subir-codigo input.error {
+  border-color: #f85149;
 }
 
-input.error:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220,53,69,0.1);
+.subir-codigo input.error:focus {
+  border-color: #f85149;
+  box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.15);
 }
 
-textarea {
+/* ── Textarea ── */
+.subir-codigo textarea {
   width: 100%;
   min-height: 150px;
-  height: auto;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
   font-family: inherit;
+  color: #e6edf3;
   resize: none !important;
   overflow: hidden;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
 }
 
-textarea:focus {
+.subir-codigo textarea::placeholder {
+  color: #4d5a6a;
+}
+
+.subir-codigo textarea:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
 }
 
-textarea.error {
-  border-color: #dc3545;
-  background-color: #fff8f8;
+.subir-codigo textarea.error {
+  border-color: #f85149;
 }
 
-textarea.error:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220,53,69,0.1);
+.subir-codigo textarea.error:focus {
+  border-color: #f85149;
+  box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.15);
 }
 
-.error-message {
+/* ── Error messages ── */
+.subir-codigo .error-message {
   display: block;
-  color: #dc3545;
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background-color: #fff8f8;
-  border-radius: 4px;
-  border-left: 3px solid #dc3545;
+  color: #f85149;
+  font-size: 0.82rem;
+  margin-top: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  background-color: rgba(248, 81, 73, 0.08);
+  border-radius: 6px;
+  border-left: 3px solid #f85149;
 }
 
-small {
+/* ── Helper text ── */
+.subir-codigo small {
   display: block;
-  color: #666;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
+  color: #9aa4b2;
+  font-size: 0.78rem;
+  margin-top: 0.4rem;
 }
 
-.file-info {
-  padding: 0.5rem;
-  background-color: #e8f4fd;
-  border-radius: 4px;
-  color: #0056b3;
+.subir-codigo .file-info {
+  padding: 0.45rem 0.7rem;
+  background-color: rgba(88, 166, 255, 0.1);
+  border-radius: 6px;
+  color: #58a6ff;
   font-weight: 500;
 }
 
-.form-buttons {
+/* ── Buttons ── */
+.subir-codigo .form-buttons {
   display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
 }
 
-button {
+.subir-codigo button[type="submit"] {
   flex: 1;
   padding: 0.75rem 1.5rem;
+  background-color: #28a745;
+  color: #ffffff;
   border: none;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.2s, transform 0.15s;
 }
 
-button[type="submit"] {
-  background-color: #007bff;
-  color: white;
-}
-
-button[type="submit"]:hover:not(:disabled) {
-  background-color: #0056b3;
+.subir-codigo button[type="submit"]:hover:not(:disabled) {
+  background-color: #218838;
   transform: translateY(-1px);
 }
 
-button[type="button"] {
-  background-color: #6c757d;
-  color: white;
+.subir-codigo button[type="button"] {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: #9aa4b2;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, transform 0.15s;
 }
 
-button[type="button"]:hover:not(:disabled) {
-  background-color: #545b62;
+.subir-codigo button[type="button"]:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #e6edf3;
   transform: translateY(-1px);
 }
 
-button:disabled {
-  opacity: 0.6;
+.subir-codigo button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-button.enviando {
+.subir-codigo button.enviando {
   position: relative;
   color: transparent;
 }
 
-button.enviando::after {
+.subir-codigo button.enviando::after {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   top: 50%;
   left: 50%;
-  margin: -10px 0 0 -10px;
-  border: 3px solid rgba(255,255,255,0.3);
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: white;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.required-note {
+/* ── Required note ── */
+.subir-codigo .required-note {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #ddd;
-  font-size: 0.85rem;
-  color: #666;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.82rem;
+  color: #9aa4b2;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .subir-codigo {
-    margin: 1rem;
-    padding: 1rem;
+    margin: 0 1rem 2rem;
+    padding: 1.25rem;
   }
-  
-  .form-buttons {
+
+  .subir-codigo .form-buttons {
     flex-direction: column;
-  }
-  
-  button {
-    width: 100%;
   }
 }

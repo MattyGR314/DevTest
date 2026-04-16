@@ -126,8 +126,6 @@ const Busqueda = () => {
     switch (campo) {
       case 'nombre':
         return 'Buscar por nombre...';
-      case 'id':
-        return 'Buscar por ID...';
       case 'descripcion':
         return 'Buscar por descripción...';
       default:
@@ -147,7 +145,6 @@ const Busqueda = () => {
             className="busqueda-seleccionar"
           >
             <option value="nombre">Nombre</option>
-            <option value="id">ID</option>
             <option value="descripcion">Descripción</option>
           </select>
 

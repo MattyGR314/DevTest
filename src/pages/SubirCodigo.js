@@ -204,6 +204,12 @@ function SubirCodigo() {
   const mostrarMensajeGlobal = mensaje && Object.keys(errores).length === 0;
 
   return (
+    <>
+    <div className="subir-codigo-header">
+      <h2>Sube tu proyecto</h2>
+      <p>Comparte tu ejecutable y recibe feedback de la comunidad de testers</p>
+    </div>
+
     <div className="subir-codigo">
 
       {mostrarMensajeGlobal && (
@@ -321,6 +327,7 @@ function SubirCodigo() {
         </div>
       </form>
     </div>
+    </>
   );
 }
 

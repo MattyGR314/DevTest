@@ -1,10 +1,117 @@
 .inicio {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
+  padding: 0;
 }
 
-.inicio p {
-  font-size: 16px;
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  padding: 80px 24px 64px;
+}
+
+.hero-titulo {
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+
+.hero-acento {
+  color: #28a745;
+}
+
+.hero-subtitulo {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: #9aa4b2;
+  max-width: 520px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+.hero-acciones {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-inicio-primario {
+  display: inline-block;
+  background-color: #28a745;
+  color: #ffffff;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-inicio-primario:hover {
+  background-color: #218838;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn-inicio-secundario {
+  display: inline-block;
+  border: 1.5px solid #58a6ff;
+  color: #58a6ff;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-inicio-secundario:hover {
+  background-color: rgba(88, 166, 255, 0.1);
+  color: #58a6ff;
+  transform: translateY(-2px);
+}
+
+/* ── Feature cards ── */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 0 32px 64px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background-color: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.feature-card:hover {
+  border-color: rgba(88, 166, 255, 0.35);
+  transform: translateY(-3px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.feature-titulo {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.feature-descripcion {
+  color: #9aa4b2;
+  font-size: 0.875rem;
   line-height: 1.6;
+  margin: 0;
 }
