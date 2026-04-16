@@ -11,16 +11,23 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-    <Router>
-      <Layout>
+      <Router>
         <Routes>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/subircodigo" element={<SubirCodigo />} />
-          <Route path="/confirmacion" element={<ConfirmacionSubida />} />
+          {/* Ruta independiente sin Layout */}
           <Route path="/iniciarSesion" element={<IniciarSesion />} />
+          
+          {/* Rutas con Layout */}
+          <Route path="*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Inicio />} />
+                <Route path="/subircodigo" element={<SubirCodigo />} />
+                <Route path="/confirmacion" element={<ConfirmacionSubida />} />
+              </Routes>
+            </Layout>
+          } />
         </Routes>
-      </Layout>
-    </Router>
+      </Router>
     </AuthProvider>
   );
 }

@@ -13,9 +13,7 @@ function IniciarSesion() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errores[name]) {
-      setErrores(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errores[name]) setErrores(prev => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -54,13 +52,9 @@ function IniciarSesion() {
         login(data.correo);
         navigate('/');
       } else {
-        if (response.status === 404) {
-          setErrores({ correo: data.error });
-        } else if (response.status === 401) {
-          setErrores({ contrasena: data.error });
-        } else {
-          setErrores({ correo: data.error || 'Error del servidor' });
-        }
+        if (response.status === 404) setErrores({ correo: data.error });
+        else if (response.status === 401) setErrores({ contrasena: data.error });
+        else setErrores({ correo: data.error || 'Error del servidor' });
       }
     } catch (error) {
       setErrores({ correo: 'Error de conexión con el servidor' });
@@ -75,62 +69,60 @@ function IniciarSesion() {
   };
 
   return (
-    <div className="iniciar-sesion">
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="form-group">
-          <label htmlFor="correo">
-            Correo electrónico: <span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            name="correo"
-            id="correo"
-            placeholder="tu@email.com"
-            value={formData.correo}
-            onChange={handleInputChange}
-            className={errores.correo ? 'error' : ''}
-          />
-          {errores.correo && (
-            <span className="error-message" role="alert">
-              ⚠️ {errores.correo}
-            </span>
-          )}
-        </div>
+    <div className="iniciar-sesion-container">
+      <div className="iniciar-sesion">
+        <h2>Iniciar <span className='Sesion'>Sesión</span></h2>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="correo">
+              Correo electrónico <span className="required">*</span>
+            </label>
+            <input
+              type="email"
+              name="correo"
+              id="correo"
+              placeholder="Ingrese su correo electrónico"
+              value={formData.correo}
+              onChange={handleInputChange}
+              className={errores.correo ? 'error' : ''}
+            />
+            {errores.correo && (
+              <span className="error-message" role="alert">{errores.correo}</span>
+            )}
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="contrasena">
-            Contraseña: <span className="required">*</span>
-          </label>
-          <input
-            type="password"
-            name="contrasena"
-            id="contrasena"
-            placeholder="Tu contraseña"
-            value={formData.contrasena}
-            onChange={handleInputChange}
-            className={errores.contrasena ? 'error' : ''}
-          />
-          {errores.contrasena && (
-            <span className="error-message" role="alert">
-              ⚠️ {errores.contrasena}
-            </span>
-          )}
-        </div>
+          <div className="form-group">
+            <label htmlFor="contrasena">
+              Contraseña <span className="required">*</span>
+            </label>
+            <input
+              type="password"
+              name="contrasena"
+              id="contrasena"
+              placeholder="Ingrese su contraseña"
+              value={formData.contrasena}
+              onChange={handleInputChange}
+              className={errores.contrasena ? 'error' : ''}
+            />
+            {errores.contrasena && (
+              <span className="error-message" role="alert">{errores.contrasena}</span>
+            )}
+          </div>
 
-        <div className="form-buttons">
-          <button type="submit" disabled={enviando}>
-            {enviando ? 'Comprobando...' : 'Iniciar Sesión'}
-          </button>
-          <button type="button" onClick={handleReset} disabled={enviando}>
-            Cancelar
-          </button>
-        </div>
+           <div className="form-buttons">
+            {/*<button type="button" onClick={handleReset} disabled={enviando} className="btn-clear">
+              Limpiar
+            </button> */}
 
-        <div className="required-note">
-          <span className="required">*</span> Campos obligatorios
-        </div>
-      </form>
+            <button type="submit" disabled={enviando} className="btn-primary-login">
+              {enviando ? 'Comprobando...' : 'Iniciar Sesión'}
+            </button>
+            <button type="button" onClick={() => navigate('/')} disabled={enviando} className="btn-secondary">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
