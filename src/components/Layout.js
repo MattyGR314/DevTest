@@ -14,10 +14,15 @@ function Layout({ children }) {
               <span className="Dev">Dev</span><span className="Test">Test</span>
           </div>
 
-          {!usuario && (
+          {!usuario ? (
             <Link to="/iniciarSesion" className="btn-login-header">
               Iniciar Sesión
             </Link>
+          ) : (
+            <div className="user-info d-flex align-items-center">
+              <i className="bi bi-person-circle me-2"></i>
+              <span>{usuario}</span>
+            </div>
           )}
         </div>
 

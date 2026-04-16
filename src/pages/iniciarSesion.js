@@ -7,7 +7,7 @@ function IniciarSesion() {
   const [formData, setFormData] = useState({ correo: '', contrasena: '' });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
-  const { login } = useAuth();
+  const { usuario, login } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -72,6 +72,11 @@ function IniciarSesion() {
     <div className="iniciar-sesion-container">
       <div className="iniciar-sesion">
         <h2>Iniciar <span className='Sesion'>Sesión</span></h2>
+        {usuario && (
+          <div className="info-message">
+            Ya has iniciado sesión como <strong>{usuario}</strong>. El botón de iniciar sesión está desactivado.
+          </div>
+        )}
         <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
             <label htmlFor="correo">
@@ -85,6 +90,7 @@ function IniciarSesion() {
               value={formData.correo}
               onChange={handleInputChange}
               className={errores.correo ? 'error' : ''}
+              disabled={!!usuario}
             />
             {errores.correo && (
               <span className="error-message" role="alert">{errores.correo}</span>
@@ -103,6 +109,7 @@ function IniciarSesion() {
               value={formData.contrasena}
               onChange={handleInputChange}
               className={errores.contrasena ? 'error' : ''}
+              disabled={!!usuario}
             />
             {errores.contrasena && (
               <span className="error-message" role="alert">{errores.contrasena}</span>
@@ -114,7 +121,7 @@ function IniciarSesion() {
               Limpiar
             </button> */}
 
-            <button type="submit" disabled={enviando} className="btn-primary-login">
+            <button type="submit" disabled={enviando || !!usuario} className="btn-primary-login">
               {enviando ? 'Comprobando...' : 'Iniciar Sesión'}
             </button>
             <button type="button" onClick={() => navigate('/')} disabled={enviando} className="btn-secondary">
