@@ -1,14 +1,229 @@
-.registro {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* ── Page header ── */
+.registro-header {
+  text-align: center;
+  padding: 48px 24px 32px;
 }
 
-.registro h2 {
-  text-align: center;
+.registro-header h2 {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  margin-bottom: 8px;
+}
+
+.registro-header p {
+  color: #9aa4b2;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* ── Form card ── */
+.registro {
+  max-width: 460px;
+  margin: 0 auto 3rem;
+  padding: 2rem;
+  background-color: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+/* ── Global error ── */
+.registro-error-general {
+  padding: 0.8rem 1rem;
+  border-left: 4px solid #f85149;
+  border-radius: 6px;
+  background-color: rgba(248, 81, 73, 0.08);
+  color: #f85149;
+  font-size: 0.88rem;
   margin-bottom: 1.5rem;
-  color: #333;
+}
+
+/* ── Field groups ── */
+.registro-group {
+  margin-bottom: 1.4rem;
+}
+
+.registro-group label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+  color: #e6edf3;
+  font-size: 0.9rem;
+}
+
+.registro-required {
+  color: #f85149;
+  margin-left: 3px;
+}
+
+/* ── Inputs ── */
+.registro-group input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #e6edf3;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.registro-group input::placeholder {
+  color: #4d5a6a;
+}
+
+.registro-group input:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.registro-group input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.registro-group input.error {
+  border-color: #f85149;
+}
+
+.registro-group input.error:focus {
+  border-color: #f85149;
+  box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.15);
+}
+
+/* ── Field error text ── */
+.registro-error-texto {
+  display: block;
+  color: #f85149;
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  background-color: rgba(248, 81, 73, 0.08);
+  border-left: 3px solid #f85149;
+  border-radius: 4px;
+}
+
+/* ── Buttons ── */
+.registro-botones {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+}
+
+.registro-btn-submit {
+  flex: 1;
+  padding: 0.8rem;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.registro-btn-submit:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.registro-btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.registro-btn-cancelar {
+  flex: 1;
+  padding: 0.8rem;
+  background-color: transparent;
+  color: #9aa4b2;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, transform 0.15s;
+}
+
+.registro-btn-cancelar:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #e6edf3;
+  transform: translateY(-1px);
+}
+
+.registro-btn-cancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Required note ── */
+.registro-nota-required {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 0.82rem;
+  color: #9aa4b2;
+  text-align: center;
+}
+
+/* ── Success state ── */
+.registro-exito {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.registro-exito-icono {
+  display: block;
+  font-size: 2.5rem;
+  color: #56d364;
+  margin-bottom: 1rem;
+}
+
+.registro-exito h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.registro-exito p {
+  color: #9aa4b2;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.registro-link-inicio {
+  display: inline-block;
+  padding: 0.7rem 1.75rem;
+  background-color: #28a745;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.registro-link-inicio:hover {
+  background-color: #218838;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 540px) {
+  .registro {
+    margin: 0 1rem 2rem;
+    padding: 1.25rem;
+  }
+
+  .registro-botones {
+    flex-direction: column;
+  }
 }
