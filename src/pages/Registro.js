@@ -8,6 +8,7 @@ function Registro() {
     correo: '',
     contrasena: '',
     confirmarContrasena: '',
+    tipoCuenta: 'developer',
   });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
@@ -32,14 +33,22 @@ function Registro() {
 
     if (!formData.contrasena.trim()) {
       nuevosErrores.contrasena = 'La contraseña es obligatoria';
-    } else if (formData.contrasena.length < 6) {
-      nuevosErrores.contrasena = 'La contraseña debe tener al menos 6 caracteres';
+    /* modificado en DT 01 05*/
+    } else if (formData.contrasena.length < 8) {
+      nuevosErrores.contrasena = 'La contraseña debe tener al menos 8 caracteres';
+    } else if (/\s/.test(formData.contrasena)) {
+      nuevosErrores.contrasena = 'La contraseña no puede contener espacios';
     }
+    /* modificado en DT 01 05*/
 
     if (!formData.confirmarContrasena.trim()) {
       nuevosErrores.confirmarContrasena = 'Debes confirmar la contraseña';
     } else if (formData.contrasena !== formData.confirmarContrasena) {
       nuevosErrores.confirmarContrasena = 'Las contraseñas no coinciden';
+    }
+
+    if (!formData.tipoCuenta) {
+      nuevosErrores.tipoCuenta = 'Debes seleccionar un tipo de cuenta';
     }
 
     setErrores(nuevosErrores);
@@ -58,6 +67,7 @@ function Registro() {
         body: JSON.stringify({
           correo: formData.correo.trim(),
           contrasena: formData.contrasena,
+          tipoCuenta: formData.tipoCuenta,
         }),
       });
 
@@ -79,7 +89,12 @@ function Registro() {
   };
 
   const handleReset = () => {
-    setFormData({ correo: '', contrasena: '', confirmarContrasena: '' });
+    setFormData({ 
+      correo: '', 
+      contrasena: '', 
+      confirmarContrasena: '',
+      tipoCuenta: 'developer',
+    });
     setErrores({});
   };
 
@@ -116,6 +131,7 @@ function Registro() {
 
         <form onSubmit={handleSubmit} noValidate>
 
+          {/* Campo correo */}
           <div className="registro-group">
             <label htmlFor="correo">
               Correo electrónico <span className="registro-required">*</span>
@@ -136,6 +152,7 @@ function Registro() {
             )}
           </div>
 
+          {/* Campo contraseña */}
           <div className="registro-group">
             <label htmlFor="contrasena">
               Contraseña <span className="registro-required">*</span>
@@ -144,7 +161,7 @@ function Registro() {
               type="password"
               name="contrasena"
               id="contrasena"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres, sin espacios"
               value={formData.contrasena}
               onChange={handleInputChange}
               className={errores.contrasena ? 'error' : ''}
@@ -156,6 +173,7 @@ function Registro() {
             )}
           </div>
 
+          {/* Campo confirmar contraseña */}
           <div className="registro-group">
             <label htmlFor="confirmarContrasena">
               Confirmar contraseña <span className="registro-required">*</span>
@@ -173,6 +191,27 @@ function Registro() {
             />
             {errores.confirmarContrasena && (
               <span className="registro-error-texto" role="alert">{errores.confirmarContrasena}</span>
+            )}
+          </div>
+
+          {/* Nuevo campo: Tipo de cuenta */}
+          <div className="registro-group">
+            <label htmlFor="tipoCuenta">
+              Tipo de cuenta <span className="registro-required">*</span>
+            </label>
+            <select
+              name="tipoCuenta"
+              id="tipoCuenta"
+              value={formData.tipoCuenta}
+              onChange={handleInputChange}
+              className={errores.tipoCuenta ? 'error' : ''}
+              disabled={enviando}
+            >
+              <option value="developer">Developer</option>
+              <option value="tester">Tester</option>
+            </select>
+            {errores.tipoCuenta && (
+              <span className="registro-error-texto" role="alert">{errores.tipoCuenta}</span>
             )}
           </div>
 

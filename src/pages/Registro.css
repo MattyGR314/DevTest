@@ -216,6 +216,47 @@
   transform: translateY(-1px);
 }
 
+/* Estilos para el select (tipo de cuenta) con flecha personalizada */
+.registro-group select {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #e6edf3;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  /* Personalización de la flecha */
+  appearance: none;  /* Oculta la flecha nativa */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa4b2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 14px;
+}
+
+.registro-group select:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.registro-group select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.registro-group select.error {
+  border-color: #f85149;
+}
+
+.registro-group select.error:focus {
+  box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.15);
+}
+
 /* ── Responsive ── */
 @media (max-width: 540px) {
   .registro {
