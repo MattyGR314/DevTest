@@ -1,3 +1,4 @@
+/* global cy */
 import React from 'react';
 import { mount } from 'cypress/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
