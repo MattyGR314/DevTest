@@ -2,7 +2,7 @@
   --bg: #0b1220;
   --panel: #0f1724;
   --muted: #9aa4b2;
-  --text: #000000;
+  --text: #ffffff; /* Ajustado a blanco puro para el tema oscuro */
   --accent: #58a6ff;
   --primary: #2389ff;
 }
@@ -13,81 +13,76 @@
   min-height: 100vh;
   background: linear-gradient(180deg, var(--bg), #05060a);
   color: var(--text);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Tipografía limpia por defecto */
 }
 
-.layout img{
-  height: 50px;
-  width: 50px;
+/* --- NUEVA CABECERA UNIFICADA Y FIJA --- */
+.header-principal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  height: 70px;
+  background: rgba(11, 18, 32, 0.95); /* Color oscuro semi-transparente */
+  backdrop-filter: blur(8px); /* Efecto cristal elegante */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Borde muy sutil */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.encabezado button{
-  height: 60px;
-  max-width: 60px;
-}
-
-.btn-close{
-  max-width: 40px;
-}
-
-.Test {
-  color: #ffffff;
-  font-size: 100px;
-  font-family: 'montserrat', sans-serif;
-  font-weight: bold;
+/* --- LOGO --- */
+.logo-link {
+  text-decoration: none;
 }
 
 .Dev {
   color: #28a745;
-  font-size: 100px;
-  font-family: 'montserrat', sans-serif;
-  font-weight: bold;
+  font-size: 28px; /* Tamaño mucho más sobrio y proporcional */
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
 }
 
-.footer{
+.Test {
   color: #ffffff;
-  
+  font-size: 28px; /* Tamaño mucho más sobrio y proporcional */
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
 }
 
-.encabezado {
-  background: linear-gradient(180deg, #07101f, #09162a);
-  padding: 24px 32px 18px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-
-
-
-.navegacion {
-  background-color: var(--panel);
-  padding: 0;
+/* --- NAVEGACIÓN --- */
+.navegacion-principal {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  
+  gap: 32px; /* Separación limpia sin líneas divisorias */
 }
 
-.navegacion a {
-  color: var(--text);
+.navegacion-principal a {
+  color: var(--muted);
   text-decoration: none;
-  padding: 15px 20px;
-  transition: background-color 0.3s, color 0.3s;
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  color:rgb(255, 255, 255)
+  font-size: 15px;
+  font-weight: 500;
+  padding: 8px 0;
+  transition: color 0.3s ease;
 }
 
-.navegacion a:hover {
-  background-color: rgba(88, 166, 255, 0.1);
-  color: var(--accent);
+.navegacion-principal a:hover {
+  color: #ffffff; /* Al pasar el ratón, se ilumina el texto, sin fondos cuadrados */
 }
 
-.navegacion a:last-child {
-  border-right: none;
+.user-actions {
+  width: 100px; /* Mantiene la navegación centrada empujando desde la derecha */
 }
 
+/* --- CONTENIDO Y FOOTER --- */
 .contenido {
   flex: 1;
-  padding: 20px;
-  color: var(--text);
+  padding: 40px 20px;
+  width: 100%;
 }
 
+.footer {
+  color: var(--muted);
+  padding: 24px;
+  font-size: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}

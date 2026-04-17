@@ -9,44 +9,42 @@ function Layout({ children }) {
   return (
     <div className="layout">
 
-        <div className="encabezado d-flex justify-content-between">
-          <div>
-              <span className="Dev">Dev</span><span className="Test">Test</span>
-          </div>
+      {/* Cabecera unificada y fija */}
+      <header className="header-principal">
+        
+        <div className="logo-container">
+          <Link to="/" className="logo-link">
+            <span className="Dev">Dev</span><span className="Test">Test</span>
+          </Link>
         </div>
 
-        <nav className="navegacion d-flex justify-content-center">
+        <nav className="navegacion-principal">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
-
-          <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
-
+          <Link to="/busqueda">Búsqueda</Link>
         </nav>
 
-        <main className="contenido">
-          {children}
-        </main>
-
-        <div className='footer text-center'>
-          <p> Plataforma académica. Todos los derechos reservados</p>
+        {/* Espacio reservado a la derecha por si luego quieres poner un perfil de usuario o botón */}
+        <div className="user-actions">
+           {/* Puedes poner el botón del offcanvas aquí en el futuro */}
         </div>
 
-      <div className="offcanvas offcanvas-end"tabIndex="-1"id="menuRight">
+      </header>
 
-          <div className="offcanvas-header">
+      <main className="contenido">
+        {children}
+      </main>
 
-            <h5 className="offcanvas-title">
-              Menú DevTest
-            </h5>
+      <div className='footer text-center'>
+        <p>Plataforma académica. Todos los derechos reservados</p>
+      </div>
 
-            <button
-              type="button"
-              className="btn-close"
-              data-bs-dismiss="offcanvas"
-            ></button>
-
-          </div>
-
+      {/* Menú lateral (Offcanvas) */}
+      <div className="offcanvas offcanvas-end" tabIndex="-1" id="menuRight">
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title">Menú DevTest</h5>
+          <button type="button" className="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
         <div className="offcanvas-body">
           {usuario ? (
             <div>
@@ -59,11 +57,9 @@ function Layout({ children }) {
             <p>No has iniciado sesión</p>
           )}
         </div>
-
       </div>
-    </div>
 
-    
+    </div>
   );
 }
 
