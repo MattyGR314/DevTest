@@ -15,7 +15,7 @@ const completarFormulario = (correo, contrasena, confirmarContrasena, tipoCuenta
 
 	/*modificado DT 01 05*/
     it('DT_01_1: Muestra los campos y botones obligatorios, incluyendo tipo de cuenta', () => {
-        cy.contains('h2', 'Crear cuenta').should('be.visible');
+        cy.contains('h2', 'Crea tu cuenta').should('be.visible');
         cy.get('input#correo').should('be.visible').and('have.attr', 'type', 'email');
 		cy.get('input#contrasena').should('be.visible').and('have.attr', 'type', 'password');
 		cy.get('input#confirmarContrasena').should('be.visible').and('have.attr', 'type', 'password');
@@ -126,7 +126,7 @@ const completarFormulario = (correo, contrasena, confirmarContrasena, tipoCuenta
 		cy.contains('button', 'Crear cuenta').click(); //modificado DT 01 05
 
 		cy.wait('@postRegistro500');
-		cy.contains('[role="alert"]', 'Error interno inesperado').should('be.visible');
+		cy.contains('.registro-error-general', 'Error interno inesperado').should('be.visible'); //modificado DT 01 05
 	});
 
 	it('DT_01_10: Muestra error de conexión cuando falla la petición', () => {
@@ -139,7 +139,7 @@ const completarFormulario = (correo, contrasena, confirmarContrasena, tipoCuenta
 		cy.contains('button', 'Crear cuenta').click(); //modificado DT 01 05
 
 		cy.wait('@postRegistroRed');
-		cy.contains('[role="alert"]', 'Error de conexión con el servidor').should('be.visible');
+		cy.contains('.registro-error-general', 'Error de conexión con el servidor').should('be.visible'); //modificado DT 01 05
 	});
 
 	// === NUEVAS PRUEBAS AÑADIDAS EN SPRINT 2 ===
