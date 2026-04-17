@@ -5,13 +5,13 @@ describe('DT_01 - Registro de usuario', () => {
 		cy.visit('/registro');
 	});
 
-/* funcion de ayuda*/
-const completarFormulario = (correo, contrasena, confirmarContrasena, tipoCuenta = 'developer') => {
-    cy.get('input#correo').clear().type(correo);
-    cy.get('input#contrasena').clear().type(contrasena);
-    cy.get('input#confirmarContrasena').clear().type(confirmarContrasena);
-    cy.get('select#tipoCuenta').select(tipoCuenta);
-  };
+	/* funcion de ayuda*/
+	const completarFormulario = (correo, contrasena, confirmarContrasena, tipoCuenta = 'developer') => {
+		cy.get('input#correo').clear().type(correo);
+		cy.get('input#contrasena').clear().type(contrasena);
+		cy.get('input#confirmarContrasena').clear().type(confirmarContrasena);
+		cy.get('select#tipoCuenta').select(tipoCuenta);
+	};
 
 	/*modificado DT 01 05*/
     it('DT_01_1: Muestra los campos y botones obligatorios, incluyendo tipo de cuenta', () => {
