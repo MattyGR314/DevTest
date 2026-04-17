@@ -40,7 +40,9 @@ jobs:
       - name: Ejecutar prueba unitaria de la unidad (Component Testing)
         uses: cypress-io/github-action@v6
         with:
-          # 2. NUEVO: Le decimos a Cypress que NO ejecute npm ci, nosotros ya instalamos arriba
           install: false 
           component: true
           spec: ${{ steps.set-target.outputs.test_file }}
+        env:
+          # Inyectamos la variable directamente en el contenedor de GitHub
+          NODE_ENV: development
