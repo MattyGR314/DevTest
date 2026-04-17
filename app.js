@@ -626,6 +626,72 @@ app.put('/api/proyectos/:id/descripcion', async (req, res) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ===== RUTA PARA COMPROBAR SI UN USUARIO YA ESTÁ INSCRITO =====
+app.get('/api/inscripciones/check', async (req, res) => {
+  const { correo, id_proyectos } = req.query;
+
+  if (!correo || !id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos, 10)]
+    );
+    connection.release();
+    res.json({ inscrito: rows.length > 0 });
+  } catch (error) {
+    console.error('Error al verificar inscripción:', error);
+    res.status(500).json({ error: 'Error al verificar inscripción' });
+  }
+});
+
+// ===== RUTA PARA GUARDAR FEEDBACK =====
+app.post('/api/feedback', async (req, res) => {
+  const { correo, id_proyectos, texto } = req.body;
+
+  if (!correo || !correo.trim()) {
+    return res.status(400).json({ error: 'El correo es obligatorio' });
+  }
+  if (!id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'ID de proyecto inválido' });
+  }
+  if (!texto || !texto.trim()) {
+    return res.status(400).json({ error: 'El texto del feedback es obligatorio' });
+  }
+  if (texto.trim().length > 1000) {
+    return res.status(400).json({ error: 'El feedback no puede exceder 1000 caracteres' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // Verificar que el usuario está inscrito en el proyecto
+    const [inscripcion] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos, 10)]
+    );
+
+    if (inscripcion.length === 0) {
+      connection.release();
+      return res.status(403).json({ error: 'Solo los testers inscritos pueden enviar feedback' });
+    }
+
+    await connection.execute(
+      'INSERT INTO feedback (correo, id_proyectos, texto) VALUES (?, ?, ?)',
+      [correo.trim(), parseInt(id_proyectos, 10), texto.trim()]
+    );
+    connection.release();
+
+    res.status(201).json({ message: 'Feedback enviado correctamente' });
+  } catch (error) {
+    console.error('Error al guardar feedback:', error);
+    res.status(500).json({ error: 'Error al guardar el feedback', detalles: error.message });
+  }
+});
+
 // ===== 1. MANEJO DE 404 PARA LA API =====
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
 // Movido a aquí en DT_5 como este orden impide los además a funcionar

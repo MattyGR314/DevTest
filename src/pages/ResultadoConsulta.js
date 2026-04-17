@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
 	const { id } = useParams();
+	const { usuario } = useAuth();
 	const [proyecto, setProyecto] = useState(null);
 	const [cargando, setCargando] = useState(true);
 	const [error, setError] = useState('');
+	const [yaInscrito, setYaInscrito] = useState(false);
 
 	useEffect(() => {
 		const fetchProyecto = async () => {
@@ -36,6 +39,14 @@ function ResultadoConsulta() {
 
 		fetchProyecto();
 	}, [id]);
+
+	useEffect(() => {
+		if (!usuario || !id) return;
+		fetch(`/api/inscripciones/check?correo=${encodeURIComponent(usuario)}&id_proyectos=${id}`)
+			.then(r => r.json())
+			.then(data => setYaInscrito(data.inscrito === true))
+			.catch(() => {});
+	}, [usuario, id]);
 
 	const formatearFecha = (fecha) => {
 		if (!fecha) return 'Sin fecha';
@@ -80,9 +91,15 @@ function ResultadoConsulta() {
 					</div>
 					
 					<div className="resultado-acciones">
-						<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
-							Inscribirse como Tester
-						</Link>
+						{yaInscrito ? (
+							<Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
+								Enviar feedback
+							</Link>
+						) : (
+							<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
+								Inscribirse como Tester
+							</Link>
+						)}
 					</div>
 				</article>
 			)}
