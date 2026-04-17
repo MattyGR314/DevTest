@@ -9,9 +9,23 @@ function Layout({ children }) {
   return (
     <div className="layout">
 
-        <div className="encabezado d-flex justify-content-between">
+        <div className="encabezado d-flex justify-content-between align-items-center">
           <div>
-              <span className="Dev">Dev</span><span className="Test">Test</span>
+            <span className="Dev">Dev</span><span className="Test">Test</span>
+          </div>
+          <div className="encabezado-sesion">
+            {usuario && (
+              <span className="encabezado-usuario">{usuario}</span>
+            )}
+            <button
+              type="button"
+              className="btn-sesion"
+              onClick={usuario ? logout : undefined}
+              disabled={!usuario}
+              title={usuario ? `Cerrar sesión de ${usuario}` : 'No has iniciado sesión'}
+            >
+              Cerrar sesión
+            </button>
           </div>
         </div>
 
