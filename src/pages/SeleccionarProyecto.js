@@ -128,7 +128,7 @@ function SeleccionarProyecto() {
         <div className="error-message">{errores.general}</div>
       )}
 
-      <form id="inscripcion" onSubmit={handleSubmit}>
+      <form id="inscripcion" onSubmit={handleSubmit} noValidate>
         <div className="form-group">
           <label htmlFor="nombre">
             Nombre <span className="required">*</span>
@@ -142,7 +142,7 @@ function SeleccionarProyecto() {
             className={errores.nombre ? "form-control error" : "form-control"}
             maxLength="100"
             placeholder="Ingrese su nombre completo"
-            disabled={enviando || cargando}
+            disabled={enviando || cargando || error}
           />
           {errores.nombre && <span className="error-text">{errores.nombre}</span>}
         </div>
@@ -159,7 +159,7 @@ function SeleccionarProyecto() {
             onChange={handleInputChange}
             className={errores.correo ? "form-control error" : "form-control"}
             placeholder="Ingrese su correo electrónico"
-            disabled={enviando || cargando}
+            disabled={enviando || cargando || error}
           />
           {errores.correo && <span className="error-text">{errores.correo}</span>}
         </div>
@@ -167,7 +167,7 @@ function SeleccionarProyecto() {
         <button
           type="submit"
           className="btn btn-primary"
-          disabled={enviando || cargando}
+          disabled={enviando || cargando || error}
         >
           {enviando ? "Guardando..." : "Inscribirse"}
         </button>

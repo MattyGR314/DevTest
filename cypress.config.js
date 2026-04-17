@@ -1,4 +1,6 @@
 const { defineConfig } = require("cypress");
+// 1. Importamos la configuración interna de Webpack que usa Create React App
+const getWebpackConfig = require("react-scripts/config/webpack.config");
 
 module.exports = defineConfig({
   // Configuración global
@@ -7,35 +9,22 @@ module.exports = defineConfig({
   defaultCommandTimeout: 10000,
   
   e2e: {
-    // URL base de tu aplicación (ajusta el puerto si es diferente)
     baseUrl: 'http://localhost:3000',
-    
-    // Aqui especificas donde buscar las pruebas E2E
     specPattern: 'cypress/e2e/**/*.cy.js',
-    
-    // Archivo de soporte (comandos personalizados)
     supportFile: 'cypress/support/e2e.js',
-    
     setupNodeEvents(on, config) {
-      // Aquí puedes agregar listeners de eventos
-      // Por ejemplo, para tareas personalizadas
-      
-      // IMPORTANTE: Retornar el config modificado
       return config;
     },
   },
 
   component: {
-    // Configuración para pruebas de componentes
     devServer: {
       framework: "react",
       bundler: "webpack",
+      // 2. Le inyectamos la configuración de CRA en modo desarrollo
+      webpackConfig: getWebpackConfig("development"),
     },
-    
-    // Donde buscar las pruebas de componentes
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
-    
-    // Archivo de soporte para componentes
     supportFile: 'cypress/support/component.js',
   },
 });
