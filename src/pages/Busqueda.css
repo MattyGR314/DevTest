@@ -179,8 +179,15 @@
   scrollbar-width: thin;
 }
 
-.editar-descripcion-boton {
+.proyecto-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
   margin-top: 1rem;
+}
+
+.editar-descripcion-boton {
   padding: 0.75rem 1.2rem;
   background-color: #7a4f01;
   color: #ffffff;
@@ -325,13 +332,19 @@
 
 .descarga-link {
   display: inline-block;
-  margin-top: 0.7rem;
-  color: #1f7a36;
-  font-weight: 500;
+  padding: 0.75rem 1.2rem;
+  background-color: #0b8f5a;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
   text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
-
 .descarga-link:hover {
-  text-decoration: underline;
+  background-color: #077a4d;
+  color: #ffffff;
+  text-decoration: none;
+  transform: translateY(-1px);
 }

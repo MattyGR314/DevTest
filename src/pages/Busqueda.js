@@ -1,14 +1,17 @@
 //creado en DT_10_T1
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Busqueda.css';
 
 const Busqueda = () => {
+  const { usuario } = useAuth();
   const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
   const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  const [inscritosIds, setInscritosIds] = useState([]);
   const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
   const [descripcionEditada, setDescripcionEditada] = useState('');
   const [errorDescripcion, setErrorDescripcion] = useState('');
@@ -19,6 +22,14 @@ const Busqueda = () => {
   useEffect(() => {
     fetchProyectos();
   }, []);
+
+  useEffect(() => {
+    if (!usuario) return;
+    fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(usuario)}`)
+      .then(r => r.json())
+      .then(data => setInscritosIds(data.ids || []))
+      .catch(() => {});
+  }, [usuario]);
 
   useEffect(() => {
     if (proyectoEnEdicion && textareaRef.current) {
@@ -187,13 +198,24 @@ const Busqueda = () => {
               <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
-            <button
-              type="button"
-              className="editar-descripcion-boton"
-              onClick={() => abrirEditorDescripcion(proyecto)}
-            >
-              Modificar descripción
-            </button>
+            <div className="proyecto-acciones">
+              <button
+                type="button"
+                className="editar-descripcion-boton"
+                onClick={() => abrirEditorDescripcion(proyecto)}
+              >
+                Modificar descripción
+              </button>
+              {inscritosIds.includes(proyecto.id) && proyecto.archivo_path && (
+                <a
+                  href={`/${proyecto.archivo_path}`}
+                  download={proyecto.nombre_fichero || true}
+                  className="descarga-link"
+                >
+                  Descargar proyecto
+                </a>
+              )}
+            </div>
           </div>
         ))}
       </div>

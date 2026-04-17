@@ -626,6 +626,28 @@ app.put('/api/proyectos/:id/descripcion', async (req, res) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ===== RUTA PARA OBTENER IDs DE PROYECTOS EN LOS QUE UN USUARIO ESTÁ INSCRITO =====
+app.get('/api/inscripciones/usuario', async (req, res) => {
+  const { correo } = req.query;
+
+  if (!correo || !correo.trim()) {
+    return res.status(400).json({ error: 'El correo es obligatorio' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id_proyectos FROM inscripciones WHERE correo = ?',
+      [correo.trim()]
+    );
+    connection.release();
+    res.json({ ids: rows.map(r => r.id_proyectos) });
+  } catch (error) {
+    console.error('Error al obtener inscripciones del usuario:', error);
+    res.status(500).json({ error: 'Error al obtener inscripciones' });
+  }
+});
+
 // ===== 1. MANEJO DE 404 PARA LA API =====
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
 // Movido a aquí en DT_5 como este orden impide los además a funcionar
