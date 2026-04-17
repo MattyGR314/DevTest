@@ -2,7 +2,6 @@ name: Pruebas Unitarias Dinámicas
 
 on:
   push:
-    # Se activará automáticamente con cualquier push a ramas como Dev_DT_05, Dev_DT_11, etc.
     branches:
       - 'Dev_DT_*'
 
@@ -17,10 +16,11 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          # 1. ACTUALIZADO: Cambiamos a Node 20 para soportar Cypress 15+ y React Router 7+
+          node-version: '20'
 
       - name: Instalar dependencias
-        # Añadimos --legacy-peer-deps para evitar el error de npm que vimos localmente con webpack-dev-server
+        # Mantenemos nuestra instalación con legacy-peer-deps
         run: npm install --legacy-peer-deps
 
       - name: Construir la aplicación (Frontend)
@@ -29,26 +29,18 @@ jobs:
       - name: Determinar archivo de prueba según la rama
         id: set-target
         run: |
-          # 1. Obtenemos el nombre de la rama (ej. Dev_DT_06)
           RAMA="${{ github.ref_name }}"
-          
-          # 2. Extraemos solo los números usando una expresión regular (ej. 06)
           NUMERO=$(echo "$RAMA" | grep -oE '[0-9]+')
-          
-          # 3. Construimos la ruta del archivo basándonos en la nueva ubicación (src/)
-          # Usamos un comodín (**) por si está dentro de src/pages/ o src/components/
           ARCHIVO="src/**/prueba-unitaria-DT${NUMERO}.cy.*"
           
           echo "La rama actual es: $RAMA"
           echo "Buscando pruebas en: $ARCHIVO"
-          
-          # 4. Guardamos la ruta en una variable de salida
           echo "test_file=$ARCHIVO" >> $GITHUB_OUTPUT
 
       - name: Ejecutar prueba unitaria de la unidad (Component Testing)
         uses: cypress-io/github-action@v6
         with:
-          # Le indicamos a Cypress que ejecute el entorno de componentes, no el de E2E
+          # 2. NUEVO: Le decimos a Cypress que NO ejecute npm ci, nosotros ya instalamos arriba
+          install: false 
           component: true
-          # Le pasamos a Cypress el archivo exacto que calculamos arriba
           spec: ${{ steps.set-target.outputs.test_file }}
