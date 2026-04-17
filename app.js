@@ -105,7 +105,7 @@ app.get('/api/test', async (req, res, next) => {
 
 // ===== RUTA DE REGISTRO =====
 app.post('/api/registro', async (req, res) => {
-  const { correo, contrasena } = req.body;
+  const { correo, contrasena, tipoCuenta } = req.body; //modificado DT 01 05
 
   if (!correo || !contrasena) {
     return res.status(400).json({ error: 'Correo y contraseña son obligatorios' });
@@ -125,8 +125,8 @@ app.post('/api/registro', async (req, res) => {
     }
 
     await connection.execute(
-      'INSERT INTO usuarios (correo, password_hash) VALUES (?, ?)',
-      [correo, contrasena]
+      'INSERT INTO usuarios (correo, password_hash, tipo) VALUES (?, ?, ?)', //modificado DT 01 05
+      [correo, contrasena, tipoCuenta || 'developer'] //modificado DT 01 05
     );
     connection.release();
 
