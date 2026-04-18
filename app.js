@@ -102,6 +102,32 @@ app.get('/api/test', async (req, res, next) => {
   }
 });
 
+// RUTA PARA MODIFICAR DESCRIPCIÓN DE PROYECTO 
+app.put('/api/proyectos/:id', async (req, res, next) => {
+  const { id } = req.params;
+  const { descripcion } = req.body;
+
+  try {
+    const connection = await pool.getConnection();
+    
+    // Ejecutamos el UPDATE
+    const [result] = await connection.query(
+      'UPDATE proyectos SET descripcion = ? WHERE id = ?', 
+      [descripcion, id]
+    );
+    
+    connection.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    res.json({ message: 'Descripción actualizada correctamente' });
+  } catch (error) {
+    console.error('Error al actualizar proyecto:', error);
+    next(error); // Esto manda el error al manejador global de Express
+  }
+});
 
 // ===== RUTA DE INICIO DE SESIÓN =====
 app.post('/api/login', async (req, res) => {
