@@ -107,7 +107,10 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
       expect(interception.request.body).to.not.be.null;
     });
 
-    cy.get('button[type="submit"]').should('be.disabled');
+    // Verificamos que el flujo culminó mostrando el mensaje de éxito al usuario
+    cy.get('.success-message')
+      .should('be.visible')
+      .and('contain', '¡Inscripción guardada exitosamente!');
   });
 
   it('PRUEBA DE ESTADO: Manejo de errores entre módulos (Error 404 en DT10)', () => {
