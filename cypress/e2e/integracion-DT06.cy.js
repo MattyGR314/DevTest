@@ -48,8 +48,8 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
       ]
     }).as('detalleConsulta');
 
-    // 5. Mock para DT06 (Seleccionar/Inscribir Proyecto) - Búsqueda por Path Param
-    cy.intercept('GET', '/api/proyectos/100', {
+    // 5. Mock para DT06 (Seleccionar/Inscribir Proyecto) - Usando comodines
+	cy.intercept('GET', '**/api/proyectos/100*', {
       statusCode: 200,
       body: { 
         id: 100, 
@@ -96,7 +96,7 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
     cy.get('article.resultado-card').should('contain', 'Descripción editada desde Cypress');
 
     // --- FASE 6: DT06 - SELECCIONAR / INSCRIBIR PROYECTO ---
-    cy.visit('/seleccionar-proyecto/100');
+    cy.visit('/seleccionarproyecto/100');
     cy.wait('@detalleInscripcion');
 
     cy.get('input#nombre').type('Tester de Integración');
