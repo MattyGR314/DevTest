@@ -1,3 +1,4 @@
+/* global cy */
 describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () => {
 
   beforeEach(() => {

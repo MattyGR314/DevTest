@@ -41,24 +41,32 @@ jobs:
 
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
+        env:
+          NODE_ENV: test # <-- SOLUCIÓN AL ERROR: Le dice a react-scripts que estamos probando
         with:
           install: false
           start: npm start
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 120
           browser: chrome
+          # Usamos wildcards (*) para ejecutar todos los archivos que empiecen con "integracion-"
+          spec: cypress/e2e/integracion-*.cy.js 
 
-      # Estos pasos solo se ejecutan si lo de arriba falla o termina
-      - name: Upload artifact
-        if: always() 
+      # ==========================================
+      # RECOMENDACIÓN DE CALIDAD (Evidencias)
+      # ==========================================
+      - name: Guardar Capturas de Pantalla (si falla)
         uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: .
-
-      - name: Upload Cypress screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
           path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Guardar Videos de las Pruebas
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          if-no-files-found: ignore
