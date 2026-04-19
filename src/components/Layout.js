@@ -21,7 +21,11 @@ function Layout({ children }) {
         <nav className="navegacion-principal">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
-          <Link to="/busqueda">Búsqueda</Link>
+
+          <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
+
+          <Link to="/registro">Registrar</Link>  {/*DT_01_T1*/}
+
         </nav>
 
         {/* Espacio reservado a la derecha por si luego quieres poner un perfil de usuario o botón */}
