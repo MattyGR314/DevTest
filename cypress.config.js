@@ -8,7 +8,7 @@ module.exports = defineConfig({
   
   e2e: {
     // URL base de tu aplicación (ajusta el puerto si es diferente)
-    baseUrl: 'http://localhost:3000',
+    baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
     
     // Aquí especificas dónde buscar las pruebas E2E
     specPattern: 'cypress/e2e/**/*.cy.js',
