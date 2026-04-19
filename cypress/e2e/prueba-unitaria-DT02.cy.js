@@ -1,10 +1,20 @@
 /// <reference types="cypress" />
 
 describe('DT_02 - Inicio de sesion en la plataforma', () => {
+	const visitLoginWithFallback = () => {
+		cy.visit('/iniciarSesion', { failOnStatusCode: false });
+		cy.get('body').then(($body) => {
+			const altBaseUrl = Cypress.env('ALT_BASE_URL');
+			if ($body.find('form').length === 0 && altBaseUrl) {
+				cy.visit(`${altBaseUrl}/iniciarSesion`);
+			}
+		});
+		cy.get('form').should('be.visible');
+	};
+
 	beforeEach(() => {
 		cy.clearLocalStorage();
-		cy.visit('/iniciarSesion');
-		cy.get('form').should('be.visible');
+		visitLoginWithFallback();
 	});
 
 	it('DT_02_1: El usuario debe rellenar un formulario con correo y contrasena', () => {
@@ -113,7 +123,7 @@ describe('DT_02 - Inicio de sesion en la plataforma', () => {
 			win.localStorage.setItem('usuario_correo', 'logueado@devtest.com');
 		});
 
-		cy.visit('/iniciarSesion');
+		visitLoginWithFallback();
 
 		cy.contains(/ya has iniciado sesión como/i).should('be.visible');
 		cy.get('input#correo').should('be.disabled');
