@@ -49,7 +49,7 @@ function IniciarSesion() {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.correo);
+        login(data.correo, data.tipo || data.rol || data.usuario?.tipo || null);
         navigate('/');
       } else {
         if (response.status === 404) setErrores({ correo: data.error });

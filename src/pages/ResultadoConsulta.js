@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
   const { id } = useParams();
+  const { usuario } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  // const { usuario } = useAuth();
-  const usuario = "osloza01@ucm.es";
+  const tipoUsuario = (localStorage.getItem('usuario_tipo') || '').toLowerCase();
 
   const [proyecto, setProyecto] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [yaInscrito, setYaInscrito] = useState(false);
   const [editando, setEditando] = useState(false);
   const [nuevaDesc, setNuevaDesc] = useState("");
   const [mensajeStatus, setMensajeStatus] = useState(null);
@@ -34,6 +36,17 @@ function ResultadoConsulta() {
     };
     obtenerProyecto();
   }, [id]);
+
+  useEffect(() => {
+    if (!usuario || !id) return;
+
+    fetch(`/api/inscripciones/check?correo=${encodeURIComponent(usuario)}&id_proyectos=${id}`)
+      .then((r) => r.json())
+      .then((data) => setYaInscrito(data.inscrito === true))
+      .catch(() => {
+        setYaInscrito(false);
+      });
+  }, [usuario, id]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -78,8 +91,40 @@ function ResultadoConsulta() {
     return new Date(fecha).toLocaleDateString();
   };
 
+  const botonInscripcion = () => {
+    if (!usuario || !proyecto) return null;
+    if (tipoUsuario !== 'tester') return null;
+    if (proyecto.correo && proyecto.correo === usuario) return null;
+
+    if (yaInscrito) {
+      return (
+        <button
+          type="button"
+          className="btn-inscripcion btn-inscripcion--desactivado"
+          disabled
+        >
+          Ya inscrito en este proyecto
+        </button>
+      );
+    }
+
+    return (
+      <Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-inscripcion">
+        Inscribirse como Tester
+      </Link>
+    );
+  };
+
   // VARIABLE CORREGIDA SEGÚN TU BACKEND: nombre_fichero
   const fichero = proyecto?.nombre_fichero || "No hay fichero adjunto";
+  const esCreador = usuario && proyecto?.correo && proyecto.correo === usuario;
+  const textoDescripcion = proyecto?.descripcion || "Sin descripción registrada";
+  const descripcionLargaUnaPalabra = (() => {
+    const texto = (proyecto?.descripcion || "").trim();
+    if (!texto) return false;
+    const palabras = texto.split(/\s+/);
+    return palabras.length === 1 && texto.length >= 40;
+  })();
 
   return (
     <section className="resultado-consulta" style={{ padding: '20px' }}>
@@ -131,7 +176,13 @@ function ResultadoConsulta() {
                   <small style={{ color: '#888', display: 'block', marginTop: '5px' }}>Máximo 500 caracteres</small>
                 </div>
               ) : (
-                <p style={{ color: 'white', marginTop: '5px' }}>{proyecto.descripcion || "Sin descripción registrada"}</p>
+                descripcionLargaUnaPalabra ? (
+                  <div className="descripcion-scroll-box" title="Descripción larga con desplazamiento horizontal">
+                    {textoDescripcion}
+                  </div>
+                ) : (
+                  <p style={{ color: 'white', marginTop: '5px' }}>{textoDescripcion}</p>
+                )
               )}
             </div>
             
@@ -139,7 +190,7 @@ function ResultadoConsulta() {
           </div>
 
           <div className="resultado-acciones" style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px' }}>
-            {usuario && proyecto && proyecto.correo && proyecto.correo === usuario ? (
+            {esCreador ? (
               <div className="edicion-botones">
                 {!editando ? (
                   <button onClick={() => setEditando(true)} className="busqueda-boton" style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '10px 20px', width: '100%' }}>
@@ -159,24 +210,11 @@ function ResultadoConsulta() {
             ) : (
               !editando && (
                 <div style={{ textAlign: 'center' }}>
-                  <button 
-                    disabled 
-                    style={{ 
-                      backgroundColor: '#333', 
-                      color: '#777', 
-                      border: '1px solid #444', 
-                      padding: '12px 20px', 
-                      width: '100%', 
-                      cursor: 'not-allowed', 
-                      borderRadius: '4px' 
-                    }}
-                  >
-                    Necesitas ser el creador del proyecto para modificar la descripción
-                  </button>
+                  {botonInscripcion()}
 
                   {!usuario && (
                     <p className="resultado-aviso-login" style={{ color: 'white', marginTop: '15px', fontSize: '0.85em' }}>
-                      <Link to="/iniciarSesion" style={{ color: '#3498db' }}>Inicia sesión</Link> para inscribirte.
+                      <Link to="/iniciarSesion" style={{ color: '#3498db' }}>Inicia sesión</Link> para inscribirte como tester.
                     </p>
                   )}
                 </div>

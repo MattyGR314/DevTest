@@ -140,7 +140,7 @@ app.post('/api/login', async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
-      'SELECT correo, password_hash FROM usuarios WHERE correo = ?',
+      'SELECT correo, password_hash, tipo FROM usuarios WHERE correo = ?',
       [correo]
     );
     connection.release();
@@ -153,7 +153,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    res.json({ correo: rows[0].correo });
+    res.json({ correo: rows[0].correo, tipo: rows[0].tipo });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error del servidor' });
