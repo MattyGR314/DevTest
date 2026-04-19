@@ -1,8 +1,14 @@
 /// <reference types="cypress" />
+import { MemoryRouter } from 'react-router-dom';
+import Registro from '../../src/pages/Registro';
 
 describe('DT_01 - Registro de usuario', () => {
 	beforeEach(() => {
-		cy.visit('/registro');
+		cy.mount(  // ahora usar mount
+			<MemoryRouter initialEntries={['/registro']}>
+				<Registro />
+			</MemoryRouter>
+		);
 	});
 
 	/* funcion de ayuda*/
@@ -97,8 +103,6 @@ describe('DT_01 - Registro de usuario', () => {
 
 		cy.contains('¡Cuenta creada!').should('be.visible');
 		cy.contains('Redirigiendo a inicio...').should('be.visible');
-
-		cy.location('pathname', { timeout: 4000 }).should('eq', '/');
 	});
 
 	it('DT_01_8: Muestra error de correo duplicado cuando backend responde 409', () => {
@@ -157,5 +161,3 @@ describe('DT_01 - Registro de usuario', () => {
 		cy.contains('[role="alert"]', 'La contraseña no puede contener espacios').should('be.visible');
 	});
 });
-
-
