@@ -56,7 +56,12 @@ jobs:
       # RECOMENDACIÓN DE CALIDAD (Evidencias)
       # ==========================================
       - name: Guardar Capturas de Pantalla (si falla)
+        if: failure()
         uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
       - name: Prepare deployment package
         if: success() && github.event_name == 'push'
         run: |
@@ -79,6 +84,7 @@ jobs:
 
       - name: Upload Cypress screenshots
         if: failure()
+        uses: actions/upload-artifact@v4
         with:
           name: cypress-screenshots
           path: cypress/screenshots
