@@ -194,6 +194,18 @@ app.post('/api/inscripciones', async (req, res) => {
       return res.status(404).json({ error: 'El proyecto no existe' });
     }
 
+    // Verificar que el correo pertenece a un usuario registrado
+    const [usuarioExiste] = await connection.execute(
+      'SELECT id FROM usuarios WHERE correo = ?',
+      [correo.trim()]
+    );
+
+    if (usuarioExiste.length === 0) {
+      connection.release();
+      console.warn('⚠️  Correo no registrado:', correo);
+      return res.status(404).json({ error: 'El correo no existe' });
+    }
+
     // Insertar la inscripción
     console.log('📥 Insertando inscripción...');
     const [result] = await connection.execute(
@@ -378,6 +390,18 @@ app.post('/api/inscripciones', async (req, res) => {
       connection.release();
       console.warn('⚠️  Proyecto no encontrado:', id_proyectos);
       return res.status(404).json({ error: 'El proyecto no existe' });
+    }
+
+    // Verificar que el correo pertenece a un usuario registrado
+    const [usuarioExiste] = await connection.execute(
+      'SELECT id FROM usuarios WHERE correo = ?',
+      [correo.trim()]
+    );
+
+    if (usuarioExiste.length === 0) {
+      connection.release();
+      console.warn('⚠️  Correo no registrado:', correo);
+      return res.status(404).json({ error: 'El correo no existe' });
     }
 
     // Insertar la inscripción
