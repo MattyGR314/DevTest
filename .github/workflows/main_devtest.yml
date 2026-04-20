@@ -57,6 +57,27 @@ jobs:
       # ==========================================
       - name: Guardar Capturas de Pantalla (si falla)
         uses: actions/upload-artifact@v4
+      - name: Prepare deployment package
+        if: success() && github.event_name == 'push'
+        run: |
+          mkdir -p deploy-package
+          cp -r build deploy-package/build
+          cp app.js deploy-package/app.js
+          cp package.json deploy-package/package.json
+          cp package-lock.json deploy-package/package-lock.json
+          cp web.config deploy-package/web.config
+          cp -r middleware deploy-package/middleware
+
+      # Artifact para uso del job de deploy
+      - name: Upload deploy artifact
+        if: success() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app-deploy
+          path: deploy-package
+          if-no-files-found: error
+
+      - name: Upload Cypress screenshots
         if: failure()
         with:
           name: cypress-screenshots
@@ -70,3 +91,45 @@ jobs:
           name: cypress-videos
           path: cypress/videos
           if-no-files-found: ignore
+
+  deploy_azure:
+    name: Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref_name == 'main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+        env:
+          CI: false
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r build deploy-package/build
+          cp -r public deploy-package/public
+          cp -r src deploy-package/src
+          cp app.js deploy-package/app.js
+          cp package.json deploy-package/package.json
+          cp package-lock.json deploy-package/package-lock.json
+          cp web.config deploy-package/web.config
+          cp -r middleware deploy-package/middleware
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: DevTest
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./deploy-package
