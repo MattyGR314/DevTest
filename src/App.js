@@ -6,11 +6,10 @@ import Inicio from './pages/Inicio';
 import SubirCodigo from './pages/SubirCodigo';
 import SeleccionarProyecto from './pages/SeleccionarProyecto';
 import ConfirmacionSubida from './pages/confirmacionSubida';
+import IniciarSesion from './pages/iniciarSesion';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
-
-
 import './App.css';
 
 function App() {
@@ -21,9 +20,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Inicio />} />
             <Route path="/registro" element={<Registro />} />
+            <Route path="/iniciarSesion" element={<IniciarSesion />} />
             <Route path="/subircodigo" element={<SubirCodigo />} />
-            <Route path="/confirmacion" element={<ConfirmacionSubida />} /> 
-            <Route path="/busqueda" element={<Busqueda />} /> 
+            <Route path="/confirmacion" element={<ConfirmacionSubida />} />
+            <Route path="/busqueda" element={<Busqueda />} />
             <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
             <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
           </Routes>

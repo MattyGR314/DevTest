@@ -2,7 +2,7 @@
   --bg: #0b1220;
   --panel: #0f1724;
   --muted: #9aa4b2;
-  --text: #ffffff; /* Ajustado a blanco puro para el tema oscuro */
+  --text: #ffffff;
   --accent: #58a6ff;
   --primary: #2389ff;
 }
@@ -13,19 +13,19 @@
   min-height: 100vh;
   background: linear-gradient(180deg, var(--bg), #05060a);
   color: var(--text);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Tipografía limpia por defecto */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* --- NUEVA CABECERA UNIFICADA Y FIJA --- */
+/* --- CABECERA --- */
 .header-principal {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
   height: 70px;
-  background: rgba(11, 18, 32, 0.95); /* Color oscuro semi-transparente */
-  backdrop-filter: blur(8px); /* Efecto cristal elegante */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Borde muy sutil */
+  background: rgba(11, 18, 32, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -38,14 +38,14 @@
 
 .Dev {
   color: #28a745;
-  font-size: 28px; /* Tamaño mucho más sobrio y proporcional */
+  font-size: 28px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
 }
 
 .Test {
   color: #ffffff;
-  font-size: 28px; /* Tamaño mucho más sobrio y proporcional */
+  font-size: 28px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
 }
@@ -53,7 +53,7 @@
 /* --- NAVEGACIÓN --- */
 .navegacion-principal {
   display: flex;
-  gap: 32px; /* Separación limpia sin líneas divisorias */
+  gap: 32px;
 }
 
 .navegacion-principal a {
@@ -66,11 +66,40 @@
 }
 
 .navegacion-principal a:hover {
-  color: #ffffff; /* Al pasar el ratón, se ilumina el texto, sin fondos cuadrados */
+  color: #ffffff;
 }
 
+/* --- ACCIONES DE USUARIO (derecha del header) --- */
 .user-actions {
-  width: 100px; /* Mantiene la navegación centrada empujando desde la derecha */
+  width: 130px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.btn-login-header {
+  background-color: #28a745;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.btn-login-header:hover {
+  background-color: #218838;
+  color: white;
+}
+
+.user-email {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* --- CONTENIDO Y FOOTER --- */

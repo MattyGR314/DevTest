@@ -116,7 +116,7 @@ app.get('/api/proyectos/:id', async (req, res) => {
 
     // Consultar el proyecto por ID
     const [proyecto] = await connection.execute(
-      'SELECT id, nombre, correo, archivo_path, fecha_creacion FROM proyectos WHERE id = ?',
+      'SELECT id, nombre, correo, archivo_path, nombre_fichero, descripcion, fecha_creacion FROM proyectos WHERE id = ?',
       [id]
     );
 
@@ -209,6 +209,16 @@ app.post('/api/inscripciones', async (req, res) => {
     // Insertar la inscripción
     console.log('📥 Insertando inscripción...');
     const [result] = await connection.execute(
+      // Verificar si ya está inscrito
+      const [yaInscrito] = await connection.execute(
+        'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+        [correo.trim(), parseInt(id_proyectos)]
+      );
+      if (yaInscrito.length > 0) {
+        connection.release();
+        return res.status(409).json({ error: 'Ya estás inscrito en este proyecto' });
+      }
+
       'INSERT INTO inscripciones (nombre, correo, id_proyectos) VALUES (?, ?, ?)',
       [nombre.trim(), correo.trim(), id_proyectos]
     );
@@ -314,7 +324,7 @@ app.get('/api/proyectos/:id', async (req, res) => {
 
     // Consultar el proyecto por ID
     const [proyecto] = await connection.execute(
-      'SELECT id, nombre, correo, archivo_path, fecha_creacion FROM proyectos WHERE id = ?',
+      'SELECT id, nombre, correo, archivo_path, nombre_fichero, descripcion, fecha_creacion FROM proyectos WHERE id = ?',
       [id]
     );
 
@@ -645,6 +655,42 @@ app.put('/api/proyectos/:id/descripcion', async (req, res) => {
     if (connection) {
       connection.release();
     }
+  }
+});
+
+// ===== RUTA PARA MODIFICAR DESCRIPCIÓN (via PUT /api/proyectos/:id) =====
+app.put('/api/proyectos/:id', async (req, res, next) => {
+  const { id } = req.params;
+  const { descripcion } = req.body;
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.query('UPDATE proyectos SET descripcion = ? WHERE id = ?', [descripcion, id]);
+    connection.release();
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Proyecto no encontrado' });
+    res.json({ message: 'Descripción actualizada correctamente', descripcion });
+  } catch (error) {
+    console.error('Error al actualizar proyecto:', error);
+    next(error);
+  }
+});
+
+// ===== RUTA PARA COMPROBAR SI UN USUARIO ESTÁ INSCRITO =====
+app.get('/api/inscripciones/check', async (req, res) => {
+  const { correo, id_proyectos } = req.query;
+  if (!correo || !id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos)]
+    );
+    connection.release();
+    res.json({ inscrito: rows.length > 0 });
+  } catch (error) {
+    console.error('Error al comprobar inscripción:', error);
+    res.status(500).json({ error: 'Error al comprobar inscripción' });
   }
 });
 

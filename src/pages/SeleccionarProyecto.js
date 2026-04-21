@@ -1,178 +1,158 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import "./SeleccionarProyecto.css";
+import { useState, useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import './SeleccionarProyecto.css';
 
 function SeleccionarProyecto() {
   const { id } = useParams();
-  const [nombreProyecto, setNombreProyecto] = useState("");
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+
+  const [nombreProyecto, setNombreProyecto] = useState('');
+  const [formData, setFormData] = useState({ nombre: '', correo: usuario || '' });
+  const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    nombre: "",
-    correo: ""
-  });
-  
-  const [errores, setErrores] = useState({});
+  const [errorGeneral, setErrorGeneral] = useState('');
 
   useEffect(() => {
-    const obtenerDatosProyecto = async () => {
-      try {
-        const respuesta = await fetch(`/api/proyectos/${id}`);
-        if (!respuesta.ok) {
-          throw new Error("No se pudo obtener el proyecto");
-        }
-        const datos = await respuesta.json();
-        setNombreProyecto(datos.nombre);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    obtenerDatosProyecto();
+    fetch(`/api/proyectos/${id}`)
+      .then(r => r.json())
+      .then(data => setNombreProyecto(data.nombre || ''))
+      .catch(() => {});
   }, [id]);
 
-  const validarFormulario = () => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errores[name]) setErrores(prev => ({ ...prev, [name]: '' }));
+    if (errorGeneral) setErrorGeneral('');
+  };
+
+  const validar = () => {
     const nuevosErrores = {};
-    
     if (!formData.nombre.trim()) {
-      nuevosErrores.nombre = "El nombre es obligatorio";
+      nuevosErrores.nombre = 'El nombre es obligatorio';
     } else if (formData.nombre.trim().length < 2) {
-      nuevosErrores.nombre = "El nombre debe tener al menos 2 caracteres";
+      nuevosErrores.nombre = 'El nombre debe tener al menos 2 caracteres';
     }
-    
     if (!formData.correo.trim()) {
-      nuevosErrores.correo = "El correo es obligatorio";
-    } else if (!/^[A-Za-z0-9](?:[^\s@]*[A-Za-z0-9])?@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(formData.correo.trim())) {
-      nuevosErrores.correo = "El correo no es válido";
+      nuevosErrores.correo = 'El correo es obligatorio';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
+      nuevosErrores.correo = 'El correo no es válido';
     }
-    
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-    // Limpiar error del campo cuando el usuario empieza a escribir
-    if (errores[name]) {
-      setErrores({
-        ...errores,
-        [name]: ""
-      });
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validarFormulario()) {
-      return;
-    }
+    if (!validar()) return;
 
     setEnviando(true);
-    
+    setErrorGeneral('');
     try {
-      const respuesta = await fetch("/api/inscripciones", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+      const respuesta = await fetch('/api/inscripciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nombre: formData.nombre.trim(),
           correo: formData.correo.trim(),
-          id_proyectos: parseInt(id)
-        })
+          id_proyectos: parseInt(id),
+        }),
       });
-
+      const datos = await respuesta.json();
       if (!respuesta.ok) {
-        const datos = await respuesta.json();
-        throw new Error(datos.error || "Error al guardar la inscripción");
+        setErrorGeneral(datos.error || 'No se pudo guardar la inscripción');
+        return;
       }
-
-      await respuesta.json();
       setExito(true);
-      setFormData({ nombre: "", correo: "" });
-      
-      setTimeout(() => setExito(false), 5000);
-    } catch (err) {
-      setErrores({ general: err.message });
+    } catch {
+      setErrorGeneral('Error de conexión. Inténtalo de nuevo.');
     } finally {
       setEnviando(false);
     }
   };
 
+  if (exito) {
+    return (
+      <section className="seleccionar-proyecto">
+        <div className="inscripcion-exito">
+          <span className="inscripcion-exito-icono">✓</span>
+          <h3>¡Inscripción completada!</h3>
+          <p>Te has inscrito correctamente como tester en <strong>{nombreProyecto}</strong>.</p>
+          <div className="inscripcion-exito-acciones">
+            <Link to="/busqueda" className="btn-inscripcion-volver">Volver a búsqueda</Link>
+            <button type="button" onClick={() => navigate('/')} className="btn-inscripcion-inicio">
+              Ir al inicio
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <div className="seleccionar-proyecto">
-      <h2>
-        Inscripción a Proyecto: {nombreProyecto || id}
-        {cargando && " (cargando...)"}
-      </h2>
-      
-      {error && <p className="error-message">Error: {error}</p>}
-      
-      {exito && (
-        <div className="success-message">
-          ✓ ¡Inscripción guardada exitosamente!
-        </div>
-      )}
-      
-      {errores.general && (
-        <div className="error-message">{errores.general}</div>
-      )}
+    <section className="seleccionar-proyecto">
+      <div className="inscripcion-header">
+        <Link to={`/resultado-consulta/${id}`} className="inscripcion-volver">
+          ← Volver al proyecto
+        </Link>
+        <h2>Inscribirse como Tester</h2>
+        {nombreProyecto && <p className="inscripcion-nombre-proyecto">{nombreProyecto}</p>}
+      </div>
 
-      <form id="inscripcion" onSubmit={handleSubmit} noValidate>
-        <div className="form-group">
-          <label htmlFor="nombre">
-            Nombre <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="nombre"
-            id="nombre"
-            value={formData.nombre}
-            onChange={handleInputChange}
-            className={errores.nombre ? "form-control error" : "form-control"}
-            maxLength="100"
-            placeholder="Ingrese su nombre completo"
-            disabled={enviando || cargando || error}
-          />
-          {errores.nombre && <span className="error-text">{errores.nombre}</span>}
-        </div>
+      <div className="inscripcion-form-card">
+        {errorGeneral && (
+          <div className="inscripcion-error-general">{errorGeneral}</div>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="correo">
-            Correo Electrónico <span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            name="correo"
-            id="correo"
-            value={formData.correo}
-            onChange={handleInputChange}
-            className={errores.correo ? "form-control error" : "form-control"}
-            placeholder="Ingrese su correo electrónico"
-            disabled={enviando || cargando || error}
-          />
-          {errores.correo && <span className="error-text">{errores.correo}</span>}
-        </div>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="inscripcion-group">
+            <label htmlFor="nombre">
+              Nombre completo <span className="inscripcion-required">*</span>
+            </label>
+            <input
+              type="text"
+              name="nombre"
+              id="nombre"
+              placeholder="Tu nombre completo"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              className={errores.nombre ? 'error' : ''}
+              disabled={enviando}
+              maxLength={100}
+            />
+            {errores.nombre && <span className="inscripcion-error-texto">{errores.nombre}</span>}
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={enviando || cargando || error}
-        >
-          {enviando ? "Guardando..." : "Inscribirse"}
-        </button>
-      </form>
-    </div>
+          <div className="inscripcion-group">
+            <label htmlFor="correo">
+              Correo electrónico <span className="inscripcion-required">*</span>
+            </label>
+            <input
+              type="email"
+              name="correo"
+              id="correo"
+              placeholder="tu@email.com"
+              value={formData.correo}
+              onChange={handleInputChange}
+              className={errores.correo ? 'error' : ''}
+              disabled={enviando}
+            />
+            {errores.correo && <span className="inscripcion-error-texto">{errores.correo}</span>}
+          </div>
+
+          <button type="submit" className="inscripcion-btn-submit" disabled={enviando}>
+            {enviando ? 'Guardando...' : 'Confirmar inscripción'}
+          </button>
+
+          <p className="inscripcion-nota">
+            <span className="inscripcion-required">*</span> Campos obligatorios
+          </p>
+        </form>
+      </div>
+    </section>
   );
 }
 

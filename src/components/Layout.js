@@ -11,7 +11,7 @@ function Layout({ children }) {
 
       {/* Cabecera unificada y fija */}
       <header className="header-principal">
-        
+
         <div className="logo-container">
           <Link to="/" className="logo-link">
             <span className="Dev">Dev</span><span className="Test">Test</span>
@@ -21,16 +21,18 @@ function Layout({ children }) {
         <nav className="navegacion-principal">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
-
-          <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
-
-          <Link to="/registro">Registrar</Link>  {/*DT_01_T1*/}
-
+          <Link to="/busqueda">Búsqueda</Link>
+          <Link to="/registro">Registrar</Link>
         </nav>
 
-        {/* Espacio reservado a la derecha por si luego quieres poner un perfil de usuario o botón */}
         <div className="user-actions">
-           {/* Puedes poner el botón del offcanvas aquí en el futuro */}
+          {!usuario ? (
+            <Link to="/iniciarSesion" className="btn-login-header">
+              Iniciar Sesión
+            </Link>
+          ) : (
+            <span className="user-email">{usuario}</span>
+          )}
         </div>
 
       </header>
