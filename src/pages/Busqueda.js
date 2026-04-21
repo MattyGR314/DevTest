@@ -24,11 +24,23 @@ const Busqueda = () => {
   }, []);
 
   useEffect(() => {
-    if (!usuario) return;
-    fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(usuario)}`)
+    const inscritosLocal = JSON.parse(localStorage.getItem('mis_inscripciones') || '{}');
+    const correo = usuario;
+
+    if (!correo) {
+      const todosLocales = Object.values(inscritosLocal).flat();
+      setInscritosIds([...new Set(todosLocales)]);
+      return;
+    }
+
+    const localIds = inscritosLocal[correo] || [];
+    fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(correo)}`)
       .then(r => r.json())
-      .then(data => setInscritosIds(data.ids || []))
-      .catch(() => {});
+      .then(data => {
+        const apiIds = data.ids || [];
+        setInscritosIds([...new Set([...apiIds, ...localIds])]);
+      })
+      .catch(() => setInscritosIds([...new Set(localIds)]));
   }, [usuario]);
 
   useEffect(() => {

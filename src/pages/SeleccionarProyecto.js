@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./SeleccionarProyecto.css";
 
 function SeleccionarProyecto() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { usuario } = useAuth();
   const [nombreProyecto, setNombreProyecto] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     nombre: "",
-    correo: ""
+    correo: usuario || ""
   });
   
   const [errores, setErrores] = useState({});
@@ -100,10 +102,20 @@ function SeleccionarProyecto() {
       }
 
       await respuesta.json();
+
+      const inscritosLocal = JSON.parse(localStorage.getItem('mis_inscripciones') || '{}');
+      const correoUsado = formData.correo.trim();
+      if (!inscritosLocal[correoUsado]) inscritosLocal[correoUsado] = [];
+      const idNum = parseInt(id);
+      if (!inscritosLocal[correoUsado].includes(idNum)) {
+        inscritosLocal[correoUsado].push(idNum);
+      }
+      localStorage.setItem('mis_inscripciones', JSON.stringify(inscritosLocal));
+
       setExito(true);
-      setFormData({ nombre: "", correo: "" });
-      
-      setTimeout(() => setExito(false), 5000);
+      setFormData({ nombre: "", correo: usuario || "" });
+
+      setTimeout(() => navigate('/busqueda'), 2000);
     } catch (err) {
       setErrores({ general: err.message });
       setTimeout(() => navigate("/"), 2500);
@@ -162,7 +174,7 @@ function SeleccionarProyecto() {
             onChange={handleInputChange}
             className={errores.correo ? "form-control error" : "form-control"}
             placeholder="Ingrese su correo electrónico"
-            disabled={enviando || cargando}
+            disabled={enviando || cargando || !!usuario}
           />
           {errores.correo && <span className="error-text">{errores.correo}</span>}
         </div>
