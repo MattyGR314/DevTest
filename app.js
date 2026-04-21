@@ -206,19 +206,19 @@ app.post('/api/inscripciones', async (req, res) => {
       return res.status(404).json({ error: 'El correo no existe' });
     }
 
+    // Verificar si ya está inscrito
+    const [yaInscrito] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos)]
+    );
+    if (yaInscrito.length > 0) {
+      connection.release();
+      return res.status(409).json({ error: 'Ya estás inscrito en este proyecto' });
+    }
+
     // Insertar la inscripción
     console.log('📥 Insertando inscripción...');
     const [result] = await connection.execute(
-      // Verificar si ya está inscrito
-      const [yaInscrito] = await connection.execute(
-        'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
-        [correo.trim(), parseInt(id_proyectos)]
-      );
-      if (yaInscrito.length > 0) {
-        connection.release();
-        return res.status(409).json({ error: 'Ya estás inscrito en este proyecto' });
-      }
-
       'INSERT INTO inscripciones (nombre, correo, id_proyectos) VALUES (?, ?, ?)',
       [nombre.trim(), correo.trim(), id_proyectos]
     );
@@ -290,7 +290,7 @@ app.post('/api/login', async (req, res) => {
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
-      'SELECT correo, password_hash FROM usuarios WHERE correo = ?',
+      'SELECT correo, password_hash, tipo FROM usuarios WHERE correo = ?',
       [correo]
     );
     connection.release();
@@ -303,7 +303,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Contraseña incorrecta' });
     }
 
-    res.json({ correo: rows[0].correo });
+    res.json({ correo: rows[0].correo, tipo: rows[0].tipo });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error del servidor' });

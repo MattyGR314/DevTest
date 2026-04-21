@@ -5,10 +5,9 @@ import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
   const { id } = useParams();
-  const { usuario } = useAuth();
+  const { usuario, tipoUsuario } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const tipoUsuario = (localStorage.getItem('usuario_tipo') || '').toLowerCase();
 
   const [proyecto, setProyecto] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -93,7 +92,7 @@ function ResultadoConsulta() {
 
   const botonInscripcion = () => {
     if (!usuario || !proyecto) return null;
-    if (tipoUsuario !== 'tester') return null;
+    if ((tipoUsuario || '').toLowerCase() !== 'tester') return null;
     if (proyecto.correo && proyecto.correo === usuario) return null;
 
     if (yaInscrito) {
@@ -190,35 +189,39 @@ function ResultadoConsulta() {
           </div>
 
           <div className="resultado-acciones" style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '15px' }}>
-            {esCreador ? (
-              <div className="edicion-botones">
-                {!editando ? (
-                  <button onClick={() => setEditando(true)} className="busqueda-boton" style={{ backgroundColor: '#f39c12', color: 'white', border: 'none', padding: '10px 20px', width: '100%' }}>
-                    Modificar Proyecto
+            <div className="edicion-botones">
+              {!editando ? (
+                <button
+                  onClick={() => setEditando(true)}
+                  className="busqueda-boton"
+                  disabled={!esCreador}
+                  title={!esCreador ? 'Solo el creador del proyecto puede modificarlo' : ''}
+                  style={{ backgroundColor: esCreador ? '#f39c12' : '#555', color: 'white', border: 'none', padding: '10px 20px', width: '100%', cursor: esCreador ? 'pointer' : 'not-allowed', opacity: esCreador ? 1 : 0.5 }}
+                >
+                  Modificar Proyecto
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button onClick={handleGuardar} className="busqueda-boton" style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 20px', flex: 1 }}>
+                    Guardar Cambios
                   </button>
-                ) : (
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button onClick={handleGuardar} className="busqueda-boton" style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 20px', flex: 1 }}>
-                      Guardar Cambios
-                    </button>
-                    <button onClick={() => { setEditando(false); setErrores({}); }} style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px 20px', flex: 1 }}>
-                      Cancelar
-                    </button>
-                  </div>
+                  <button onClick={() => { setEditando(false); setErrores({}); }} style={{ backgroundColor: '#6c757d', color: 'white', border: 'none', padding: '10px 20px', flex: 1 }}>
+                    Cancelar
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!editando && (
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                {botonInscripcion()}
+
+                {!usuario && (
+                  <p className="resultado-aviso-login" style={{ color: 'white', marginTop: '15px', fontSize: '0.85em' }}>
+                    <Link to="/iniciarSesion" style={{ color: '#3498db' }}>Inicia sesión</Link> para inscribirte como tester.
+                  </p>
                 )}
               </div>
-            ) : (
-              !editando && (
-                <div style={{ textAlign: 'center' }}>
-                  {botonInscripcion()}
-
-                  {!usuario && (
-                    <p className="resultado-aviso-login" style={{ color: 'white', marginTop: '15px', fontSize: '0.85em' }}>
-                      <Link to="/iniciarSesion" style={{ color: '#3498db' }}>Inicia sesión</Link> para inscribirte como tester.
-                    </p>
-                  )}
-                </div>
-              )
             )}
           </div>
         </article>

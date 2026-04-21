@@ -1,9 +1,11 @@
 //creado en DT_10_T1
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Busqueda.css';
 
 const Busqueda = () => {
+  const { usuario } = useAuth();
   const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
   const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
   const [resultados, setResultados] = useState([]);
@@ -188,6 +190,8 @@ const Busqueda = () => {
               type="button"
               className="editar-descripcion-boton"
               onClick={() => abrirEditorDescripcion(proyecto)}
+              disabled={!usuario || usuario !== proyecto.correo}
+              title={!usuario || usuario !== proyecto.correo ? 'Solo el creador puede modificar la descripción' : ''}
             >
               Modificar descripción
             </button>
