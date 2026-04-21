@@ -7,32 +7,67 @@ function FeedbackProyecto() {
   const { id } = useParams();
   const { usuario } = useAuth();
 
-  const [nombreProyecto, setNombreProyecto] = useState('');
+  const [proyecto, setProyecto] = useState(null);
+  const [proyectoCargando, setProyectoCargando] = useState(true);
+  const [proyectoError, setProyectoError] = useState('');
   const [texto, setTexto] = useState('');
-  const [correo, setCorreo] = useState(usuario || '');
+  const [archivo, setArchivo] = useState(null);
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [exito, setExito] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState('');
 
   useEffect(() => {
+    setProyectoCargando(true);
     fetch(`/api/proyectos/${id}`)
-      .then(r => r.json())
-      .then(data => setNombreProyecto(data.nombre || ''))
-      .catch(() => {});
+      .then(r => {
+        if (!r.ok) throw new Error('not_found');
+        return r.json();
+      })
+      .then(data => setProyecto(data))
+      .catch(() => setProyectoError('El proyecto no existe o ha sido borrado.'))
+      .finally(() => setProyectoCargando(false));
   }, [id]);
+
+  // DT_08_5: sin sesión → pedir login
+  if (!usuario) {
+    return (
+      <div className="feedback-proyecto">
+        <div className="feedback-header">
+          <Link to={`/resultado-consulta/${id}`} className="feedback-volver">← Volver al proyecto</Link>
+          <h2>Enviar feedback</h2>
+        </div>
+        <div className="feedback-error-general">
+          Debes <Link to="/iniciarSesion">iniciar sesión</Link> para poder enviar feedback.
+        </div>
+      </div>
+    );
+  }
+
+  // DT_08_4: proyecto no encontrado
+  if (!proyectoCargando && proyectoError) {
+    return (
+      <div className="feedback-proyecto">
+        <div className="feedback-header">
+          <Link to="/busqueda" className="feedback-volver">← Volver a búsqueda</Link>
+          <h2>Enviar feedback</h2>
+        </div>
+        <div className="feedback-error-general">{proyectoError}</div>
+      </div>
+    );
+  }
 
   const validar = () => {
     const nuevosErrores = {};
-    if (!correo.trim()) {
-      nuevosErrores.correo = 'El correo es obligatorio';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
-      nuevosErrores.correo = 'El correo no es válido';
-    }
+    // DT_08_3: comentarios vacíos
     if (!texto.trim()) {
-      nuevosErrores.texto = 'El feedback no puede estar vacío';
+      nuevosErrores.texto = 'Los comentarios no pueden estar vacíos';
     } else if (texto.trim().length > 1000) {
       nuevosErrores.texto = 'El feedback no puede exceder 1000 caracteres';
+    }
+    // DT_08_3: sin archivo
+    if (!archivo) {
+      nuevosErrores.archivo = 'Debes adjuntar al menos un documento';
     }
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
@@ -46,36 +81,38 @@ function FeedbackProyecto() {
     setErrorGeneral('');
 
     try {
+      const formData = new FormData();
+      formData.append('correo', usuario);
+      formData.append('id_proyectos', id);
+      formData.append('texto', texto.trim());
+      formData.append('archivo', archivo);
+
       const respuesta = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          correo: correo.trim(),
-          id_proyectos: parseInt(id),
-          texto: texto.trim(),
-        }),
+        body: formData,
       });
 
       const datos = await respuesta.json();
 
       if (!respuesta.ok) {
-        setErrorGeneral(datos.error || 'No se pudo enviar el feedback');
+        if (respuesta.status === 403) {
+          setErrorGeneral('No estás inscrito en este proyecto. Inscríbete primero para poder enviar feedback.');
+        } else if (respuesta.status === 404) {
+          setErrorGeneral('El proyecto no existe o ha sido borrado.');
+        } else {
+          setErrorGeneral(datos.error || 'No se pudo enviar el feedback');
+        }
         return;
       }
 
       setExito(true);
       setTexto('');
+      setArchivo(null);
     } catch {
       setErrorGeneral('Error de conexión. Inténtalo de nuevo.');
     } finally {
       setEnviando(false);
     }
-  };
-
-  const handleChange = (setter, campo) => (e) => {
-    setter(e.target.value);
-    if (errores[campo]) setErrores(prev => ({ ...prev, [campo]: '' }));
-    if (errorGeneral) setErrorGeneral('');
   };
 
   return (
@@ -85,7 +122,7 @@ function FeedbackProyecto() {
           ← Volver al proyecto
         </Link>
         <h2>Enviar feedback</h2>
-        {nombreProyecto && <p className="feedback-nombre-proyecto">{nombreProyecto}</p>}
+        {proyecto && <p className="feedback-nombre-proyecto">{proyecto.nombre}</p>}
       </div>
 
       {exito ? (
@@ -103,29 +140,29 @@ function FeedbackProyecto() {
           )}
 
           <div className="feedback-group">
-            <label htmlFor="correo-feedback">
-              Tu correo <span className="feedback-required">*</span>
-            </label>
-            <input
-              type="email"
-              id="correo-feedback"
-              value={correo}
-              onChange={handleChange(setCorreo, 'correo')}
-              placeholder="tu@email.com"
-              className={errores.correo ? 'error' : ''}
-              disabled={enviando}
-            />
-            {errores.correo && <span className="feedback-error-texto">{errores.correo}</span>}
+            <label>Proyecto testeado</label>
+            <span className="feedback-readonly">
+              {proyectoCargando ? 'Cargando...' : (proyecto?.nombre || '')}
+            </span>
+          </div>
+
+          <div className="feedback-group">
+            <label>Tu correo</label>
+            <span className="feedback-readonly">{usuario}</span>
           </div>
 
           <div className="feedback-group">
             <label htmlFor="texto-feedback">
-              Feedback <span className="feedback-required">*</span>
+              Comentarios <span className="feedback-required">*</span>
             </label>
             <textarea
               id="texto-feedback"
               value={texto}
-              onChange={handleChange(setTexto, 'texto')}
+              onChange={(e) => {
+                setTexto(e.target.value);
+                if (errores.texto) setErrores(prev => ({ ...prev, texto: '' }));
+                if (errorGeneral) setErrorGeneral('');
+              }}
               placeholder="Describe tu experiencia con el proyecto, errores encontrados, sugerencias..."
               maxLength={1000}
               className={errores.texto ? 'error' : ''}
@@ -135,7 +172,24 @@ function FeedbackProyecto() {
             <small>{texto.length}/1000 caracteres</small>
           </div>
 
-          <button type="submit" disabled={enviando} className="feedback-boton-enviar">
+          <div className="feedback-group">
+            <label htmlFor="archivo-feedback">
+              Documentos <span className="feedback-required">*</span>
+            </label>
+            <input
+              type="file"
+              id="archivo-feedback"
+              onChange={(e) => {
+                setArchivo(e.target.files[0] || null);
+                if (errores.archivo) setErrores(prev => ({ ...prev, archivo: '' }));
+              }}
+              className={errores.archivo ? 'error' : ''}
+              disabled={enviando}
+            />
+            {errores.archivo && <span className="feedback-error-texto">{errores.archivo}</span>}
+          </div>
+
+          <button type="submit" disabled={enviando || proyectoCargando} className="feedback-boton-enviar">
             {enviando ? 'Enviando...' : 'Enviar feedback'}
           </button>
         </form>
