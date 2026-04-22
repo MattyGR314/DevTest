@@ -1,93 +1,224 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
-	const { id } = useParams();
-	const [proyecto, setProyecto] = useState(null);
-	const [cargando, setCargando] = useState(true);
-	const [error, setError] = useState('');
+  const { id } = useParams();
+  const { usuario } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const tipoUsuario = (localStorage.getItem('usuario_tipo') || '').toLowerCase();
 
-	useEffect(() => {
-		const fetchProyecto = async () => {
-			setCargando(true);
-			setError('');
+  const [proyecto, setProyecto] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+  const [yaInscrito, setYaInscrito] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [nuevaDesc, setNuevaDesc] = useState("");
+  const [mensajeStatus, setMensajeStatus] = useState(null);
+  const [errores, setErrores] = useState({});
 
-			try {
-				const response = await fetch(`/api/proyectos?q=${encodeURIComponent(id)}&campo=id`);
-				if (!response.ok) {
-					throw new Error('No se pudo obtener el proyecto');
-				}
+  useEffect(() => {
+    const obtenerProyecto = async () => {
+      try {
+        setCargando(true);
+        const response = await fetch(`/api/proyectos/${id}`);
+        if (!response.ok) throw new Error("Proyecto no encontrado");
+        const data = await response.json();
+        setProyecto(data);
+        setNuevaDesc(data.descripcion || "");
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setCargando(false);
+      }
+    };
+    obtenerProyecto();
+  }, [id]);
 
-				const data = await response.json();
-				if (!Array.isArray(data) || data.length === 0) {
-					setProyecto(null);
-					setError('No existe un proyecto con ese ID.');
-					return;
-				}
+  useEffect(() => {
+    if (!usuario || !id) return;
 
-				setProyecto(data[0]);
-			} catch (err) {
-				setError(err.message || 'Error al cargar el proyecto');
-			} finally {
-				setCargando(false);
-			}
-		};
+    fetch(`/api/inscripciones/check?correo=${encodeURIComponent(usuario)}&id_proyectos=${id}`)
+      .then((r) => r.json())
+      .then((data) => setYaInscrito(data.inscrito === true))
+      .catch(() => {
+        setYaInscrito(false);
+      });
+  }, [usuario, id]);
 
-		fetchProyecto();
-	}, [id]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('edit') === 'true' && usuario && proyecto && proyecto.correo && proyecto.correo === usuario) {
+      setEditando(true);
+    }
+  }, [location, proyecto, usuario]);
 
-	const formatearFecha = (fecha) => {
-		if (!fecha) return 'Sin fecha';
-		return new Date(fecha).toLocaleString('es-ES', {
-			year: 'numeric',
-			month: '2-digit',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit',
-		});
-	};
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setNuevaDesc(value);
+    if (errores.descripcion) {
+      setErrores(prev => ({ ...prev, descripcion: '' }));
+    }
+  };
 
-	const descripcion = proyecto?.descripcion || proyecto?.description || 'Sin descripcion registrada';
-	const fichero = proyecto?.nombre_fichero || proyecto?.fichero || 'Sin fichero';
+  const handleGuardar = async () => {
+    if (nuevaDesc.length > 500) {
+      setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
+      return;
+    }
 
-	return (
-		<section className="resultado-consulta">
-			<div className="resultado-header">
-				<h2>Detalle del proyecto</h2>
-				<Link to="/busqueda" className="resultado-volver">Volver a busqueda</Link>
-			</div>
+    try {
+      const response = await fetch(`/api/proyectos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descripcion: nuevaDesc.trim() }),
+      });
 
-			{cargando && <p className="resultado-info">Cargando proyecto...</p>}
+      if (response.ok) {
+        setMensajeStatus({ tipo: 'success', texto: '¡Proyecto actualizado con éxito!' });
+      } else {
+        setMensajeStatus({ tipo: 'error', texto: 'Error al actualizar el proyecto.' });
+      }
+    } catch (error) {
+      setMensajeStatus({ tipo: 'error', texto: 'Error de conexión con el servidor.' });
+    }
+  };
 
-			{!cargando && error && <p className="resultado-error">{error}</p>}
+  const formatearFecha = (fecha) => {
+    if (!fecha) return "Fecha no disponible";
+    return new Date(fecha).toLocaleDateString('es-ES');
+  };
 
-			{!cargando && !error && proyecto && (
-				<article className="resultado-card">
-					<p className="resultado-id">Proyecto #{proyecto.id}</p>
-					<h3>{proyecto.nombre || 'Sin nombre'}</h3>
+  const botonInscripcion = () => {
+    if (!usuario || !proyecto) return null;
+    if (tipoUsuario !== 'tester') return null;
+    if (proyecto.correo && proyecto.correo === usuario) return null;
 
-					<div className="resultado-meta">
-						<p>
-							<strong>Fecha:</strong> {formatearFecha(proyecto.fecha_creacion)}
-						</p>
-						<p className="resultado-descripcion-scroll">
-							<strong>Descripcion:</strong> {descripcion}
-						</p>
-						<p>
-							<strong>Fichero:</strong> {fichero}
-						</p>
-					</div>
-					
-					<div className="resultado-acciones">
-						<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
-							Inscribirse como Tester
-						</Link>
-					</div>
-				</article>
-			)}
-		</section>
-	);
+    if (yaInscrito) {
+      return (
+        <button
+          type="button"
+          className="btn-inscripcion btn-inscripcion--desactivado"
+          disabled
+        >
+          Ya inscrito en este proyecto
+        </button>
+      );
+    }
+
+    return (
+      <Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-inscripcion">
+        Inscribirse como Tester
+      </Link>
+    );
+  };
+
+  const fichero = proyecto?.nombre_fichero || "No hay fichero adjunto";
+  const esCreador = usuario && proyecto?.correo && proyecto.correo === usuario;
+  const textoDescripcion = proyecto?.descripcion || "Sin descripción registrada";
+  const descripcionLargaUnaPalabra = (() => {
+    const texto = (proyecto?.descripcion || "").trim();
+    if (!texto) return false;
+    const palabras = texto.split(/\s+/);
+    return palabras.length === 1 && texto.length >= 40;
+  })();
+
+  return (
+    <section className="resultado-consulta">
+      <div className="resultado-header">
+        <h2>Detalle del proyecto</h2>
+        <Link to="/busqueda" className="resultado-volver">← Volver a búsqueda</Link>
+      </div>
+
+      {mensajeStatus && (
+        <div className={`resultado-mensaje-status ${mensajeStatus.tipo}`}>
+          <h3>{mensajeStatus.texto}</h3>
+          <button onClick={() => navigate('/')} className="btn-aceptar-status">
+            Aceptar y volver al inicio
+          </button>
+        </div>
+      )}
+
+      {cargando && <p className="resultado-info text-center">Cargando proyecto...</p>}
+      {!cargando && error && <p className="resultado-error text-center">{error}</p>}
+
+      {!cargando && !error && proyecto && !mensajeStatus && (
+        <article className="resultado-card">
+          <p className="resultado-id">Proyecto #{proyecto.id}</p>
+          <h3>{proyecto.nombre || 'Sin nombre'}</h3>
+
+          <div className="resultado-meta">
+            <p><strong>Fecha de creación:</strong> {formatearFecha(proyecto.fecha_creacion)}</p>
+            
+            <div className="resultado-descripcion-container">
+              <strong>Descripción:</strong> 
+              {editando ? (
+                <div className="form-group">
+                  <textarea 
+                    value={nuevaDesc} 
+                    onChange={handleInputChange}
+                    maxLength="500"
+                    className={`resultado-textarea ${errores.descripcion ? 'error' : ''}`}
+                  />
+                  {errores.descripcion && (
+                    <span className="error-message">
+                      ⚠️ {errores.descripcion}
+                    </span>
+                  )}
+                  <small className="char-counter">Máximo 500 caracteres</small>
+                </div>
+              ) : (
+                descripcionLargaUnaPalabra ? (
+                  <div className="descripcion-scroll-box" title="Descripción larga con desplazamiento horizontal">
+                    {textoDescripcion}
+                  </div>
+                ) : (
+                  <p className="texto-descripcion">{textoDescripcion}</p>
+                )
+              )}
+            </div>
+            
+            <p><strong>Fichero:</strong> {fichero}</p>
+          </div>
+
+          <div className="resultado-acciones">
+            {esCreador ? (
+              <div className="edicion-botones">
+                {!editando ? (
+                  <button onClick={() => setEditando(true)} className="btn-modificar">
+                    Modificar Proyecto
+                  </button>
+                ) : (
+                  <div className="edicion-botones-acciones">
+                    <button onClick={handleGuardar} className="btn-guardar">
+                      Guardar Cambios
+                    </button>
+                    <button onClick={() => { setEditando(false); setErrores({}); }} className="btn-cancelar">
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              !editando && (
+                <div className="inscripcion-container">
+                  {botonInscripcion()}
+
+                  {!usuario && (
+                    <p className="resultado-aviso-login">
+                      <Link to="/iniciarSesion" className="resultado-link-login">Inicia sesión</Link> para inscribirte como tester.
+                    </p>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </article>
+      )}
+    </section>
+  );
 }
 
 export default ResultadoConsulta;

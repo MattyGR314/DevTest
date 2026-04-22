@@ -1,20 +1,20 @@
-//creado en DT_10_T1
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Busqueda.css';
 
 const Busqueda = () => {
-  const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
-  const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
+  const [termino, setTermino] = useState('');
+  const [campo, setCampo] = useState('nombre');
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
+  
+  // Estados para la edición de descripciones (DT_10_T1)
   const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
   const [descripcionEditada, setDescripcionEditada] = useState('');
   const [errorDescripcion, setErrorDescripcion] = useState('');
   const [guardandoDescripcion, setGuardandoDescripcion] = useState(false);
   const textareaRef = useRef(null);
-  //
 
   useEffect(() => {
     fetchProyectos();
@@ -26,22 +26,19 @@ const Busqueda = () => {
       textareaRef.current.style.height = `${Math.max(150, textareaRef.current.scrollHeight)}px`;
     }
   }, [descripcionEditada, proyectoEnEdicion]);
-                    //DT_10_T1  termino         tipo
+
   const fetchProyectos = async (query = '', searchField = '') => {
     setCargando(true);
     setError('');
     try {
-      let url = '/api/proyectos';
-      if (query) {
-        url = `/api/proyectos?q=${encodeURIComponent(query)}&campo=${encodeURIComponent(searchField)}`;
-      }
+      const url = query
+        ? `/api/proyectos?q=${encodeURIComponent(query)}&campo=${encodeURIComponent(searchField)}`
+        : '/api/proyectos';
       const response = await fetch(url);
       if (!response.ok) throw new Error('Error al cargar proyectos');
-      const data = await response.json();
-      setResultados(data);
+      setResultados(await response.json());
     } catch (err) {
-      setError(err.message);
-      setError('Error al cargar proyectos');
+      setError(err.message || 'Error al cargar proyectos');
     } finally {
       setCargando(false);
     }
@@ -122,68 +119,58 @@ const Busqueda = () => {
     }
   };
 
-    const getPlaceholder = () => {
-    switch (campo) {
-      case 'nombre':
-        return 'Buscar por nombre...';
-      case 'descripcion':
-        return 'Buscar por descripción...';
-      default:
-        return 'Buscar...';
-    }
-  };
-
   return (
-    <div className="contenedor-busqueda">
-      <h2>Búsqueda de Proyectos</h2>
-      <form onSubmit={handleSearch} className="formula-busqueda">
-        <div className="formula-grupo">
-          {/* DT_5_T1 menu de seleccion*/}
-          <select
-            value={campo}
-            onChange={(e) => setCampo(e.target.value)}
-            className="busqueda-seleccionar"
-          >
-            <option value="nombre">Nombre</option>
-            <option value="descripcion">Descripción</option>
-          </select>
+    <div className="busqueda-page">
+      <div className="busqueda-header">
+        <h2>Búsqueda de Proyectos</h2>
+        <p>Explora proyectos disponibles e inscríbete como tester</p>
+      </div>
 
-          <input
-            type="text"
-            placeholder={getPlaceholder()}
-            value={termino}
-            onChange={(e) => setTermino(e.target.value)}
-            className="busqueda-input"
-          />
-          <button type="submit" disabled={cargando} className="busqueda-boton">
-            {cargando ? 'Buscando...' : 'Buscar'}
-          </button>
-        </div>
+      <form onSubmit={handleSearch} className="busqueda-form">
+        <select
+          value={campo}
+          onChange={(e) => setCampo(e.target.value)}
+          className="busqueda-select"
+        >
+          <option value="nombre">Nombre</option>
+          <option value="descripcion">Descripción</option>
+        </select>
+        <input
+          type="text"
+          placeholder={campo === 'nombre' ? 'Buscar por nombre...' : 'Buscar por descripción...'}
+          value={termino}
+          onChange={(e) => setTermino(e.target.value)}
+          className="busqueda-input"
+        />
+        <button type="submit" disabled={cargando} className="busqueda-boton">
+          {cargando ? 'Buscando...' : 'Buscar'}
+        </button>
       </form>
 
-      {/* DT_5_T1 infos de error*/}
-      {error && <div className="error-mensaje">{error}</div>}
-
-      {cargando && <div className="cargando">Cargando proyectos...</div>}
-
-      {!cargando && resultados.length === 0 && (
-        <p className="no-resultados">No se encontraron proyectos.</p>
+      {error && <div className="busqueda-error">{error}</div>}
+      {cargando && <p className="busqueda-cargando">Cargando proyectos...</p>}
+      {!cargando && resultados.length === 0 && !error && (
+        <p className="busqueda-vacio">No se encontraron proyectos.</p>
       )}
 
-      {/* DT_5_T1 mostrar la tabla del resultado*/}
-      <div className="resultados-list">
+      <div className="busqueda-resultados">
         {resultados.map((proyecto) => (
-          <div key={proyecto.id} className="proyecto-tabla">
+          <div key={proyecto.id} className="proyecto-card">
             <h3>
-              <Link to={`/resultado-consulta/${proyecto.id}`} className="proyecto-link">
+              <Link to={`/resultado-consulta/${proyecto.id}`} className="proyecto-card-link">
                 {proyecto.nombre}
               </Link>
             </h3>
             <p><strong>Correo:</strong> {proyecto.correo}</p>
             {(proyecto.descripcion || proyecto.description) && (
-              <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
+              <p className="proyecto-card-descripcion">
+                <strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}
+              </p>
             )}
-            <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
+            <p className="proyecto-card-fecha">
+              Subido el {new Date(proyecto.fecha_creacion).toLocaleDateString('es-ES')}
+            </p>
+            
             <button
               type="button"
               className="editar-descripcion-boton"
@@ -195,6 +182,7 @@ const Busqueda = () => {
         ))}
       </div>
 
+      {/* Modal de Edición de Descripción */}
       {proyectoEnEdicion && (
         <div className="descripcion-modal-overlay" role="presentation" onClick={cerrarEditorDescripcion}>
           <div
@@ -235,7 +223,6 @@ const Busqueda = () => {
           </div>
         </div>
       )}
-
 
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './SubirCodigo.css';
@@ -15,6 +15,14 @@ function SubirCodigo() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({ ...INITIAL_STATE, correo: usuario || '' });
+
+  // Sincronizar el correo si el usuario se carga de forma asíncrona
+  useEffect(() => {
+    if (usuario) {
+      setFormData(prev => ({ ...prev, correo: usuario }));
+    }
+  }, [usuario]);
+
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [mensaje, setMensaje] = useState('');
@@ -37,7 +45,6 @@ function SubirCodigo() {
     return extension === 'exe' || extension === 'bat';
   };
 
-  //Nueva función limpiarError
   const limpiarError = (campo) => {
     if (errores[campo]) {
       setErrores(prev => ({ ...prev, [campo]: '' }));
@@ -57,12 +64,7 @@ function SubirCodigo() {
       e.target.style.height = Math.max(150, e.target.scrollHeight) + 'px';
     }
 
-    // Limpiar error del campo cuando el usuario empieza a escribir
-    if (errores[name]) {
-      setErrores(prev => ({ ...prev, [name]: '' }));
-    }
     limpiarError(name);
-
     if (mensaje) setMensaje('');
   };
 
@@ -74,7 +76,6 @@ function SubirCodigo() {
     }));
 
     limpiarError('archivo');
-
     if (mensaje) setMensaje('');
   };
 
@@ -94,7 +95,7 @@ function SubirCodigo() {
       nuevosErrores.correo = 'El correo electrónico es obligatorio';
     }
 
-    // Si no hay archivo en el state, intentar leer directamente del input (puede pasar si el usuario clicó muy rápido)
+    // Si no hay archivo en el state, intentar leer directamente del input
     const archivoDesdeInput = fileInputRef.current?.files?.[0];
     const archivoAUsar = formData.archivo || archivoDesdeInput;
 
@@ -128,16 +129,15 @@ function SubirCodigo() {
       setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
       return;
     }
-    setEnviando(true);
-    console.log('Formulario enviado:', { ...formData, archivo: archivoAUsar });
 
+    setEnviando(true);
 
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
-    data.append('descripcion', formData.descripcion ? formData.descripcion.trim() : '');
-    if (formData.archivo) {
-      data.append('archivo', formData.archivo);
+    data.append('descripcion', descripcionValue.trim());
+    if (archivoAUsar) {
+      data.append('archivo', archivoAUsar);
     }
 
     try {
@@ -150,29 +150,13 @@ function SubirCodigo() {
       const errorMsg = result.error || result.message || 'Inténtalo de nuevo';
 
       if (response.status === 409) {
-        // Error de duplicidad en la base de datos
         setErrores({ nombre: errorMsg || 'Ya existe un proyecto con este nombre' });
         setMensaje(errorMsg || 'Ya existe un proyecto con este nombre');
         setEnviando(false);
         return;
       }
 
-      if (response.status === 400) {
-        // Error de validación en el servidor (ej: campo inválido)
-        setMensaje(errorMsg);
-        setEnviando(false);
-        return;
-      }
-
-      if (response.status === 500) {
-        // Error interno del servidor
-        setMensaje(errorMsg);
-        setEnviando(false);
-        return;
-      }
-
-      if (response.status === 503) {
-        // Base de datos no disponible
+      if (response.status >= 400 && response.status < 600) {
         setMensaje(errorMsg);
         setEnviando(false);
         return;
@@ -186,7 +170,6 @@ function SubirCodigo() {
         setMensaje(`Error desconocido: ${errorMsg}`);
       }
     } catch (error) {
-      console.error('Error al subir el archivo:', error);
       setMensaje('Error de conexión. Verifica tu internet e intenta de nuevo.');
     } finally {
       setEnviando(false);
@@ -205,128 +188,128 @@ function SubirCodigo() {
 
   return (
     <>
-    <div className="subir-codigo-header">
-      <h2>Sube tu proyecto</h2>
-      <p>Comparte tu ejecutable y recibe feedback de la comunidad de testers</p>
-    </div>
+      <div className="subir-codigo-header">
+        <h2>Sube tu proyecto</h2>
+        <p>Comparte tu ejecutable y recibe feedback de la comunidad de testers</p>
+      </div>
 
-    <div className="subir-codigo">
+      <div className="subir-codigo">
+        {mostrarMensajeGlobal && (
+          <div className="mensaje-global mensaje-separado" role="alert" aria-live="polite">
+            {mensaje}
+          </div>
+        )}
 
-      {mostrarMensajeGlobal && (
-        <div className="mensaje-global mensaje-separado" role="alert" aria-live="polite">
-          {mensaje}
-        </div>
-      )}
+        <form id="uploadCode" onSubmit={handleSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="nombre">
+              Escriba el nombre de su proyecto: <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              name="nombre"
+              id="nombre"
+              inputMode="text"
+              placeholder="Ej: Mi Juego Increíble"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              className={errores.nombre ? 'error' : ''}
+              maxLength="100"
+            />
+            {errores.nombre && (
+              <span className="error-message" role="alert">
+                {errores.nombre}
+              </span>
+            )}
+            <small>Solo letras, números y espacios (sin caracteres especiales)</small>
+          </div>
 
-      <form id="uploadCode" onSubmit={handleSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="correo">
+              Correo electrónico: <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              name="correo"
+              id="correo"
+              inputMode="text"
+              placeholder="tu@email.com"
+              value={formData.correo}
+              onChange={handleInputChange}
+              className={errores.correo ? 'error' : ''}
+            />
+            {errores.correo && (
+              <span className="error-message" role="alert">
+                {errores.correo}
+              </span>
+            )}
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="nombre">
-            Escriba el nombre de su proyecto: <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="nombre"
-            id="nombre"
-            inputMode="text"
-            placeholder="Ej: Mi Juego Increíble"
-            value={formData.nombre}
-            onChange={handleInputChange}
-            className={errores.nombre ? 'error' : ''}
-            maxLength="100"
-          />
-          {errores.nombre && (
-            <span className="error-message" role="alert">
-              {errores.nombre}
-            </span>
-          )}
-          <small>Solo letras, números y espacios (sin caracteres especiales)</small>
-        </div>
+          <div className="form-group">
+            <label htmlFor="archivo">
+              Selecciona un archivo ejecutable: <span className="required">*</span>
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              name="archivo"
+              id="archivo"
+              accept=".exe, .bat"
+              inputMode="none"
+              onChange={handleFileChange}
+              className={errores.archivo ? 'error' : ''}
+            />
+            {errores.archivo && (
+              <span className="error-message" role="alert">
+                {errores.archivo}
+              </span>
+            )}
+            {formData.archivo && (
+              <small className="file-info">
+                📁 Archivo seleccionado: {formData.archivo.name} 
+                ({(formData.archivo.size / 1024).toFixed(2)} KB)
+              </small>
+            )}
+            <small>Formatos permitidos: .exe, .bat</small>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="descripcion">Descripción del proyecto:</label>
+            <textarea
+              name="descripcion"
+              id="descripcion"
+              placeholder="Cuéntanos un poco sobre tu proyecto..."
+              value={formData.descripcion}
+              onChange={handleInputChange}
+              maxLength={500}
+              className={descripcionClassName}
+            />
+            {descripcionError && (
+              <span className="error-message" role="alert">
+                ⚠️ {descripcionError}
+              </span>
+            )}
+            <small>Máximo 500 caracteres</small>
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="correo">
-            Correo electrónico: <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            name="correo"
-            id="correo"
-            inputMode="text"
-            placeholder="tu@email.com"
-            value={formData.correo}
-            onChange={handleInputChange}
-            className={errores.correo ? 'error' : ''}
-          />
-          {errores.correo && (
-            <span className="error-message" role="alert">
-              {errores.correo}
-            </span>
-          )}
-        </div>
+          <div className="form-buttons">
+            <button
+              type="submit"
+              disabled={enviando}
+              className={enviando ? 'enviando' : ''}
+            >
+              {enviando ? 'Enviando...' : 'Aceptar'}
+            </button>
+            <button type="button" onClick={handleReset} disabled={enviando}>
+              Cancelar
+            </button>
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="archivo">
-            Selecciona un archivo ejecutable: <span className="required">*</span>
-          </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            name="archivo"
-            id="archivo"
-            accept=".exe, .bat"
-            inputMode="none"
-            onChange={handleFileChange}
-            className={errores.archivo ? 'error' : ''}
-          />
-          {errores.archivo && (
-            <span className="error-message" role="alert">
-              {errores.archivo}
-            </span>
-          )}
-          {formData.archivo && (
-            <small className="file-info">
-              Archivo seleccionado: {formData.archivo.name}
-            </small>
-          )}
-          <small>Formatos permitidos: .exe, .bat</small>
-        </div>
-        <div className="form-group">
-          <label htmlFor="descripcion">Descripción del proyecto:</label>
-          <textarea
-            name="descripcion"
-            id="descripcion"
-            placeholder="Cuéntanos un poco sobre tu proyecto..."
-            value={formData.descripcion}
-            onChange={handleInputChange}
-            maxLength={500}
-            className={descripcionClassName}
-          />
-          {descripcionError && (
-            <span className="error-message" role="alert">
-              ⚠️ {descripcionError}
-            </span>
-          )}
-          <small>Máximo 500 caracteres</small>
-        </div>
-
-        <div className="form-buttons">
-          <button
-            type="submit"
-            disabled={enviando}
-            className={enviando ? 'enviando' : ''}
-          >
-            {enviando ? 'Enviando...' : 'Aceptar'}
-          </button>
-          <button type="button" onClick={handleReset} disabled={enviando}>
-            Cancelar
-          </button>
-        </div>
-
-        <div className="required-note">
-          <span className="required">*</span> Campos obligatorios
-        </div>
-      </form>
-    </div>
+          <div className="required-note">
+            <span className="required">*</span> Campos obligatorios
+          </div>
+        </form>
+      </div>
     </>
   );
 }

@@ -21,16 +21,22 @@ function Layout({ children }) {
         <nav className="navegacion-principal">
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
-
-          <Link to="/busqueda">Búsqueda</Link>  {/*DT_10_T1*/}
-
-          <Link to="/registro">Registrar</Link>  {/*DT_01_T1*/}
-
+          <Link to="/busqueda">Búsqueda</Link>
+          <Link to="/registro">Registrar</Link>
         </nav>
 
-        {/* Espacio reservado a la derecha por si luego quieres poner un perfil de usuario o botón */}
+        {/* Acciones de usuario dinámicas */}
         <div className="user-actions">
-           {/* Puedes poner el botón del offcanvas aquí en el futuro */}
+          {!usuario ? (
+            <Link to="/iniciarSesion" className="btn-login-header">
+              Iniciar Sesión
+            </Link>
+          ) : (
+            <div className="user-info d-flex align-items-center" data-bs-toggle="offcanvas" data-bs-target="#menuRight" style={{cursor: 'pointer'}}>
+              <i className="bi bi-person-circle me-2"></i>
+              <span>{usuario}</span>
+            </div>
+          )}
         </div>
 
       </header>
@@ -44,7 +50,7 @@ function Layout({ children }) {
       </div>
 
       {/* Menú lateral (Offcanvas) */}
-      <div className="offcanvas offcanvas-end" tabIndex="-1" id="menuRight">
+      <div className="offcanvas offcanvas-end text-dark" tabIndex="-1" id="menuRight">
         <div className="offcanvas-header">
           <h5 className="offcanvas-title">Menú DevTest</h5>
           <button type="button" className="btn-close" data-bs-dismiss="offcanvas"></button>
@@ -53,7 +59,7 @@ function Layout({ children }) {
           {usuario ? (
             <div>
               <p>Hola, {usuario}</p>
-              <button type="button" onClick={logout} className="btn btn-outline-secondary btn-sm">
+              <button type="button" onClick={logout} className="btn btn-outline-danger btn-sm">
                 Cerrar sesión
               </button>
             </div>

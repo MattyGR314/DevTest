@@ -9,25 +9,32 @@ import ConfirmacionSubida from './pages/confirmacionSubida';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
-
-
+import IniciarSesion from './pages/iniciarSesion';
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Inicio />} />
-            <Route path="/registro" element={<Registro />} />
-            <Route path="/subircodigo" element={<SubirCodigo />} />
-            <Route path="/confirmacion" element={<ConfirmacionSubida />} /> 
-            <Route path="/busqueda" element={<Busqueda />} /> 
-            <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
-            <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          {/* Rutas independientes sin Layout */}
+          <Route path="/iniciarSesion" element={<IniciarSesion />} />
+          
+          {/* Rutas con Layout */}
+          <Route path="*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Inicio />} />
+                <Route path="/registro" element={<Registro />} />
+                <Route path="/subircodigo" element={<SubirCodigo />} />
+                <Route path="/confirmacion" element={<ConfirmacionSubida />} /> 
+                <Route path="/busqueda" element={<Busqueda />} /> 
+                <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
+                <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
+              </Routes>
+            </Layout>
+          } />
+        </Routes>
       </Router>
     </AuthProvider>
   );
