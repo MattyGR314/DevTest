@@ -186,15 +186,22 @@ const Busqueda = () => {
               <p className="descripcion-scroll"><strong>Descripción:</strong> {proyecto.descripcion || proyecto.description}</p>
             )}
             <p><strong>Subido:</strong> {new Date(proyecto.fecha_creacion).toLocaleDateString()}</p>
-            <button
-              type="button"
-              className="editar-descripcion-boton"
-              onClick={() => abrirEditorDescripcion(proyecto)}
-              disabled={!usuario || usuario !== proyecto.correo}
-              title={!usuario || usuario !== proyecto.correo ? 'Solo el creador puede modificar la descripción' : ''}
-            >
-              Modificar descripción
-            </button>
+            <div className="proyecto-acciones">
+              <button
+                type="button"
+                className="editar-descripcion-boton"
+                onClick={() => abrirEditorDescripcion(proyecto)}
+                disabled={!usuario || usuario !== proyecto.correo}
+                title={!usuario || usuario !== proyecto.correo ? 'Solo el creador puede modificar la descripción' : ''}
+              >
+                Modificar descripción
+              </button>
+              {usuario && usuario === proyecto.correo && (
+                <Link to={`/detalles-proyecto/${proyecto.id}`} className="detalles-proyecto-boton">
+                  Añadir detalles
+                </Link>
+              )}
+            </div>
           </div>
         ))}
       </div>

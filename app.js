@@ -696,6 +696,82 @@ app.get('/api/inscripciones/check', async (req, res) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ===== RUTAS DE DETALLES DE PROYECTO =====
+const CREAR_TABLA_DETALLES = `
+  CREATE TABLE IF NOT EXISTS detalles_proyecto (
+    id_proyecto INT PRIMARY KEY,
+    version VARCHAR(50),
+    plataforma VARCHAR(100),
+    instrucciones TEXT,
+    CONSTRAINT fk_detalles_proyecto
+      FOREIGN KEY (id_proyecto) REFERENCES proyectos(id)
+      ON DELETE CASCADE ON UPDATE CASCADE
+  )
+`;
+
+app.get('/api/proyectos/:id/detalles', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  try {
+    const connection = await pool.getConnection();
+    await connection.query(CREAR_TABLA_DETALLES);
+    const [rows] = await connection.execute(
+      'SELECT version, plataforma, instrucciones FROM detalles_proyecto WHERE id_proyecto = ?',
+      [id]
+    );
+    connection.release();
+    res.json(rows[0] || {});
+  } catch (error) {
+    console.error('Error al obtener detalles:', error);
+    res.status(500).json({ error: 'Error al obtener detalles' });
+  }
+});
+
+app.put('/api/proyectos/:id/detalles', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  const { correo, version, plataforma, instrucciones } = req.body;
+
+  if (!correo || !correo.trim()) {
+    return res.status(400).json({ error: 'El correo es obligatorio' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    await connection.query(CREAR_TABLA_DETALLES);
+
+    const [proyecto] = await connection.execute(
+      'SELECT correo FROM proyectos WHERE id = ?',
+      [id]
+    );
+
+    if (proyecto.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    if (proyecto[0].correo !== correo.trim()) {
+      connection.release();
+      return res.status(403).json({ error: 'Solo el creador puede editar los detalles' });
+    }
+
+    await connection.execute(
+      `INSERT INTO detalles_proyecto (id_proyecto, version, plataforma, instrucciones)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE version = VALUES(version), plataforma = VALUES(plataforma), instrucciones = VALUES(instrucciones)`,
+      [id, version?.trim() || null, plataforma?.trim() || null, instrucciones?.trim() || null]
+    );
+
+    connection.release();
+    res.json({ message: 'Detalles actualizados correctamente', id });
+  } catch (error) {
+    console.error('Error al guardar detalles:', error);
+    res.status(500).json({ error: 'Error al guardar detalles' });
+  }
+});
+
 // ===== 1. MANEJO DE 404 PARA LA API =====
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
 // Movido a aquí en DT_5 como este orden impide los además a funcionar

@@ -10,6 +10,7 @@ import IniciarSesion from './pages/iniciarSesion';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
+import DetallesProyecto from './pages/DetallesProyecto';
 import './App.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
             <Route path="/busqueda" element={<Busqueda />} />
             <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
             <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
+            <Route path="/detalles-proyecto/:id" element={<DetallesProyecto />} />
           </Routes>
         </Layout>
       </Router>

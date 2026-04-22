@@ -171,6 +171,38 @@
   outline: none;
 }
 
+/* ── Project actions row ── */
+.proyecto-acciones {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.proyecto-acciones .editar-descripcion-boton {
+  margin-top: 0;
+}
+
+.detalles-proyecto-boton {
+  display: inline-block;
+  padding: 0.55rem 1rem;
+  background-color: transparent;
+  color: #58a6ff;
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.detalles-proyecto-boton:hover {
+  background: rgba(88, 166, 255, 0.08);
+  border-color: rgba(88, 166, 255, 0.5);
+  transform: translateY(-1px);
+}
+
 /* ── Edit description button ── */
 .editar-descripcion-boton {
   margin-top: 1rem;
