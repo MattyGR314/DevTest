@@ -319,6 +319,98 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
 
 app.use('/api', notFoundHandler); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== RUTA PARA COMPROBAR SI UN USUARIO YA ESTÁ INSCRITO =====
+app.get('/api/inscripciones/check', async (req, res) => {
+  const { correo, id_proyectos } = req.query;
+
+  if (!correo || !id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos, 10)]
+    );
+    connection.release();
+    res.json({ inscrito: rows.length > 0 });
+  } catch (error) {
+    console.error('Error al verificar inscripción:', error);
+    res.status(500).json({ error: 'Error al verificar inscripción' });
+  }
+});
+
+// ===== RUTA PARA GUARDAR FEEDBACK =====
+app.post('/api/feedback', upload.single('archivo'), async (req, res) => {
+  const { correo, id_proyectos, texto } = req.body;
+
+  if (!correo || !correo.trim()) {
+    return res.status(400).json({ error: 'El correo es obligatorio' });
+  }
+  if (!id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'ID de proyecto inválido' });
+  }
+  if (!texto || !texto.trim()) {
+    return res.status(400).json({ error: 'Los comentarios no pueden estar vacíos' });
+  }
+  if (texto.trim().length > 1000) {
+    return res.status(400).json({ error: 'El feedback no puede exceder 1000 caracteres' });
+  }
+  if (!req.file) {
+    return res.status(400).json({ error: 'Debes adjuntar al menos un documento' });
+  }
+
+  const idProyecto = parseInt(id_proyectos, 10);
+
+  try {
+    const connection = await pool.getConnection();
+
+    // DT_08_4: Verificar que el proyecto existe
+    const [proyectoRows] = await connection.execute(
+      'SELECT id FROM proyectos WHERE id = ?',
+      [idProyecto]
+    );
+    if (proyectoRows.length === 0) {
+      connection.release();
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'El proyecto no existe o ha sido borrado' });
+    }
+
+    // DT_08_6: Verificar que el usuario está inscrito en el proyecto
+    const [inscripcion] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), idProyecto]
+    );
+    if (inscripcion.length === 0) {
+      connection.release();
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(403).json({ error: 'Solo los testers inscritos pueden enviar feedback' });
+    }
+
+    const archivo_path = req.file.filename;
+    const nombre_fichero = req.file.originalname;
+
+    await connection.execute(
+      'INSERT INTO feedback (correo, id_proyectos, texto, archivo_path, nombre_fichero) VALUES (?, ?, ?, ?, ?)',
+      [correo.trim(), idProyecto, texto.trim(), archivo_path, nombre_fichero]
+    );
+    connection.release();
+
+    res.status(201).json({ message: 'Feedback enviado correctamente' });
+  } catch (error) {
+    console.error('Error al guardar feedback:', error);
+    res.status(500).json({ error: 'Error al guardar el feedback', detalles: error.message });
+  }
+});
+
+// ===== 1. MANEJO DE 404 PARA LA API =====
+// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+// Movido a aquí en DT_5 como este orden impide los además a funcionar
+app.use('/api', notFoundHandler); 
+
+// ===== ARCHIVOS ESTÁTICOS (React) =====
 app.use(express.static(path.join(__dirname, "build")));
 
 app.use((req, res) => {

@@ -2,6 +2,8 @@ const { defineConfig } = require("cypress");
 // 1. Importamos la configuración interna de Webpack que usa Create React App
 // Esto es vital para que las pruebas de componentes entiendan los loaders de CRA
 const getWebpackConfig = require("react-scripts/config/webpack.config");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = defineConfig({
   // Configuración global de la ventana y tiempos de espera
@@ -18,7 +20,54 @@ module.exports = defineConfig({
     supportFile: 'cypress/support/e2e.js',
 
     setupNodeEvents(on, config) {
-      // Implementar listeners de eventos aquí si es necesario
+      on('task', {
+        async multipartRequest({ url, method = 'POST', fields = {}, filePath, fileField = 'archivo', fileName }) {
+          if (!url) {
+            throw new Error('multipartRequest requiere la propiedad "url"');
+          }
+
+          const formData = new FormData();
+          Object.entries(fields).forEach(([key, value]) => {
+            formData.append(key, String(value));
+          });
+
+          if (filePath) {
+            const absoluteFilePath = path.isAbsolute(filePath)
+              ? filePath
+              : path.resolve(config.projectRoot, filePath);
+
+            if (!fs.existsSync(absoluteFilePath)) {
+              throw new Error(`Archivo no encontrado para multipartRequest: ${absoluteFilePath}`);
+            }
+
+            const buffer = fs.readFileSync(absoluteFilePath);
+            const blob = new Blob([buffer]);
+            formData.append(fileField, blob, fileName || path.basename(absoluteFilePath));
+          }
+
+          const response = await fetch(url, {
+            method,
+            body: formData,
+          });
+
+          const responseText = await response.text();
+          let parsedBody = responseText;
+
+          try {
+            parsedBody = responseText ? JSON.parse(responseText) : null;
+          } catch (error) {
+            // Keep plain text when response is not JSON.
+          }
+
+          return {
+            status: response.status,
+            ok: response.ok,
+            body: parsedBody,
+          };
+        },
+      });
+      
+      // IMPORTANTE: Retornar el config modificado
       return config;
     },
   },
