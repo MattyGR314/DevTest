@@ -168,6 +168,29 @@
   gap: 0.75rem;
 }
 
+/* Botón para ver feedback*/
+.btn-ver-feedback {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  margin-bottom: 1rem;
+  background-color: #17a2b8;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-ver-feedback:hover {
+  background-color: #138496;
+  color: white;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
 /* Botones de Edición */
 .btn-modificar, .btn-guardar, .btn-cancelar {
   border: none;
@@ -304,6 +327,11 @@
 }
 
 .resultado-link-login:hover { text-decoration: underline; }
+
+/* Separación adicional para el contenedor del botón Modificar */
+.edicion-botones {
+  margin-top: 0.5rem;
+}
 
 @media (max-width: 640px) {
   .resultado-consulta { padding: 0 1rem; margin-top: 1.5rem; }
