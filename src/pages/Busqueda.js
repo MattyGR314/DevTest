@@ -27,15 +27,12 @@ const Busqueda = () => {
     const correo = usuario;
 
     if (!correo) {
-      const todosLocales = Object.values(inscritosLocal).flat();
       return;
     }
 
-    const localIds = inscritosLocal[correo] || [];
     fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(correo)}`)
       .then(r => r.json())
       .then(data => {
-        const apiIds = data.ids || [];
       })
   }, [usuario]);
 
