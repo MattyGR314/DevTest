@@ -108,3 +108,38 @@
 	background-color: #0056b3;
 	text-decoration: none;
 }
+
+.resultado-acciones {
+	margin-top: 1.5rem;
+	padding-top: 1rem;
+	border-top: 1px solid #e3e8ee;
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	flex-wrap: wrap;
+}
+
+.inscrito-msg {
+	margin: 0;
+	color: #0b4aa1;
+	font-weight: 600;
+	background-color: #e6f0ff;
+	padding: 0.75rem 1.5rem;
+	border-radius: 4px;
+}
+
+.btn-descarga {
+	display: inline-block;
+	padding: 0.75rem 1.5rem;
+	background-color: #2ea043;
+	color: white;
+	text-decoration: none;
+	border-radius: 4px;
+	font-weight: 600;
+	transition: background-color 0.3s;
+}
+
+.btn-descarga:hover {
+	background-color: #238636;
+	text-decoration: none;
+}

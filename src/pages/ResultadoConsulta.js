@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
 	const { id } = useParams();
+	const { usuario, tipoUsuario } = useAuth();
 	const [proyecto, setProyecto] = useState(null);
 	const [cargando, setCargando] = useState(true);
 	const [error, setError] = useState('');
+	const [estaInscrito, setEstaInscrito] = useState(false);
 
 	useEffect(() => {
 		const fetchProyecto = async () => {
@@ -36,6 +39,27 @@ function ResultadoConsulta() {
 
 		fetchProyecto();
 	}, [id]);
+
+	useEffect(() => {
+		if (!usuario || !proyecto?.id) return;
+
+		const verificarInscripcion = async () => {
+			const inscritosLocal = JSON.parse(localStorage.getItem('mis_inscripciones') || '{}');
+			const localIds = inscritosLocal[usuario] || [];
+
+			try {
+				const response = await fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(usuario)}`);
+				const data = await response.json();
+				const apiIds = data.ids || [];
+				const todosIds = [...new Set([...apiIds, ...localIds])];
+				setEstaInscrito(todosIds.includes(proyecto.id));
+			} catch {
+				setEstaInscrito(localIds.includes(proyecto.id));
+			}
+		};
+
+		verificarInscripcion();
+	}, [usuario, proyecto?.id]);
 
 	const formatearFecha = (fecha) => {
 		if (!fecha) return 'Sin fecha';
@@ -80,9 +104,23 @@ function ResultadoConsulta() {
 					</div>
 					
 					<div className="resultado-acciones">
-						<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
-							Inscribirse como Tester
-						</Link>
+						{!estaInscrito ? (
+							<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
+								Inscribirse como Tester
+							</Link>
+						) : (
+							<p className="inscrito-msg">Ya estás inscrito en este proyecto.</p>
+						)}
+
+						{tipoUsuario === 'tester' && estaInscrito && proyecto.archivo_path && (
+							<a
+								href={`/${proyecto.archivo_path}`}
+								download={proyecto.nombre_fichero || true}
+								className="descarga-link btn-descarga"
+							>
+								Descargar proyecto
+							</a>
+						)}
 					</div>
 				</article>
 			)}

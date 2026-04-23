@@ -218,15 +218,6 @@ const Busqueda = () => {
               >
                 Modificar descripción
               </button>
-              {inscritosIds.includes(proyecto.id) && proyecto.archivo_path && (
-                <a
-                  href={`/${proyecto.archivo_path}`}
-                  download={proyecto.nombre_fichero || true}
-                  className="descarga-link"
-                >
-                  Descargar proyecto
-                </a>
-              )}
             </div>
           </div>
         ))}
