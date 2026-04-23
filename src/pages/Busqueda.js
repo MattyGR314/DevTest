@@ -1,11 +1,9 @@
 //creado en DT_10_T1
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import './Busqueda.css';
 
 const Busqueda = () => {
-  const { usuario } = useAuth();
   const [termino, setTermino] = useState('');  // DT_10_T1 terminos de busqueda
   const [campo, setCampo] = useState('nombre');  // DT_10_T1 tipos de busqueda
   const [resultados, setResultados] = useState([]);
@@ -16,25 +14,10 @@ const Busqueda = () => {
   const [errorDescripcion, setErrorDescripcion] = useState('');
   const [guardandoDescripcion, setGuardandoDescripcion] = useState(false);
   const textareaRef = useRef(null);
-  //
 
   useEffect(() => {
     fetchProyectos();
   }, []);
-
-  useEffect(() => {
-    const inscritosLocal = JSON.parse(localStorage.getItem('mis_inscripciones') || '{}');
-    const correo = usuario;
-
-    if (!correo) {
-      return;
-    }
-
-    fetch(`/api/inscripciones/usuario?correo=${encodeURIComponent(correo)}`)
-      .then(r => r.json())
-      .then(data => {
-      })
-  }, [usuario]);
 
   useEffect(() => {
     if (proyectoEnEdicion && textareaRef.current) {
