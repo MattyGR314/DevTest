@@ -317,7 +317,6 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
 
 // ===== ESTÁTICOS Y MANEJO DE ERRORES =====
 
-app.use('/api', notFoundHandler); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ===== RUTA PARA COMPROBAR SI UN USUARIO YA ESTÁ INSCRITO =====
@@ -407,6 +406,7 @@ app.post('/api/feedback', upload.single('archivo'), async (req, res) => {
 
 // Rutas para obtener feedback de un proyecto
 app.get('/api/proyectos/:id/feedback', async (req, res) => {
+  
   const { id } = req.params;
   const userEmail = req.headers['x-user-email'];
 

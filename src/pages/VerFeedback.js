@@ -85,7 +85,7 @@ function VerFeedback() {
             <div key={item.id} className="feedback-item">
               <div className="feedback-meta">
                 <strong>{item.correo}</strong> el{' '}
-                {new Date(item.fecha_subida).toLocaleString()}
+                {new Date(item.fecha_creacion).toLocaleString()}
               </div>
               <div className="feedback-texto">{item.texto}</div>
               {item.archivo_path && (
