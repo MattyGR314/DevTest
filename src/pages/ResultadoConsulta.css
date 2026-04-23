@@ -269,45 +269,57 @@
   text-decoration: none;
 }
 
-.btn-feedback {
-	display: inline-block;
-	padding: 0.75rem 1.5rem;
-	background-color: #28a745;
-	color: white;
-	text-decoration: none;
-	border-radius: 4px;
-	font-weight: 600;
-	transition: background-color 0.3s;
-}
-
-.btn-feedback:hover {
-	background-color: #218838;
-	color: white;
-	text-decoration: none;
-}
-
-.btn-feedback {
-	display: inline-block;
-	padding: 0.75rem 1.5rem;
-	background-color: #28a745;
-	color: white;
-	text-decoration: none;
-	border-radius: 4px;
-	font-weight: 600;
-	transition: background-color 0.3s;
-}
-
-.btn-feedback:hover {
-	background-color: #218838;
-	color: white;
-	text-decoration: none;
-}
-
 .resultado-link-login:hover { text-decoration: underline; }
+
+/* ── Integración DT07: Acciones exclusivas del Tester ── */
+.acciones-tester-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-feedback {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.3s, transform 0.15s;
+}
+
+.btn-feedback:hover {
+  background-color: #218838;
+  color: white;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.btn-descarga {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #58a6ff; /* Diferenciado en azul para no chocar con el verde de feedback */
+  color: #0b1220;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.3s, transform 0.15s;
+}
+
+.btn-descarga:hover {
+  background-color: #79b8ff;
+  color: #0b1220;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
 
 @media (max-width: 640px) {
   .resultado-consulta { padding: 0 1rem; margin-top: 1.5rem; }
   .resultado-header { flex-direction: column; align-items: flex-start; }
   .resultado-card { padding: 1.25rem; }
   .edicion-botones-acciones { flex-direction: column; }
+  .acciones-tester-container { flex-direction: column; width: 100%; }
+  .btn-feedback, .btn-descarga { width: 100%; text-align: center; }
 }

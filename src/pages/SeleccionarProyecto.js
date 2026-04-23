@@ -76,6 +76,16 @@ function SeleccionarProyecto() {
         return;
       }
       
+      // Integración DT07: Guardar la inscripción en localStorage para persistencia local
+      const inscritosLocal = JSON.parse(localStorage.getItem('mis_inscripciones') || '{}');
+      const correoUsado = formData.correo.trim();
+      if (!inscritosLocal[correoUsado]) inscritosLocal[correoUsado] = [];
+      const idNum = parseInt(id);
+      if (!inscritosLocal[correoUsado].includes(idNum)) {
+        inscritosLocal[correoUsado].push(idNum);
+      }
+      localStorage.setItem('mis_inscripciones', JSON.stringify(inscritosLocal));
+      
       setExito(true);
     } catch {
       setErrorGeneral('Error de conexión. Inténtalo de nuevo.');
@@ -84,7 +94,7 @@ function SeleccionarProyecto() {
     }
   };
 
-  // Pantalla de éxito encapsulada
+  // Pantalla de éxito encapsulada (Mantenida de Dev)
   if (exito) {
     return (
       <section className="seleccionar-proyecto">
@@ -149,7 +159,7 @@ function SeleccionarProyecto() {
               value={formData.correo}
               onChange={handleInputChange}
               className={errores.correo ? 'error' : ''}
-              disabled={enviando}
+              disabled={enviando || !!usuario} /* Integración DT07: Se desactiva si el usuario tiene sesión iniciada */
             />
             {errores.correo && <span className="inscripcion-error-texto">{errores.correo}</span>}
           </div>

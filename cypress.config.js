@@ -56,7 +56,7 @@ module.exports = defineConfig({
           try {
             parsedBody = responseText ? JSON.parse(responseText) : null;
           } catch (error) {
-            // Keep plain text when response is not JSON.
+            // Conservar texto plano cuando la respuesta no es JSON
           }
 
           return {
@@ -67,7 +67,6 @@ module.exports = defineConfig({
         },
       });
       
-      // IMPORTANTE: Retornar el config modificado
       return config;
     },
   },
@@ -79,7 +78,7 @@ module.exports = defineConfig({
       // 2. Inyectamos la configuración de CRA en modo desarrollo para compatibilidad total
       webpackConfig: getWebpackConfig("development"),
     },
-    // Ubicación de las pruebas de componentes (normalmente junto al código fuente)
+    // Ubicación de las pruebas de componentes
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/component.js',
   },

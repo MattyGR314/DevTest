@@ -8,6 +8,7 @@ function ResultadoConsulta() {
   const { usuario } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  // Se obtiene el tipo de usuario de localStorage tal como se hace en Dev
   const tipoUsuario = (localStorage.getItem('usuario_tipo') || '').toLowerCase();
 
   const [proyecto, setProyecto] = useState(null);
@@ -210,9 +211,23 @@ function ResultadoConsulta() {
                 )}
               </div>
             ) : yaInscrito ? (
-              <Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
-                Enviar feedback
-              </Link>
+              /* Integración DT07: Contenedor para acciones exclusivas de los testers inscritos */
+              <div className="acciones-tester-container">
+                <Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
+                  Enviar feedback
+                </Link>
+                
+                {/* DT07: Botón de descarga del fichero ejecutable */}
+                {tipoUsuario === 'tester' && proyecto.archivo_path && (
+                  <a
+                    href={`/${proyecto.archivo_path}`}
+                    download={proyecto.nombre_fichero || true}
+                    className="btn-descarga"
+                  >
+                    Descargar ejecutable
+                  </a>
+                )}
+              </div>
             ) : (
               !editando && (
                 <div className="inscripcion-container">
