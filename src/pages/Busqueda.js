@@ -11,7 +11,6 @@ const Busqueda = () => {
   const [resultados, setResultados] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
-  const [inscritosIds, setInscritosIds] = useState([]);
   const [proyectoEnEdicion, setProyectoEnEdicion] = useState(null);
   const [descripcionEditada, setDescripcionEditada] = useState('');
   const [errorDescripcion, setErrorDescripcion] = useState('');
