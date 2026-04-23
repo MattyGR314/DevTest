@@ -1,9 +1,6 @@
 const { defineConfig } = require("cypress");
 
 // Definir variable de entorno antes de importar dependencias de react-scripts
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-
-const getWebpackConfig = require("react-scripts/config/webpack.config");
 const fs = require('fs');
 const path = require('path');
 
@@ -76,12 +73,9 @@ module.exports = defineConfig({
 
   component: {
     devServer: {
-      framework: "react",
+      framework: "create-react-app",
       bundler: "webpack",
-      // 2. Inyectamos la configuración de CRA en modo desarrollo para compatibilidad total
-      webpackConfig: getWebpackConfig("development"),
     },
-    // Ubicación de las pruebas de componentes (normalmente junto al código fuente)
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/component.js',
   },
