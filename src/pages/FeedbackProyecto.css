@@ -1,0 +1,246 @@
+.feedback-proyecto {
+  max-width: 580px;
+  margin: 2rem auto 3rem;
+  padding: 0 1.5rem;
+}
+
+/* ── Header ── */
+.feedback-header {
+  margin-bottom: 1.75rem;
+}
+
+.feedback-volver {
+  display: inline-block;
+  color: #58a6ff;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+
+.feedback-volver:hover {
+  color: #79b8ff;
+  text-decoration: underline;
+}
+
+.feedback-header h2 {
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0 0 0.4rem;
+}
+
+.feedback-nombre-proyecto {
+  color: #9aa4b2;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ── Form card ── */
+.feedback-form {
+  background-color: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1.75rem;
+}
+
+/* ── Error general ── */
+.feedback-error-general {
+  padding: 0.8rem 1rem;
+  border-left: 4px solid #f85149;
+  border-radius: 6px;
+  background-color: rgba(248, 81, 73, 0.08);
+  color: #f85149;
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ── Field groups ── */
+.feedback-group {
+  margin-bottom: 1.4rem;
+}
+
+.feedback-group label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-weight: 600;
+  color: #e6edf3;
+  font-size: 0.9rem;
+}
+
+.feedback-required {
+  color: #f85149;
+  margin-left: 3px;
+}
+
+/* ── Read-only display field ── */
+.feedback-readonly {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #e6edf3;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ── Input ── */
+.feedback-group input[type="email"],
+.feedback-group input[type="email"]:disabled {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #e6edf3;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.feedback-group input[type="email"]::placeholder {
+  color: #4d5a6a;
+}
+
+.feedback-group input[type="email"]:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.feedback-group input[type="email"].error {
+  border-color: #f85149;
+}
+
+/* ── Textarea ── */
+.feedback-group textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 0.7rem 0.85rem;
+  background-color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #e6edf3;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.feedback-group textarea::placeholder {
+  color: #4d5a6a;
+}
+
+.feedback-group textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.feedback-group textarea.error {
+  border-color: #f85149;
+}
+
+/* ── Field error ── */
+.feedback-error-texto {
+  display: block;
+  color: #f85149;
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  background-color: rgba(248, 81, 73, 0.08);
+  border-left: 3px solid #f85149;
+  border-radius: 4px;
+}
+
+.feedback-group small {
+  display: block;
+  color: #9aa4b2;
+  font-size: 0.78rem;
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
+/* ── Submit button ── */
+.feedback-boton-enviar {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.15s;
+  margin-top: 0.5rem;
+}
+
+.feedback-boton-enviar:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.feedback-boton-enviar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Success state ── */
+.feedback-exito {
+  background-color: #0f1724;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  border-radius: 12px;
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.feedback-exito-icono {
+  display: block;
+  font-size: 2rem;
+  color: #56d364;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-exito p {
+  color: #e6edf3;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+}
+
+.feedback-link-busqueda {
+  display: inline-block;
+  padding: 0.65rem 1.5rem;
+  border: 1.5px solid #58a6ff;
+  color: #58a6ff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.feedback-link-busqueda:hover {
+  background-color: rgba(88, 166, 255, 0.1);
+  color: #58a6ff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .feedback-proyecto {
+    padding: 0 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .feedback-form {
+    padding: 1.25rem;
+  }
+}
