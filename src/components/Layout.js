@@ -22,15 +22,19 @@ function Layout({ children }) {
           <Link to="/">Inicio</Link>
           <Link to="/subircodigo">Subir Código</Link>
           <Link to="/busqueda">Búsqueda</Link>
-          <Link to="/registro">Registrar</Link>
+          {/* Se elimina <Link to="/registro">Registrar</Link> de aquí */}
         </nav>
 
-        {/* Acciones de usuario dinámicas */}
         <div className="user-actions">
           {!usuario ? (
-            <Link to="/iniciarSesion" className="btn-login-header">
-              Iniciar Sesión
-            </Link>
+            <>
+              <Link to="/registro" className="btn-register-header">
+                Registrar
+              </Link>
+              <Link to="/iniciarSesion" className="btn-login-header">
+                Iniciar Sesión
+              </Link>
+            </>
           ) : (
             <div className="user-info d-flex align-items-center" data-bs-toggle="offcanvas" data-bs-target="#menuRight" style={{cursor: 'pointer'}}>
               <i className="bi bi-person-circle me-2"></i>
