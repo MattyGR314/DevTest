@@ -21,17 +21,11 @@ function ResultadoConsulta() {
 
   useEffect(() => {
     const obtenerProyecto = async () => {
-      setError('');
       try {
         setCargando(true);
-        const response = await fetch(`/api/proyectos?q=${encodeURIComponent(id)}&campo=id`);
+        const response = await fetch(`/api/proyectos/${id}`);
         if (!response.ok) throw new Error("Proyecto no encontrado");
         const data = await response.json();
-        if (!Array.isArray(data) || data.length === 0) {
-					setProyecto(null);
-					setError('No existe un proyecto con ese ID.');
-					return;
-				}
         setProyecto(data);
         setNuevaDesc(data.descripcion || "");
       } catch (err) {
@@ -190,15 +184,6 @@ function ResultadoConsulta() {
           </div>
 
           <div className="resultado-acciones">
-            {yaInscrito ? (
-							<Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
-								Enviar feedback
-							</Link>
-						) : (
-							<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
-								Inscribirse como Tester
-							</Link>
-						)}
             {esCreador ? (
               <div className="edicion-botones">
                 {!editando ? (

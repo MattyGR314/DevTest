@@ -9,7 +9,6 @@ import ConfirmacionSubida from './pages/confirmacionSubida';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
-import FeedbackProyecto from './pages/FeedbackProyecto';
 import IniciarSesion from './pages/iniciarSesion';
 import './App.css';
 
@@ -32,7 +31,6 @@ function App() {
                 <Route path="/busqueda" element={<Busqueda />} /> 
                 <Route path="/resultado-consulta/:id" element={<ResultadoConsulta />} />
                 <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
-                <Route path="/feedback/:id" element={<FeedbackProyecto />} />
               </Routes>
             </Layout>
           } />
