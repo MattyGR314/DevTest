@@ -405,6 +405,56 @@ app.post('/api/feedback', upload.single('archivo'), async (req, res) => {
   }
 });
 
+// Rutas para obtener feedback de un proyecto
+app.get('/api/proyectos/:id/feedback', async (req, res) => {
+  const { id } = req.params;
+  const userEmail = req.headers['x-user-email'];
+
+  if (!userEmail) {
+    return res.status(401).json({ error: 'No se ha iniciado sesión' });
+  }
+
+  const proyectoId = parseInt(id, 10);
+  if (isNaN(proyectoId)) {
+    return res.status(400).json({ error: 'ID de proyecto inválido' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // Verificar existencia del proyecto y obtener dueño
+    const [proyectoRows] = await connection.execute(
+      'SELECT correo FROM proyectos WHERE id = ?',
+      [proyectoId]
+    );
+    if (proyectoRows.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    const duenoProyecto = proyectoRows[0].correo;
+    if (userEmail !== duenoProyecto) {
+      connection.release();
+      return res.status(403).json({ error: 'Solo los dueños del proyecto pueden ver el feedback' });
+    }
+
+    // Obtener feedbacks ordenados por fecha
+    const [feedbackRows] = await connection.execute(
+      `SELECT id, correo, texto, archivo_path, nombre_fichero, fecha_creacion 
+       FROM feedback 
+       WHERE id_proyectos = ? 
+       ORDER BY fecha_creacion DESC`,
+      [proyectoId]
+    );
+    connection.release();
+
+    res.json(feedbackRows);
+  } catch (error) {
+    console.error('Error al obtener feedback:', error);
+    res.status(500).json({ error: 'Error al obtener feedback' });
+  }
+});
+
 // ===== 1. MANEJO DE 404 PARA LA API =====
 // Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
 // Movido a aquí en DT_5 como este orden impide los además a funcionar

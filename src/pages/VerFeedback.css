@@ -1,0 +1,37 @@
+.ver-feedback {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.feedback-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.feedback-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: #f9f9f9;
+}
+
+.feedback-meta {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-texto {
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+}
+
+.feedback-archivo {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
