@@ -28,7 +28,6 @@ const Busqueda = () => {
 
     if (!correo) {
       const todosLocales = Object.values(inscritosLocal).flat();
-      setInscritosIds([...new Set(todosLocales)]);
       return;
     }
 
@@ -37,9 +36,7 @@ const Busqueda = () => {
       .then(r => r.json())
       .then(data => {
         const apiIds = data.ids || [];
-        setInscritosIds([...new Set([...apiIds, ...localIds])]);
       })
-      .catch(() => setInscritosIds([...new Set(localIds)]));
   }, [usuario]);
 
   useEffect(() => {
