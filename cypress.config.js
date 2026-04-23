@@ -1,20 +1,14 @@
 const { defineConfig } = require("cypress");
-
-// Definir variable de entorno antes de importar dependencias de react-scripts
 const fs = require('fs');
 const path = require('path');
 
 module.exports = defineConfig({
-  // Configuración global de la ventana y tiempos de espera
   viewportWidth: 1280,
   viewportHeight: 720,
   defaultCommandTimeout: 10000,
   
   e2e: {
-    // URL base dinámica: usa variable de entorno o localhost por defecto
     baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
-    
-    // Ubicación de las pruebas E2E y archivo de soporte
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: 'cypress/support/e2e.js',
 
@@ -55,7 +49,7 @@ module.exports = defineConfig({
           try {
             parsedBody = responseText ? JSON.parse(responseText) : null;
           } catch (error) {
-            // Keep plain text when response is not JSON.
+            // Conservar texto plano cuando la respuesta no es JSON
           }
 
           return {
@@ -66,7 +60,6 @@ module.exports = defineConfig({
         },
       });
       
-      // IMPORTANTE: Retornar el config modificado
       return config;
     },
   },
