@@ -24,14 +24,14 @@ function ResultadoConsulta() {
       setError('');
       try {
         setCargando(true);
-        const response = await fetch(`/api/proyectos?q=${encodeURIComponent(id)}&campo=id`);
+        const response = await fetch(`/api/proyectos/${encodeURIComponent(id)}`);
         if (!response.ok) throw new Error("Proyecto no encontrado");
         const data = await response.json();
-        if (!Array.isArray(data) || data.length === 0) {
-					setProyecto(null);
-					setError('No existe un proyecto con ese ID.');
-					return;
-				}
+        if (!data || typeof data !== 'object') {
+          setProyecto(null);
+          setError('No existe un proyecto con ese ID.');
+          return;
+        }
         setProyecto(data);
         setNuevaDesc(data.descripcion || "");
       } catch (err) {
@@ -76,7 +76,7 @@ function ResultadoConsulta() {
     }
 
     try {
-      const response = await fetch(`/api/proyectos/${id}`, {
+      const response = await fetch(`/api/proyectos/${id}/descripcion`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ descripcion: nuevaDesc.trim() }),
@@ -122,7 +122,9 @@ function ResultadoConsulta() {
   };
 
   const fichero = proyecto?.nombre_fichero || "No hay fichero adjunto";
-  const esCreador = usuario && proyecto?.correo && proyecto.correo === usuario;
+  const correoProyecto = (proyecto?.correo || '').trim().toLowerCase();
+  const correoUsuario = (usuario || '').trim().toLowerCase();
+  const esCreador = Boolean(correoUsuario && correoProyecto && correoUsuario === correoProyecto);
   const textoDescripcion = proyecto?.descripcion || "Sin descripción registrada";
   const descripcionLargaUnaPalabra = (() => {
     const texto = (proyecto?.descripcion || "").trim();
@@ -190,23 +192,12 @@ function ResultadoConsulta() {
           </div>
 
           <div className="resultado-acciones">
-            {yaInscrito ? (
-							<Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
-								Enviar feedback
-							</Link>
-						) : (
-							<Link to={`/seleccionarproyecto/${proyecto.id}`} className="btn-participar">
-								Inscribirse como Tester
-							</Link>
-						)}
-
             {/* DT_09_01 Nuevo botón solo para el dueño */}
             {esCreador && (
               <Link to={`/proyecto/${proyecto.id}/ver-feedback`} className="btn-ver-feedback">
                 Ver feedback recibido
               </Link>
             )}
-            
             {esCreador ? (
               <div className="edicion-botones">
                 {!editando ? (
@@ -224,6 +215,10 @@ function ResultadoConsulta() {
                   </div>
                 )}
               </div>
+            ) : yaInscrito ? (
+              <Link to={`/feedback/${proyecto.id}`} className="btn-feedback">
+                Enviar feedback
+              </Link>
             ) : (
               !editando && (
                 <div className="inscripcion-container">
@@ -245,3 +240,4 @@ function ResultadoConsulta() {
 }
 
 export default ResultadoConsulta;
+
