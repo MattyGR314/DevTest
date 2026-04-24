@@ -99,9 +99,9 @@ function ResultadoConsulta() {
   };
 
   const botonInscripcion = () => {
-    if (!usuario || !proyecto) return null;
-    if (tipoUsuario !== 'tester') return null;
-    if (proyecto.correo && proyecto.correo === usuario) return null;
+    if (!proyecto) return null;
+    if (usuario && tipoUsuario !== 'tester') return null;
+    if (usuario && proyecto.correo && proyecto.correo === usuario) return null;
 
     if (yaInscrito) {
       return (
@@ -232,12 +232,6 @@ function ResultadoConsulta() {
               !editando && (
                 <div className="inscripcion-container">
                   {botonInscripcion()}
-
-                  {!usuario && (
-                    <p className="resultado-aviso-login">
-                      <Link to="/iniciarSesion" className="resultado-link-login">Inicia sesión</Link> para inscribirte como tester.
-                    </p>
-                  )}
                 </div>
               )
             )}
