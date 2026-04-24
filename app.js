@@ -63,6 +63,11 @@ const pool = mysql.createPool({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const normalizeStoredPath = (value) => {
+  if (!value || typeof value !== 'string') return null;
+  return value.replace(/\\/g, '/').replace(/^\.?\//, '');
+};
+
 app.use('/api', apiLimiter); 
 
 app.get('/api/health', async (req, res, next) => {
@@ -169,7 +174,11 @@ app.get('/api/proyectos', async (req, res) => {
 
     const [rows] = await connection.query(query, params);
     connection.release();
-    res.json(rows);
+    const normalizedRows = rows.map((row) => ({
+      ...row,
+      archivo_path: normalizeStoredPath(row.archivo_path)
+    }));
+    res.json(normalizedRows);
   } catch (error) {
     console.error('Error al obtener proyectos:', error);
     res.status(500).json({ error: 'Error al obtener proyectos', detalles: error.message });
@@ -189,7 +198,10 @@ app.get('/api/proyectos/:id', async (req, res) => {
     connection.release();
 
     if (rows.length === 0) return res.status(404).json({ error: 'Proyecto no encontrado' });
-    res.json(rows[0]);
+    res.json({
+      ...rows[0],
+      archivo_path: normalizeStoredPath(rows[0].archivo_path)
+    });
   } catch (error) {
     console.error('Error al obtener proyecto:', error);
     res.status(500).json({ error: 'Error al obtener proyecto' });
@@ -361,7 +373,7 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     console.log('📝 Inicio de subida de archivo...');
     const { nombre, correo } = req.body;
     const archivo = req.file;
-    const filePath = archivo ? archivo.path : null;
+    const filePath = archivo ? path.posix.join('uploads', archivo.filename) : null;
     const nombreFichero = archivo ? archivo.originalname : null;
     const descripcion = req.body.descripcion || null;
 
@@ -434,7 +446,14 @@ app.post('/api/feedback', upload.single('archivo'), async (req, res) => {
 });
 
 app.use('/api', notFoundHandler); 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.exe' || ext === '.bat') {
+      res.setHeader('Content-Type', 'application/octet-stream');
+    }
+  }
+}));
 app.use(express.static(path.join(__dirname, "build")));
 
 app.use((req, res) => {

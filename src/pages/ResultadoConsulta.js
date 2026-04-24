@@ -127,6 +127,13 @@ function ResultadoConsulta() {
   const correoUsuario = (usuario || '').trim().toLowerCase();
   const esCreador = Boolean(correoUsuario && correoProyecto && correoUsuario === correoProyecto);
   const textoDescripcion = proyecto?.descripcion || "Sin descripción registrada";
+  const rutaDescarga = (() => {
+    if (!proyecto?.archivo_path) return null;
+    const normalizada = String(proyecto.archivo_path)
+      .replace(/\\/g, '/')
+      .replace(/^\/+/, '');
+    return `/${normalizada}`;
+  })();
   const descripcionLargaUnaPalabra = (() => {
     const texto = (proyecto?.descripcion || "").trim();
     if (!texto) return false;
@@ -218,9 +225,9 @@ function ResultadoConsulta() {
                 </Link>
                 
                 {/* DT07: Botón de descarga del fichero ejecutable */}
-                {tipoUsuario === 'tester' && proyecto.archivo_path && (
+                {tipoUsuario === 'tester' && rutaDescarga && (
                   <a
-                    href={`/${proyecto.archivo_path}`}
+                    href={rutaDescarga}
                     download={proyecto.nombre_fichero || true}
                     className="btn-descarga"
                   >
