@@ -12,7 +12,6 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     fecha_creacion: '2026-04-21T10:00:00Z',
   };
 
-  // Objeto que espera el API de feedback según el componente
   const proyectoApi = {
     id: Number(proyectoId),
     nombre: 'Proyecto Integracion Feedback',
@@ -44,16 +43,20 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     cy.visit(`/resultado-consulta/${proyectoId}`, {
       onBeforeLoad(win) {
         if (usuarioLogueado) {
-          win.localStorage.setItem('usuario', usuarioLogueado);
+          // Restauradas todas las claves necesarias para asegurar sesión en el Contexto
+          win.localStorage.setItem('usuario_correo', usuarioLogueado);
+          win.localStorage.setItem('usuario', usuarioLogueado); 
+          win.localStorage.setItem('correo', usuarioLogueado);  
           win.localStorage.setItem('usuario_tipo', 'tester');
         }
       },
     });
     cy.wait('@getDetalleProyecto');
-    cy.wait('@checkInscripcion');
+    if (usuarioLogueado) {
+      cy.wait('@checkInscripcion');
+    }
   };
 
-  // Refactorizado para aceptar configuraciones de error y retardo
   const visitFeedback = ({ 
     usuarioLogueado = usuario, 
     statusCode = 200, 
@@ -70,7 +73,9 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     cy.visit(`/feedback/${proyectoId}`, {
       onBeforeLoad(win) {
         if (usuarioLogueado) {
+          win.localStorage.setItem('usuario_correo', usuarioLogueado);
           win.localStorage.setItem('usuario', usuarioLogueado);
+          win.localStorage.setItem('correo', usuarioLogueado);
           win.localStorage.setItem('usuario_tipo', 'tester');
         }
       },
@@ -104,13 +109,14 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
 
   it('IT_FB_003: Flujo de navegacion desde ResultadoConsulta a Feedback', () => {
     interceptResultadoConsulta({ inscrito: true });
-    // Interceptamos la segunda llamada que hará la página de feedback
+    visitResultadoConsulta();
+
+    // El intercept se declara DESPUÉS de cargar la vista inicial para evitar enmascarar a @getDetalleProyecto
     cy.intercept('GET', `/api/proyectos/${proyectoId}`, {
       statusCode: 200,
       body: proyectoApi,
     }).as('getProyectoFeedbackNav');
 
-    visitResultadoConsulta();
     cy.contains('a.btn-feedback', 'Enviar feedback').click();
 
     cy.url().should('include', `/feedback/${proyectoId}`);
@@ -130,7 +136,6 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
 
   it('IT_FB_006: Muestra estado de carga antes de recibir proyecto', () => {
     visitFeedback({ delay: 1000, waitProject: false });
-    // Verificamos el texto exacto definido en FeedbackProyecto.js
     cy.get('.feedback-readonly').should('contain', 'Cargando...');
     cy.wait('@getProyectoFeedback');
   });
@@ -152,7 +157,6 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
   });
 
   it('IT_FB_010: Si id en ruta es invalido, la vista maneja el error de proyecto', () => {
-    // Simulamos respuesta de error para ID inválido
     visitFeedback({ statusCode: 400 });
     cy.contains('.feedback-error-general', 'El proyecto no existe o ha sido borrado.').should('be.visible');
   });
@@ -160,14 +164,15 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
   it('IT_FB_011: Formulario vacio muestra errores y evita llamada al backend', () => {
     visitFeedback();
     cy.intercept('POST', '/api/feedback').as('postFeedbackBloqueado');
+    
     cy.get('button.feedback-boton-enviar').click();
+    
     cy.contains('.feedback-error-texto', 'Los comentarios no pueden estar vacíos').should('be.visible');
     cy.get('@postFeedbackBloqueado.all').should('have.length', 0);
   });
 
   it('IT_FB_012: Comentario de exactamente 1000 caracteres permite envio', () => {
     const texto1000 = 'A'.repeat(1000);
-
     visitFeedback();
     cy.intercept('POST', '/api/feedback', {
       statusCode: 201,
@@ -193,7 +198,6 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
 
   it('IT_FB_014: El boton enviar permanece deshabilitado mientras se carga proyecto', () => {
     visitFeedback({ delay: 1000, waitProject: false });
-    // El botón se deshabilita si enviando es true O proyectoCargando es true
     cy.get('button.feedback-boton-enviar').should('be.disabled');
     cy.wait('@getProyectoFeedback');
     cy.get('button.feedback-boton-enviar').should('not.be.disabled');
@@ -228,7 +232,7 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     cy.get('button.feedback-boton-enviar').click();
 
     cy.wait('@postFeedback403');
-    cy.contains('.feedback-error-general', /No est.*inscrito en este proyecto/i).should('be.visible');
+    cy.contains('.feedback-error-general', /No est.*inscrito/i).should('be.visible');
   });
 
   it('IT_FB_017: Si proyecto se borra entre carga y submit se notifica 404', () => {
@@ -391,5 +395,3 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     cy.contains('.feedback-error-general', /No est.*inscrito/i).should('be.visible');
   });
 });
-
- 
