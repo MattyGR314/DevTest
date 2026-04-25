@@ -24,12 +24,14 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
       failOnStatusCode: false
     });
 
-    // 2. Crear un proyecto dinámicamente para asegurar su existencia en la BD
+    // 2. Crear un proyecto dinámicamente asegurando la validación del frontend
     cy.visit('/subircodigo');
     cy.get('input[name="nombre"]').type('Proyecto Integracion DT06');
     cy.get('input[name="correo"]').type('nuevo_tester@ucm.es');
-    // Utilizo el archivo existente en tu estructura de directorios
-    cy.get('input[type="file"]').selectFile('cypress/fixtures/documento.txt');
+    
+    // CORRECCIÓN: Usamos un archivo .exe para pasar la validación esEjecutable()
+    cy.get('input[type="file"]').selectFile('cypress/fixtures/programa.exe');
+    
     cy.get('button[type="submit"]').click();
     
     // Esperar a que la redirección confirme la inserción en BD
@@ -37,8 +39,9 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
 
     // 3. Obtener el ID real generado y ejecutar la inscripción
     cy.request('/api/proyectos').then((res) => {
-      // Tomo el ID del último proyecto insertado (el que acabo de crear)
-      const idProyectoReal = res.body[0].id;
+      // Buscamos específicamente el proyecto que acabamos de crear
+      const proyectoCreado = res.body.find(p => p.nombre === 'Proyecto Integracion DT06');
+      const idProyectoReal = proyectoCreado.id;
 
       cy.intercept('POST', '/api/inscripciones').as('postInscripcion');
       cy.visit(`/seleccionarproyecto/${idProyectoReal}`);
@@ -47,8 +50,10 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
       cy.get('input[name="correo"]').type('nuevo_tester@ucm.es');
       cy.get('button[type="submit"]').click();
 
+      // Validar conexión exitosa con el backend (Código 201)
       cy.wait('@postInscripcion').its('response.statusCode').should('eq', 201);
 
+      // Validar persistencia en LocalStorage
       cy.window().then((win) => {
         const inscripciones = JSON.parse(win.localStorage.getItem('mis_inscripciones') || '{}');
         expect(inscripciones['nuevo_tester@ucm.es']).to.include(idProyectoReal);
