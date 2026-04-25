@@ -1,5 +1,5 @@
 name: Pruebas Unitarias e Integración Dinámicas
-
+# Este workflow se ejecuta en cada push a ramas que sigan el patrón 'Dev_DT_*'. 
 on:
   push:
     branches:
