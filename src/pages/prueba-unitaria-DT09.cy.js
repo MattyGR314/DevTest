@@ -5,17 +5,16 @@ import VerFeedback from './VerFeedback';
 import { AuthProvider } from '../context/AuthContext';
 
 const mountWithContext = (usuarioMock, idProyecto = '1') => {
-  // 1. Inyectamos los datos en el localStorage del iframe del componente
-  cy.window().then((win) => {
-    if (usuarioMock) {
-      win.localStorage.setItem('usuario', usuarioMock);
-      win.localStorage.setItem('usuario_tipo', 'developer');
-    } else {
-      win.localStorage.clear();
-    }
-  });
+  // 1. Limpiar y configurar localStorage antes de montar
+  if (usuarioMock) {
+    localStorage.setItem('usuario', usuarioMock);
+    localStorage.setItem('usuario_tipo', 'developer');
+  } else {
+    localStorage.clear();
+  }
 
   // 2. Montamos el componente (Cypress lo encola automáticamente después de modificar la ventana)
+// 2. Montar el componente
   cy.mount(
     <AuthProvider>
       <MemoryRouter initialEntries={[`/proyecto/${idProyecto}/ver-feedback`]}>
