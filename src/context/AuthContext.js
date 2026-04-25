@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 
-const AuthContext = createContext(null);
+// Localiza la inicialización del contexto y añade 'export'
+export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(() => {
