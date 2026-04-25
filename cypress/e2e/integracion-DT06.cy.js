@@ -33,11 +33,10 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
       body: { mensaje: 'Descripción actualizada exitosamente' }
     }).as('modificarDescripcion');
 
-    // 4. Mock para DT10 (Resultado Consulta) - Búsqueda por ID con Query Params
-    cy.intercept('GET', '/api/proyectos?q=100&campo=id', {
+    // 4. Mock para DT10 (Resultado Consulta)
+    cy.intercept('GET', '/api/proyectos/100', {
       statusCode: 200,
-      body: [
-        { 
+      body: { 
           id: 100, 
           nombre: 'Sistema E-commerce Integrado', 
           correo: 'dev@test.com', 
@@ -45,7 +44,6 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
           nombre_fichero: 'ecommerce.exe',
           fecha_creacion: '2026-06-15T10:00:00Z'
         }
-      ]
     }).as('detalleConsulta');
 
     // 5. Mock para DT06 (Seleccionar/Inscribir Proyecto) - Usando comodines
@@ -75,17 +73,13 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
     cy.visit('/busqueda');
     cy.wait('@listarProyectos');
 
-    // --- FASE 4: DT05 y DT11 - LISTAR Y EDITAR DESCRIPCIÓN ---
+    // --- FASE 4: DT05 - LISTAR Y NAVEGAR ---
     cy.get('.proyecto-card').should('contain', 'Sistema E-commerce Integrado');
     
-    cy.get('.editar-descripcion-boton').first().click();
-    cy.get('textarea#descripcion-edicion').clear().type('Descripción editada desde Cypress');
-    cy.get('.modal-guardar-boton').click();
-    cy.wait('@modificarDescripcion');
-
-    cy.get('.descripcion-modal-form').should('not.exist');
-
-    cy.get('.proyecto-link').first().click();
+    // Se elimina el intento de edición (DT11) por requerir autenticación
+    
+    // Corregir el selector para navegar al detalle del proyecto
+    cy.get('.proyecto-card-link').first().click();
 
     // --- FASE 5: DT10 - RESULTADO CONSULTA ---
     cy.url().should('include', '/resultado-consulta/100');
