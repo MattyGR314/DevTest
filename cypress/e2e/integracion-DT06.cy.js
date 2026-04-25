@@ -16,7 +16,7 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
   });
 
   it('INT_02: Integración Frontend, API y Base de Datos (Bottom-Up)', () => {
-    // 1. Inyectar usuario en BD real usando el endpoint disponible
+    // 1. Inyectar usuario en BD real
     cy.request({
       method: 'POST',
       url: '/api/registro',
@@ -24,25 +24,35 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
       failOnStatusCode: false
     });
 
-    // 2. Inyectar proyecto (id: 1) en BD real.
-    // Es imperativo que exista el registro en la tabla 'proyectos'.
-    // No dispongo de esa información para poblarlo vía API sin usar un archivo, 
-    // se sugiere usar cy.exec() con tu script de semillas si incluye el ID 1:
-    // cy.exec('node infra/seed_dt07.js', { failOnNonZeroExit: false });
-
-    cy.intercept('POST', '/api/inscripciones').as('postInscripcion');
-
-    cy.visit('/seleccionarproyecto/1');
-
-    cy.get('input[name="nombre"]').type('Estudiante UCM');
+    // 2. Crear un proyecto dinámicamente para asegurar su existencia en la BD
+    cy.visit('/subircodigo');
+    cy.get('input[name="nombre"]').type('Proyecto Integracion DT06');
     cy.get('input[name="correo"]').type('nuevo_tester@ucm.es');
+    // Utilizo el archivo existente en tu estructura de directorios
+    cy.get('input[type="file"]').selectFile('cypress/fixtures/documento.txt');
     cy.get('button[type="submit"]').click();
+    
+    // Esperar a que la redirección confirme la inserción en BD
+    cy.url().should('include', '/confirmacion');
 
-    cy.wait('@postInscripcion').its('response.statusCode').should('eq', 201);
+    // 3. Obtener el ID real generado y ejecutar la inscripción
+    cy.request('/api/proyectos').then((res) => {
+      // Tomo el ID del último proyecto insertado (el que acabo de crear)
+      const idProyectoReal = res.body[0].id;
 
-    cy.window().then((win) => {
-      const inscripciones = JSON.parse(win.localStorage.getItem('mis_inscripciones') || '{}');
-      expect(inscripciones['nuevo_tester@ucm.es']).to.include(1);
+      cy.intercept('POST', '/api/inscripciones').as('postInscripcion');
+      cy.visit(`/seleccionarproyecto/${idProyectoReal}`);
+
+      cy.get('input[name="nombre"]').type('Estudiante UCM');
+      cy.get('input[name="correo"]').type('nuevo_tester@ucm.es');
+      cy.get('button[type="submit"]').click();
+
+      cy.wait('@postInscripcion').its('response.statusCode').should('eq', 201);
+
+      cy.window().then((win) => {
+        const inscripciones = JSON.parse(win.localStorage.getItem('mis_inscripciones') || '{}');
+        expect(inscripciones['nuevo_tester@ucm.es']).to.include(idProyectoReal);
+      });
     });
   });
 

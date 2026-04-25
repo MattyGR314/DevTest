@@ -35,10 +35,8 @@ describe('Integración: DT07 - Descarga de Ejecutable (Conexión Real)', () => {
     });
 
     cy.get('.btn-descarga').should('not.exist');
-    cy.get('.btn-participar')
-      .should('be.visible');
+    cy.get('.btn-inscripcion').should('be.visible');
   });
-});
 
   it('Flujo denegado: Fallo en conexión o falta de inscripción', () => {
     // Se prueba con un ID (ej. 2) que en la BD real no tenga archivo o inscripción.
@@ -50,9 +48,7 @@ describe('Integración: DT07 - Descarga de Ejecutable (Conexión Real)', () => {
     });
 
     cy.get('.btn-descarga').should('not.exist');
-    cy.get('.btn-participar')
-      .should('be.visible');
-
+    cy.get('.btn-inscripcion').should('be.visible');
   });
 
   it('Flujo denegado: Sesión inactiva con conexión real', () => {
@@ -60,7 +56,7 @@ describe('Integración: DT07 - Descarga de Ejecutable (Conexión Real)', () => {
     cy.visit('/resultado-consulta/1');
 
     cy.get('.btn-descarga', { timeout: 10000 }).should('not.exist');
-    cy.get('.btn-participar').should('be.visible');
+    cy.get('.btn-inscripcion').should('be.visible');
   });
 
   it('Flujo denegado: Tester sin registro en tabla inscripciones real', () => {
@@ -73,5 +69,7 @@ describe('Integración: DT07 - Descarga de Ejecutable (Conexión Real)', () => {
     });
 
     cy.get('.btn-descarga', { timeout: 10000 }).should('not.exist');
-    cy.get('.btn-participar').should('be.visible');
+    cy.get('.btn-inscripcion').should('be.visible');
   });
+
+});
