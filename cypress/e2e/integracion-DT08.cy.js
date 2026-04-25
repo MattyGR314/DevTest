@@ -28,17 +28,11 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
   };
 
   const interceptResultadoConsulta = ({ inscrito = true, detalle = proyectoDetalle } = {}) => {
-    cy.intercept(
-      {
-        method: 'GET',
-        pathname: '/api/proyectos',
-        query: { q: proyectoId, campo: 'id' },
-      },
-      {
-        statusCode: 200,
-        body: [detalle],
-      }
-    ).as('getDetalleProyecto');
+    // Ajuste de URL para coincidir con fetch(`/api/proyectos/${id}`)
+    cy.intercept('GET', `**/api/proyectos/${proyectoId}`, {
+      statusCode: 200,
+      body: detalle, // Enviamos el objeto directo, no un array
+    }).as('getDetalleProyecto');
 
     cy.intercept('GET', /\/api\/inscripciones\/check.*/, {
       statusCode: 200,
@@ -102,14 +96,16 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     visitResultadoConsulta();
 
     cy.contains('a.btn-feedback', 'Enviar feedback').should('be.visible');
-    cy.contains('a.btn-participar', 'Inscribirse como Tester').should('not.exist');
+    // Selector corregido: btn-participar -> btn-inscripcion
+    cy.contains('a.btn-inscripcion', 'Inscribirse como Tester').should('not.exist');
   });
 
   it('IT_FB_002: ResultadoConsulta muestra Inscribirse cuando usuario no esta inscrito', () => {
     interceptResultadoConsulta({ inscrito: false });
     visitResultadoConsulta();
 
-    cy.contains('a.btn-participar', 'Inscribirse como Tester').should('be.visible');
+    // Selector corregido: btn-participar -> btn-inscripcion
+    cy.contains('a.btn-inscripcion', 'Inscribirse como Tester').should('be.visible');
     cy.contains('a.btn-feedback', 'Enviar feedback').should('not.exist');
   });
 
