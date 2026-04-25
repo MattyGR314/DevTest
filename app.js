@@ -438,12 +438,13 @@ app.get('/api/proyectos/:id/feedback', async (req, res) => {
       return res.status(403).json({ error: 'Solo los dueños del proyecto pueden ver el feedback' });
     }
 
-    // Obtener feedbacks ordenados por fecha
+    // Obtener feedbacks ordenados por fecha y recuperar el nombre del tester
     const [feedbackRows] = await connection.execute(
-      `SELECT id, correo, texto, archivo_path, nombre_fichero, fecha_creacion 
-       FROM feedback 
-       WHERE id_proyectos = ? 
-       ORDER BY fecha_creacion DESC`,
+      `SELECT f.id, f.correo, i.nombre AS nombre_usuario, f.texto, f.archivo_path, f.nombre_fichero, f.fecha_creacion 
+       FROM feedback f
+       LEFT JOIN inscripciones i ON f.correo = i.correo AND f.id_proyectos = i.id_proyectos
+       WHERE f.id_proyectos = ? 
+       ORDER BY f.fecha_creacion ASC`,
       [proyectoId]
     );
     connection.release();

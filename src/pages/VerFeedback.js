@@ -79,12 +79,13 @@ function VerFeedback() {
         <div className="feedback-error-general">{error}</div>
       )}
 
-      {feedbackList.length > 0 && (
+     {feedbackList.length > 0 && (
         <div className="feedback-lista">
           {feedbackList.map((item) => (
             <div key={item.id} className="feedback-item">
               <div className="feedback-meta">
-                <strong>{item.correo}</strong> el{' '}
+                {/* Reemplazamos item.correo por item.nombre_usuario */}
+                <strong>{item.nombre_usuario || item.correo}</strong> el{' '}
                 {new Date(item.fecha_creacion).toLocaleString()}
               </div>
               <div className="feedback-texto">{item.texto}</div>
