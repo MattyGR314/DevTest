@@ -64,3 +64,11 @@ jobs:
           spec: ${{ steps.set-target.outputs.test_file_int }}
         env:
           NODE_ENV: test
+        
+      - name: Guardar Capturas de Pantalla (si falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore

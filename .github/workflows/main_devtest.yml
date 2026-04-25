@@ -62,6 +62,7 @@ jobs:
           name: cypress-screenshots
           path: cypress/screenshots
           if-no-files-found: ignore
+          
       - name: Prepare deployment package
         if: success() && github.event_name == 'push'
         run: |
