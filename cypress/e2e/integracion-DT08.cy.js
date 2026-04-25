@@ -28,10 +28,9 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
   };
 
   const interceptResultadoConsulta = ({ inscrito = true, detalle = proyectoDetalle } = {}) => {
-    // Ajuste de URL para coincidir con fetch(`/api/proyectos/${id}`)
-    cy.intercept('GET', `**/api/proyectos/${proyectoId}`, {
+    cy.intercept('GET', new RegExp(`/api/proyectos/${proyectoId}$`), {
       statusCode: 200,
-      body: detalle, // Enviamos el objeto directo, no un array
+      body: detalle,
     }).as('getDetalleProyecto');
 
     cy.intercept('GET', /\/api\/inscripciones\/check.*/, {
@@ -45,45 +44,34 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
       onBeforeLoad(win) {
         if (usuarioLogueado) {
           win.localStorage.setItem('usuario_correo', usuarioLogueado);
-        } else {
-          win.localStorage.removeItem('usuario_correo');
+          win.localStorage.setItem('usuario', usuarioLogueado); // Clave crítica para AuthContext
+          win.localStorage.setItem('correo', usuarioLogueado);  // Clave de respaldo
+          win.localStorage.setItem('usuario_tipo', 'tester');
         }
       },
     });
-
     cy.wait('@getDetalleProyecto');
-    if (usuarioLogueado) {
-      cy.wait('@checkInscripcion');
-    }
+    cy.wait('@checkInscripcion');
   };
 
-  const visitFeedback = ({
-    usuarioLogueado = usuario,
-    id = proyectoId,
-    statusCode = 200,
-    body = proyectoApi,
-    delay = 0,
-    waitProject = true,
-  } = {}) => {
-    cy.intercept('GET', `/api/proyectos/${id}`, {
-      statusCode,
-      delay,
-      body,
-    }).as('getProyectoFeedback');
-
-    cy.visit(`/feedback/${id}`, {
+  const visitFeedback = ({ usuarioLogueado = usuario } = {}) => {
+    cy.visit(`/feedback/${proyectoId}`, {
       onBeforeLoad(win) {
         if (usuarioLogueado) {
           win.localStorage.setItem('usuario_correo', usuarioLogueado);
-        } else {
-          win.localStorage.removeItem('usuario_correo');
+          win.localStorage.setItem('usuario', usuarioLogueado);
+          win.localStorage.setItem('correo', usuarioLogueado);
+          win.localStorage.setItem('usuario_tipo', 'tester');
         }
       },
     });
 
-    if (waitProject) {
-      cy.wait('@getProyectoFeedback');
-    }
+    cy.intercept('GET', new RegExp(`/api/proyectos/${proyectoId}$`), {
+      statusCode: 200,
+      body: proyectoApi,
+    }).as('getProyectoFeedback');
+
+    cy.wait('@getProyectoFeedback');
   };
 
   const completarFormulario = (texto = 'Feedback integrado de prueba') => {
@@ -104,7 +92,7 @@ describe('INTEGRACION: DT_08 - Enviar feedback', () => {
     interceptResultadoConsulta({ inscrito: false });
     visitResultadoConsulta();
 
-    // Selector corregido: btn-participar -> btn-inscripcion
+    // Ahora que el usuario está logueado correctamente, aparecerá este texto
     cy.contains('a.btn-inscripcion', 'Inscribirse como Tester').should('be.visible');
     cy.contains('a.btn-feedback', 'Enviar feedback').should('not.exist');
   });

@@ -2,46 +2,51 @@
 
 describe('Pruebas de Integración - DT07 Descarga de Ejecutable', () => {
   const PROYECTO_ID = 1;
-  const USUARIO_CORREO = 'tester@ucm.es';
+  const USUARIO_TEST = 'tester@ucm.es';
 
   beforeEach(() => {
     cy.clearLocalStorage();
     
-    // INTEGRACIÓN CAJA BLANCA: Forzamos el cuerpo de respuesta (body) en los intercepts 
-    // para asegurar que la "conexión entre unidades" reciba JSON y no HTML.
+    // INTEGRACIÓN CAJA BLANCA: Definimos el objeto exacto que espera el componente
+    // para validar la conexión con la unidad de Proyectos 
     cy.intercept('GET', `/api/proyectos/${PROYECTO_ID}`, {
       statusCode: 200,
       body: { 
         id: PROYECTO_ID, 
-        nombre: 'Proyecto Delta', 
-        archivo_path: 'uploads/ejecutable_test.exe' 
+        nombre: 'Proyecto Delta',
+        nombre_fichero: 'programa.exe',
+        archivo_path: 'uploads/123-programa.exe',
+        correo: 'creador@devtest.com',
+        fecha_creacion: '2026-04-25'
       }
     }).as('getProyecto');
   });
 
-  it('INT_DT07_01: Integración Exitosa (Top-Down) - Conexión de Datos y Descarga', () => {
-    // Simulamos la unión con el módulo de Autenticación
-    window.localStorage.setItem('usuario_correo', USUARIO_CORREO);
+  it('INT_DT07_01: Integración Exitosa (Top-Down) - Tester Inscrito', () => {
+    // Unión con módulo Auth: El tipo debe estar en minúsculas para el componente 
+    localStorage.setItem('usuario_correo', USUARIO_TEST);
+    localStorage.setItem('usuario_tipo', 'tester');
 
-    // Stub de la unidad de Inscripciones para validar la lógica de grupo 
+    // Unión con módulo Inscripciones: Simulamos conexión positiva 
     cy.intercept('GET', `/api/inscripciones/check*`, {
       statusCode: 200,
       body: { inscrito: true }
     }).as('checkInscrito');
 
     cy.visit(`/resultado-consulta/${PROYECTO_ID}`);
-
-    // Validamos que la unión de unidades (Proyecto + Inscripción) permite la descarga
     cy.wait(['@getProyecto', '@checkInscrito']);
-    
-    // Verificamos el atributo href como prueba de caja blanca de la URL generada
-    cy.get('a[href*="uploads"]').should('be.visible').and('have.attr', 'download');
+
+    // Verificamos que la unión de las 3 unidades permite la descarga 
+    cy.get('a.btn-descarga')
+      .should('be.visible')
+      .and('have.attr', 'href', '/uploads/123-programa.exe');
   });
 
-  it('INT_DT07_02: Integración Denegada (Caja Blanca) - Usuario No Inscrito', () => {
-    window.localStorage.setItem('usuario_correo', USUARIO_CORREO);
+  it('INT_DT07_02: Integración Denegada (Caja Blanca) - Tester No Inscrito', () => {
+    localStorage.setItem('usuario_correo', USUARIO_TEST);
+    localStorage.setItem('usuario_tipo', 'tester');
 
-    // Forzamos respuesta negativa del módulo subordinado (Inscripciones) 
+    // La conexión con la unidad de inscripciones devuelve falso 
     cy.intercept('GET', `/api/inscripciones/check*`, {
       statusCode: 200,
       body: { inscrito: false }
@@ -50,31 +55,35 @@ describe('Pruebas de Integración - DT07 Descarga de Ejecutable', () => {
     cy.visit(`/resultado-consulta/${PROYECTO_ID}`);
     cy.wait(['@getProyecto', '@checkNoInscrito']);
 
-    // La integración debe ocultar el botón y mostrar el mensaje de acción requerida
-    cy.get('a[href*="uploads"]').should('not.exist');
-    cy.contains(/inscribirse|participar/i).should('be.visible');
+    // El componente debe integrar la respuesta y mostrar el botón de inscripción 
+    cy.get('a.btn-descarga').should('not.exist');
+    cy.contains('Inscribirse como Tester').should('be.visible');
   });
 
-  it('INT_DT07_03: Manejo de Errores de Conexión (Fallo de Unidad)', () => {
-    // Simulamos un fallo en la conexión con la base de datos (Error 500) 
+  it('INT_DT07_03: Manejo de Errores de Conexión entre Unidades', () => {
+    // Simulamos que la conexión con la base de datos de proyectos falla 
     cy.intercept('GET', `/api/proyectos/${PROYECTO_ID}`, {
-      statusCode: 500,
-      body: { error: 'Error interno de conexión' }
+      statusCode: 404,
+      body: { error: 'Proyecto no encontrado' }
     }).as('errorConexion');
 
     cy.visit(`/resultado-consulta/${PROYECTO_ID}`);
     cy.wait('@errorConexion');
 
-    // Validamos que el sistema maneja la ruptura de la conexión correctamente
-    cy.contains(/error|no se pudo/i).should('be.visible');
+    // Validamos que el componente captura el error de la unidad subordinada 
+    cy.contains('Proyecto no encontrado').should('be.visible');
   });
 
-  it('INT_DT07_04: Integración de Seguridad - Sesión Inactiva', () => {
-    // Al no haber datos en LocalStorage, la conexión con AuthContext debe fallar
-    cy.visit(`/resultado-consulta/${PROYECTO_ID}`);
+  it('INT_DT07_04: Integración de Seguridad - Usuario Desarrollador', () => {
+    // Si la unidad de Auth indica que es 'developer', no debe ver la descarga 
+    localStorage.setItem('usuario_correo', 'dev@ucm.es');
+    localStorage.setItem('usuario_tipo', 'developer');
 
-    // Verificamos que el sistema solicita inicio de sesión para interactuar
-    cy.get('a[href*="uploads"]').should('not.exist');
-    cy.contains(/inicia sesión/i).should('be.visible');
+    cy.visit(`/resultado-consulta/${PROYECTO_ID}`);
+    cy.wait('@getProyecto');
+
+    // Según ResultadoConsulta.js, si no es tester, botonInscripcion() devuelve null 
+    cy.get('a.btn-descarga').should('not.exist');
+    cy.get('.btn-inscripcion').should('not.exist');
   });
 });

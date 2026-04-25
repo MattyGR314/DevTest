@@ -1,10 +1,8 @@
 /// <reference types="cypress" />
 
 /**
- * SUITE DE PRUEBAS DE INTEGRACION
+ * SUITE DE PRUEBAS DE INTEGRACION CORREGIDA
  * Flujo: Consultar Proyecto (DT_10)
- * Objetivo: Validar la navegacion desde busqueda a detalle y el manejo de estados
- * simulando respuestas del backend para asegurar estabilidad en CI.
  */
 
 describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
@@ -30,10 +28,11 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
         nombre: 'Proyecto Integracion DT10',
         descripcion: 'Detalle de prueba para flujo integrado',
         correo: 'dt10@test.com',
-        fichero: 'integracion.exe',
+        nombre_fichero: 'integracion.exe',
         fecha_creacion: '2026-03-20T10:30:00Z'
       };
 
+      // Intercept para la búsqueda en la página de Busqueda.js
       cy.intercept({
         method: 'GET',
         pathname: '/api/proyectos',
@@ -46,27 +45,22 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
         body: [proyecto]
       }).as('buscarPorNombre');
 
-      cy.intercept({
-        method: 'GET',
-        pathname: '/api/proyectos',
-        query: {
-          q: '111',
-          campo: 'id'
-        }
-      }, {
+      // Intercept para la carga del detalle en ResultadoConsulta.js
+      cy.intercept('GET', '/api/proyectos/111', {
         statusCode: 200,
-        body: [proyecto]
+        body: proyecto
       }).as('consultarPorId');
 
       cy.visit('http://localhost:3000/busqueda');
       cy.wait('@cargaInicialProyectos');
 
-      cy.get('select.busqueda-seleccionar').select('nombre');
+      // Corrección de selector: busqueda-select
+      cy.get('select.busqueda-select').select('nombre');
       cy.get('input.busqueda-input').clear().type('Proyecto Integracion DT10');
       cy.get('button.busqueda-boton').click();
       cy.wait('@buscarPorNombre');
 
-      cy.contains('a.proyecto-link', 'Proyecto Integracion DT10').should('be.visible').click();
+      cy.contains('a.proyecto-card-link', 'Proyecto Integracion DT10').should('be.visible').click();
 
       cy.wait('@consultarPorId');
       cy.url().should('include', '/resultado-consulta/111');
@@ -81,33 +75,31 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
   describe('ESTADOS DE LA CONSULTA DE DETALLE', () => {
 
     it('IT_CON_002 (DT_10_2): Mostrar mensaje cuando no existe el proyecto', () => {
-      cy.intercept('GET', '/api/proyectos?q=999&campo=id', {
+      cy.intercept('GET', '/api/proyectos/999', {
         statusCode: 200,
-        body: []
+        body: null // Provoca que ResultadoConsulta.js active el error de ID inexistente
       }).as('proyectoNoExiste');
 
       cy.visit('http://localhost:3000/resultado-consulta/999');
       cy.wait('@proyectoNoExiste');
 
-      // Notificacion de no encontrado (DT_10_2)
       cy.contains('.resultado-error', 'No existe un proyecto con ese ID.').should('be.visible');
 
-      // En la implementacion actual el regreso es por accion de usuario
-      // hacia la pantalla de inicio funcional del flujo (busqueda)
-      cy.contains('a', 'Volver a busqueda').should('be.visible').click();
+      // Corrección de texto: "Volver a búsqueda" (con tilde)
+      cy.contains('a', 'Volver a búsqueda').should('be.visible').click();
       cy.url().should('include', '/busqueda');
     });
 
     it('IT_CON_003 (DT_10_3): Notificar ausencia de nombre asociado', () => {
-      cy.intercept('GET', '/api/proyectos?q=456&campo=id', {
+      cy.intercept('GET', '/api/proyectos/456', {
         statusCode: 200,
-        body: [{
+        body: {
           id: 456,
           nombre: null,
           descripcion: 'Servicio sin nombre para pruebas',
-          fichero: 'servicio.exe',
+          nombre_fichero: 'servicio.exe',
           fecha_creacion: '2026-03-21T12:00:00Z'
-        }]
+        }
       }).as('proyectoSinNombre');
 
       cy.visit('http://localhost:3000/resultado-consulta/456');
@@ -120,15 +112,15 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
     });
 
     it('IT_CON_004 (DT_10_4): Notificar ausencia de fichero asociado', () => {
-      cy.intercept('GET', '/api/proyectos?q=789&campo=id', {
+      cy.intercept('GET', '/api/proyectos/789', {
         statusCode: 200,
-        body: [{
+        body: {
           id: 789,
           nombre: 'Proyecto sin fichero',
           descripcion: 'Proyecto con metadatos pero sin binario',
-          fichero: null,
+          nombre_fichero: null,
           fecha_creacion: '2026-03-21T15:10:00Z'
-        }]
+        }
       }).as('proyectoSinFichero');
 
       cy.visit('http://localhost:3000/resultado-consulta/789');
@@ -137,20 +129,20 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
       cy.contains('Detalle del proyecto').should('be.visible');
       cy.contains('Proyecto sin fichero').should('be.visible');
       cy.contains('Proyecto con metadatos pero sin binario').should('be.visible');
-      cy.contains('Sin fichero').should('be.visible');
+      cy.contains('No hay fichero adjunto').should('be.visible');
     });
 
     it('IT_CON_005: Mostrar estado de carga antes de renderizar detalle', () => {
-      cy.intercept('GET', '/api/proyectos?q=222&campo=id', {
+      cy.intercept('GET', '/api/proyectos/222', {
         delay: 1200,
         statusCode: 200,
-        body: [{
+        body: {
           id: 222,
           nombre: 'Proyecto con latencia',
           descripcion: 'Se usa para validar estado de carga',
-          fichero: 'latencia.exe',
+          nombre_fichero: 'latencia.exe',
           fecha_creacion: '2026-03-22T08:00:00Z'
-        }]
+        }
       }).as('detalleLento');
 
       cy.visit('http://localhost:3000/resultado-consulta/222');
@@ -162,7 +154,7 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
     });
 
     it('IT_CON_006: Manejar error de backend en consulta por ID', () => {
-      cy.intercept('GET', '/api/proyectos?q=500&campo=id', {
+      cy.intercept('GET', '/api/proyectos/500', {
         statusCode: 500,
         body: { error: 'Error interno' }
       }).as('errorDetalle');
@@ -170,7 +162,8 @@ describe('INTEGRACION: DT_10 - Consultar proyecto', () => {
       cy.visit('http://localhost:3000/resultado-consulta/500');
       cy.wait('@errorDetalle');
 
-      cy.contains('.resultado-error', 'No se pudo obtener el proyecto').should('be.visible');
+      // ResultadoConsulta.js muestra err.message en el bloque de error
+      cy.contains('.resultado-error', 'Proyecto no encontrado').should('be.visible');
       cy.get('.resultado-card').should('not.exist');
     });
 
