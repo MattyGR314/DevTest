@@ -16,6 +16,20 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
   });
 
   it('INT_02: Integración Frontend, API y Base de Datos (Bottom-Up)', () => {
+    // 1. Inyectar usuario en BD real usando el endpoint disponible
+    cy.request({
+      method: 'POST',
+      url: '/api/registro',
+      body: { correo: 'nuevo_tester@ucm.es', contrasena: '1234', tipoCuenta: 'developer' },
+      failOnStatusCode: false
+    });
+
+    // 2. Inyectar proyecto (id: 1) en BD real.
+    // Es imperativo que exista el registro en la tabla 'proyectos'.
+    // No dispongo de esa información para poblarlo vía API sin usar un archivo, 
+    // se sugiere usar cy.exec() con tu script de semillas si incluye el ID 1:
+    // cy.exec('node infra/seed_dt07.js', { failOnNonZeroExit: false });
+
     cy.intercept('POST', '/api/inscripciones').as('postInscripcion');
 
     cy.visit('/seleccionarproyecto/1');
@@ -27,7 +41,7 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
     cy.wait('@postInscripcion').its('response.statusCode').should('eq', 201);
 
     cy.window().then((win) => {
-      const inscripciones = JSON.parse(win.localStorage.getItem('mis_inscripciones'));
+      const inscripciones = JSON.parse(win.localStorage.getItem('mis_inscripciones') || '{}');
       expect(inscripciones['nuevo_tester@ucm.es']).to.include(1);
     });
   });
