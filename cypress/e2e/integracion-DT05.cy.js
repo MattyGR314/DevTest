@@ -62,10 +62,10 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
       cy.wait('@getProyectosNuevos');
 
       // C) Verificamos que se integren correctamente las vistas
-      cy.get('.resultados-list').should('exist');
+      cy.get('.busqueda-resultados').should('exist');
       
       // Buscamos el proyecto en la lista generada
-      cy.contains('.proyecto-tabla', nombreUnico).within(() => {
+      cy.contains('.proyecto-card', nombreUnico).within(() => {
         cy.get('h3').should('contain', nombreUnico);
         cy.contains('integracion@test.com').should('be.visible');
       });
@@ -84,7 +84,7 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
       cy.visit('http://localhost:3000/busqueda');
       cy.wait('@getMultiples');
 
-      cy.get('.proyecto-tabla').should('have.length', 2);
+      cy.get('.proyecto-card').should('have.length', 2);
     });
 
   });
@@ -104,8 +104,8 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
       cy.visit('http://localhost:3000/busqueda');
       cy.wait('@getProyectosVacios');
 
-      cy.get('.proyecto-tabla').should('not.exist');
-      cy.get('.no-resultados')
+      cy.get('.proyecto-card').should('not.exist');
+      cy.get('.busqueda-vacio')
         .should('be.visible')
         .and('contain.text', 'No se encontraron proyectos');
     });
@@ -120,13 +120,13 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
 
       cy.visit('http://localhost:3000/busqueda');
 
-      cy.get('.cargando', { timeout: 500 }).should('be.visible');
+      cy.get('.busqueda-cargando', { timeout: 500 }).should('be.visible');
 
       cy.wait('@getProyectosLentos');
 
-      cy.get('.cargando').should('not.exist');
+      cy.get('.busqueda-cargando').should('not.exist');
       // Usamos 'exist' en lugar de 'be.visible' por si hay problemas de CSS con el height
-      cy.get('.resultados-list').should('exist'); 
+      cy.get('.busqueda-resultados').should('exist'); 
     });
 
     it('IT_LST_005: El frontend maneja con gracia una caída de la Base de Datos (Error 500)', () => {
@@ -138,11 +138,11 @@ describe('INTEGRACIÓN: DT_05 - Listar Proyectos Registrados', () => {
       cy.visit('http://localhost:3000/busqueda');
       cy.wait('@getErrorDb');
 
-      cy.get('.error-mensaje')
+      cy.get('.busqueda-error')
         .should('be.visible')
         .and('contain.text', 'Error al cargar proyectos');
 
-      cy.get('.proyecto-tabla').should('not.exist');
+      cy.get('.proyecto-card').should('not.exist');
     });
 
   });
