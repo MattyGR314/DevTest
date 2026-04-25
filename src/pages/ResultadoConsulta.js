@@ -193,11 +193,11 @@ function ResultadoConsulta() {
 
           <div className="resultado-acciones">
             {/* DT_09_01 Nuevo botón solo para el dueño */}
-            {esCreador && (
-              <Link to={`/proyecto/${proyecto.id}/ver-feedback`} className="btn-ver-feedback">
-                Ver feedback recibido
-              </Link>
-            )}
+
+            <Link to={`/proyecto/${proyecto.id}/ver-feedback`} className="btn-ver-feedback">
+              Ver feedback recibido
+            </Link>
+
             {esCreador ? (
               <div className="edicion-botones">
                 {!editando ? (
