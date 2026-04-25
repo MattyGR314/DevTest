@@ -1,23 +1,34 @@
+/* global cy */
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import VerFeedback from './VerFeedback';
-import { AuthContext } from '../context/AuthContext';
+import { AuthProvider } from '../context/AuthContext';
 
-// Stub para simular dependencias de enrutamiento y autenticación
 const mountWithContext = (usuarioMock, idProyecto = '1') => {
+  // Inyección de estado para el AuthProvider real
+  if (usuarioMock) {
+    window.localStorage.setItem('usuario', usuarioMock);
+  } else {
+    window.localStorage.removeItem('usuario');
+  }
+
   cy.mount(
-    <AuthContext.Provider value={{ usuario: usuarioMock }}>
+    <AuthProvider>
       <MemoryRouter initialEntries={[`/proyecto/${idProyecto}/ver-feedback`]}>
         <Routes>
           <Route path="/proyecto/:id/ver-feedback" element={<VerFeedback />} />
         </Routes>
       </MemoryRouter>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 };
 
 describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   const apiEndpoint = '/api/proyectos/1/feedback';
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
 
   it('Debe mostrar error si no hay usuario autenticado (Estado local vacío)', () => {
     mountWithContext(null);
