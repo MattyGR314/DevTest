@@ -76,7 +76,7 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
     cy.wait('@listarProyectos');
 
     // --- FASE 4: DT05 y DT11 - LISTAR Y EDITAR DESCRIPCIÓN ---
-    cy.get('.proyecto-tabla').should('contain', 'Sistema E-commerce Integrado');
+    cy.get('.proyecto-card').should('contain', 'Sistema E-commerce Integrado');
     
     cy.get('.editar-descripcion-boton').first().click();
     cy.get('textarea#descripcion-edicion').clear().type('Descripción editada desde Cypress');
@@ -115,12 +115,14 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
 
   it('PRUEBA DE ESTADO: Manejo de errores entre módulos (Error 404 en DT10)', () => {
     // Simulamos que el usuario llegó a un ID inválido desde la búsqueda y el servidor da error
-    cy.intercept('GET', '/api/proyectos?q=999&campo=id', {
+    // Cambiar la ruta interceptada:
+    cy.intercept('GET', '/api/proyectos/999', {
       statusCode: 404,
-      body: { error: "Not found" }
+      body: { error: 'Proyecto no encontrado' }
     }).as('consultaError');
 
     cy.visit('/resultado-consulta/999');
+    
     cy.wait('@consultaError');
 
     cy.get('.resultado-error').should('be.visible').and('contain', 'No se pudo obtener el proyecto');
@@ -128,4 +130,5 @@ describe('Pruebas de Integración - Flujo Principal (Sin Autenticación)', () =>
     cy.get('.resultado-volver').click();
     cy.url().should('include', '/busqueda');
   });
+  
 });
