@@ -16,14 +16,14 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
   });
 
   it('INT_02: Integración Frontend y Persistencia Local (Top-Down)', () => {
-    // Stubs para evadir la restricción del proxy en el entorno CI
     cy.intercept('GET', '/api/proyectos/1', { 
       statusCode: 200, 
       body: { id: 1, nombre: 'Proyecto de Integración' } 
     }).as('getProyecto');
     
     cy.intercept('POST', '/api/inscripciones', { 
-      statusCode: 201 
+      statusCode: 201,
+      body: { message: 'Inscripcion exitosa' } // Corrección: Body inyectado para evitar fallo de parseo JSON
     }).as('postInscripcion');
 
     cy.visit('/seleccionarproyecto/1');
