@@ -32,7 +32,18 @@ describe('Pruebas de Integración - DT06 Seleccionar Proyecto', () => {
     // CORRECCIÓN: Usamos un archivo .exe para pasar la validación esEjecutable()
     cy.get('input[type="file"]').selectFile('cypress/fixtures/programa.exe');
     
+    cy.intercept('POST', '/subircodigo').as('peticionSubida');
     cy.get('button[type="submit"]').click();
+
+    cy.wait('@peticionSubida').then((interception) => {
+      const bodyRespuesta = JSON.stringify(interception.response.body);
+      // Esta aserción fallará intencionalmente si el código no es 200-300, 
+      // imprimiendo el motivo real del rechazo en el log de Actions
+      expect(
+        interception.response.statusCode, 
+        `Motivo de rechazo del backend: ${bodyRespuesta}`
+      ).to.eq(200);
+    });
     
     // Esperar a que la redirección confirme la inserción en BD
     cy.url().should('include', '/confirmacion');
