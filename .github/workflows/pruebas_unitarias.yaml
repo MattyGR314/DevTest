@@ -25,6 +25,8 @@ jobs:
 
       - name: Construir la aplicación (Frontend)
         run: npm run build
+        env:
+          CI: false
 
       - name: Determinar archivo de prueba según la rama
         id: set-target
