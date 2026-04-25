@@ -2,48 +2,43 @@
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import VerFeedback from './VerFeedback';
-import { AuthProvider } from '../context/AuthContext';
+// Importamos el Contexto original, NO el Provider
+import { AuthContext } from '../context/AuthContext';
 
-const mountWithContext = (usuarioMock, idProyecto = '1') => {
-  // Inyección de estado para el AuthProvider real
-  if (usuarioMock) {
-    window.localStorage.setItem('usuario', usuarioMock);
-  } else {
-    window.localStorage.removeItem('usuario');
-  }
-
+// Creamos un MockProvider que inyecta el valor de forma síncrona
+const mountWithMockContext = (usuarioMock, idProyecto = '1') => {
   cy.mount(
-    <AuthProvider>
+    <AuthContext.Provider value={{ usuario: usuarioMock }}>
       <MemoryRouter initialEntries={[`/proyecto/${idProyecto}/ver-feedback`]}>
         <Routes>
           <Route path="/proyecto/:id/ver-feedback" element={<VerFeedback />} />
         </Routes>
       </MemoryRouter>
-    </AuthProvider>
+    </AuthContext.Provider>
   );
 };
 
 describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
-  const apiEndpoint = '/api/proyectos/1/feedback';
-
+  
   beforeEach(() => {
-    window.localStorage.clear();
+    // Interceptamos peticiones genéricas para evitar llamadas accidentales al backend
+    cy.intercept('GET', '**/api/**', { statusCode: 200, body: {} }).as('genericApi');
   });
 
-  it('Debe mostrar error si no hay usuario autenticado (Estado local vacío)', () => {
-    mountWithContext(null);
+  it('Debe mostrar error si no hay usuario autenticado (Contexto vacío)', () => {
+    mountWithMockContext(null);
     cy.get('.feedback-error-general')
       .should('be.visible')
       .and('contain.text', 'Debes iniciar sesión para ver el feedback.');
   });
 
   it('Debe renderizar error 403 al simular respuesta denegada de la API', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept({ method: 'GET', url: '**/api/proyectos/*/feedback*' }, {
       statusCode: 403,
       body: { error: 'Solo los dueños del proyecto pueden ver el feedback' }
     }).as('getFeedbackDenegado');
 
-    mountWithContext('tester@ejemplo.com');
+    mountWithMockContext('tester@ejemplo.com');
     cy.wait('@getFeedbackDenegado');
 
     cy.get('.feedback-error-general')
@@ -52,12 +47,12 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   });
 
   it('Debe renderizar error 404 al simular proyecto inexistente', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept({ method: 'GET', url: '**/api/proyectos/*/feedback*' }, {
       statusCode: 404,
       body: { error: 'Proyecto no encontrado' }
     }).as('getFeedbackNoEncontrado');
 
-    mountWithContext('dueno@ejemplo.com');
+    mountWithMockContext('dueno@ejemplo.com');
     cy.wait('@getFeedbackNoEncontrado');
 
     cy.get('.feedback-error-general')
@@ -66,12 +61,12 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   });
 
   it('Debe renderizar estado vacío al recibir array sin datos (200)', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept({ method: 'GET', url: '**/api/proyectos/*/feedback*' }, {
       statusCode: 200,
       body: []
     }).as('getFeedbackVacio');
 
-    mountWithContext('dueno@ejemplo.com');
+    mountWithMockContext('dueno@ejemplo.com');
     cy.wait('@getFeedbackVacio');
 
     cy.get('.feedback-error-general')
@@ -92,12 +87,12 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
       }
     ];
 
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept({ method: 'GET', url: '**/api/proyectos/*/feedback*' }, {
       statusCode: 200,
       body: mockData
     }).as('getFeedbackExito');
 
-    mountWithContext('dueno@ejemplo.com');
+    mountWithMockContext('dueno@ejemplo.com');
     cy.wait('@getFeedbackExito');
 
     cy.get('.feedback-lista').should('exist');
