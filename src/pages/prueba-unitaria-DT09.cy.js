@@ -2,39 +2,30 @@
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import VerFeedback from './VerFeedback';
-import { AuthProvider } from '../context/AuthContext';
+// 1. Importa AuthContext en lugar de AuthProvider
+import { AuthContext } from '../context/AuthContext';
 
 const mountWithContext = (usuarioMock, idProyecto = '1') => {
-  // 1. Limpiar y configurar localStorage antes de montar
-  if (usuarioMock) {
-    localStorage.setItem('usuario', usuarioMock);
-    localStorage.setItem('usuario_tipo', 'developer');
-  } else {
-    localStorage.clear();
-  }
+  // 2. Definimos el valor exacto que espera useAuth() en VerFeedback.js
+  const authMockValue = { 
+    usuario: usuarioMock 
+  };
 
-  // 2. Montamos el componente (Cypress lo encola automáticamente después de modificar la ventana)
-// 2. Montar el componente
+  // 3. Montamos el componente inyectando el contexto directamente
   cy.mount(
-    <AuthProvider>
+    <AuthContext.Provider value={authMockValue}>
       <MemoryRouter initialEntries={[`/proyecto/${idProyecto}/ver-feedback`]}>
         <Routes>
           <Route path="/proyecto/:id/ver-feedback" element={<VerFeedback />} />
         </Routes>
       </MemoryRouter>
-    </AuthProvider>
+    </AuthContext.Provider>
   );
 };
 
 describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
+  // Ya no necesitas el beforeEach para limpiar el localStorage
   
-  beforeEach(() => {
-    cy.window().then((win) => {
-      win.localStorage.clear();
-      win.sessionStorage.clear();
-    });
-  });
-
   it('Debe mostrar error si no hay usuario autenticado (Estado local vacío)', () => {
     mountWithContext(null);
     cy.get('.feedback-error-general')
