@@ -5,27 +5,17 @@ import VerFeedback from './VerFeedback';
 import { AuthProvider } from '../context/AuthContext';
 
 const mountWithContext = (usuarioMock, idProyecto = '1') => {
-  if (usuarioMock) {
-    // Saturación de almacenamiento: Cubrimos las posibles nomenclaturas de llaves
-    // que AuthProvider pueda estar intentando leer para restaurar la sesión.
-    const userData = JSON.stringify({ correo: usuarioMock, tipo: 'developer' });
-    const keysRaw = ['usuario', 'correo', 'email', 'user', 'token'];
-    const keysJson = ['user_data', 'auth', 'session', 'login'];
+  // 1. Inyectamos los datos en el localStorage del iframe del componente
+  cy.window().then((win) => {
+    if (usuarioMock) {
+      win.localStorage.setItem('usuario', usuarioMock);
+      win.localStorage.setItem('usuario_tipo', 'developer');
+    } else {
+      win.localStorage.clear();
+    }
+  });
 
-    keysRaw.forEach(key => {
-      window.localStorage.setItem(key, usuarioMock);
-      window.sessionStorage.setItem(key, usuarioMock);
-    });
-    keysJson.forEach(key => {
-      window.localStorage.setItem(key, userData);
-      window.sessionStorage.setItem(key, userData);
-    });
-    window.localStorage.setItem('usuario_tipo', 'developer');
-  } else {
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-  }
-
+  // 2. Montamos el componente (Cypress lo encola automáticamente después de modificar la ventana)
   cy.mount(
     <AuthProvider>
       <MemoryRouter initialEntries={[`/proyecto/${idProyecto}/ver-feedback`]}>
@@ -38,11 +28,12 @@ const mountWithContext = (usuarioMock, idProyecto = '1') => {
 };
 
 describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
-  const apiEndpoint = '/api/proyectos/1/feedback';
-
+  
   beforeEach(() => {
-    window.localStorage.clear();
-    window.sessionStorage.clear();
+    cy.window().then((win) => {
+      win.localStorage.clear();
+      win.sessionStorage.clear();
+    });
   });
 
   it('Debe mostrar error si no hay usuario autenticado (Estado local vacío)', () => {
@@ -53,7 +44,7 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   });
 
   it('Debe renderizar error 403 al simular respuesta denegada de la API', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept('GET', '**/api/proyectos/*/feedback', {
       statusCode: 403,
       body: { error: 'Solo los dueños del proyecto pueden ver el feedback' }
     }).as('getFeedbackDenegado');
@@ -67,7 +58,7 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   });
 
   it('Debe renderizar error 404 al simular proyecto inexistente', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept('GET', '**/api/proyectos/*/feedback', {
       statusCode: 404,
       body: { error: 'Proyecto no encontrado' }
     }).as('getFeedbackNoEncontrado');
@@ -81,7 +72,7 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
   });
 
   it('Debe renderizar estado vacío al recibir array sin datos (200)', () => {
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept('GET', '**/api/proyectos/*/feedback', {
       statusCode: 200,
       body: []
     }).as('getFeedbackVacio');
@@ -107,7 +98,7 @@ describe('Prueba Unitaria de Componente DT09 - VerFeedback', () => {
       }
     ];
 
-    cy.intercept('GET', apiEndpoint, {
+    cy.intercept('GET', '**/api/proyectos/*/feedback', {
       statusCode: 200,
       body: mockData
     }).as('getFeedbackExito');
