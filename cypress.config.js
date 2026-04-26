@@ -24,18 +24,4 @@ module.exports = defineConfig({
       return config;
     },
   },
-
-  component: {
-    // Configuración para pruebas de componentes
-    devServer: {
-      framework: "react",
-      bundler: "webpack",
-    },
-    
-    // Donde buscar las pruebas de componentes
-    specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
-    
-    // Archivo de soporte para componentes
-    supportFile: 'cypress/support/component.js',
-  },
 });
