@@ -168,6 +168,31 @@
   gap: 0.75rem;
 }
 
+/* Botón para ver feedback*/
+.btn-ver-feedback {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.5rem; /* Unificado con el estilo de btn-inscripcion */
+  margin-bottom: 1rem;
+  background-color: #17a2b8;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem; /* Ajustado para coincidir con btn-modificar/inscripcion */
+  text-align: center;
+  box-sizing: border-box; /* Asegura que el padding no ensanche el botón más del 100% */
+  transition: background-color 0.2s, transform 0.15s;
+  border: none;
+}
+
+.btn-ver-feedback:hover {
+  background-color: #138496;
+  color: #ffffff;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
 /* Botones de Edición */
 .btn-modificar, .btn-guardar, .btn-cancelar {
   border: none;
@@ -313,6 +338,10 @@
   color: #0b1220;
   text-decoration: none;
   transform: translateY(-1px);
+}
+/* Separación adicional para el contenedor del botón Modificar */
+.edicion-botones {
+  margin-top: 0.5rem;
 }
 
 @media (max-width: 640px) {

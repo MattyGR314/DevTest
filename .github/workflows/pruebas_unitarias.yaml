@@ -1,5 +1,5 @@
-name: Pruebas Unitarias Dinámicas
-
+name: Pruebas Unitarias e Integración Dinámicas
+# Este workflow se ejecuta en cada push a ramas que sigan el patrón 'Dev_DT_*'. 
 on:
   push:
     branches:
@@ -16,33 +16,59 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          # 1. ACTUALIZADO: Cambiamos a Node 20 para soportar Cypress 15+ y React Router 7+
           node-version: '20'
 
       - name: Instalar dependencias
-        # Mantenemos nuestra instalación con legacy-peer-deps
         run: npm install --legacy-peer-deps
 
       - name: Construir la aplicación (Frontend)
         run: npm run build
+        env:
+          CI: false
 
-      - name: Determinar archivo de prueba según la rama
+      - name: Determinar archivos de prueba según la rama
         id: set-target
         run: |
           RAMA="${{ github.ref_name }}"
           NUMERO=$(echo "$RAMA" | grep -oE '[0-9]+')
-          ARCHIVO="src/**/prueba-unitaria-DT${NUMERO}.cy.*"
           
-          echo "La rama actual es: $RAMA"
-          echo "Buscando pruebas en: $ARCHIVO"
-          echo "test_file=$ARCHIVO" >> $GITHUB_OUTPUT
+          ARCHIVO_UNIT="src/**/prueba-unitaria-DT${NUMERO}.cy.*"
+          ARCHIVO_INT="cypress/e2e/integracion-DT${NUMERO}.cy.js"
+          
+          echo "test_file_unit=$ARCHIVO_UNIT" >> $GITHUB_OUTPUT
+          echo "test_file_int=$ARCHIVO_INT" >> $GITHUB_OUTPUT
+          
+          if [ -f "$ARCHIVO_INT" ]; then
+            echo "run_integration=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_integration=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Ejecutar prueba unitaria de la unidad (Component Testing)
+      - name: Ejecutar prueba unitaria (Component Testing)
         uses: cypress-io/github-action@v6
         with:
           install: false 
           component: true
-          spec: ${{ steps.set-target.outputs.test_file }}
+          spec: ${{ steps.set-target.outputs.test_file_unit }}
         env:
-          # Inyectamos la variable directamente en el contenedor de GitHub
           NODE_ENV: development
+
+      - name: Ejecutar prueba de integración (E2E)
+        if: steps.set-target.outputs.run_integration == 'true'
+        uses: cypress-io/github-action@v6
+        with:
+          install: false
+          start: npm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          spec: ${{ steps.set-target.outputs.test_file_int }}
+        env:
+          NODE_ENV: test
+        
+      - name: Guardar Capturas de Pantalla (si falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore

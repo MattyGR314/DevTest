@@ -324,8 +324,32 @@ app.post('/api/inscripciones', async (req, res) => {
 
 app.get('/api/inscripciones/check', async (req, res) => {
   const { correo, id_proyectos } = req.query;
-  if (!correo || !id_proyectos || isNaN(id_proyectos)) return res.status(400).json({ error: 'Parámetros inválidos' });
-  
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos)]
+    );
+    connection.release();
+    res.json({ inscrito: rows.length > 0 });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al comprobar inscripción' });
+  }
+});
+
+
+// ===== ESTÁTICOS Y MANEJO DE ERRORES =====
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== RUTA PARA COMPROBAR SI UN USUARIO YA ESTÁ INSCRITO =====
+app.get('/api/inscripciones/check', async (req, res) => {
+  const { correo, id_proyectos } = req.query;
+
+  if (!correo || !id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
@@ -444,6 +468,61 @@ app.post('/api/feedback', upload.single('archivo'), async (req, res) => {
   }
 });
 
+// Rutas para obtener feedback de un proyecto
+app.get('/api/proyectos/:id/feedback', async (req, res) => {
+  
+  const { id } = req.params;
+  const userEmail = req.headers['x-user-email'];
+
+  if (!userEmail) {
+    return res.status(401).json({ error: 'No se ha iniciado sesión' });
+  }
+
+  const proyectoId = parseInt(id, 10);
+  if (isNaN(proyectoId)) {
+    return res.status(400).json({ error: 'ID de proyecto inválido' });
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // Verificar existencia del proyecto y obtener dueño
+    const [proyectoRows] = await connection.execute(
+      'SELECT correo FROM proyectos WHERE id = ?',
+      [proyectoId]
+    );
+    if (proyectoRows.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    const duenoProyecto = proyectoRows[0].correo;
+    if (userEmail !== duenoProyecto) {
+      connection.release();
+      return res.status(403).json({ error: 'Solo los dueños del proyecto pueden ver el feedback' });
+    }
+
+    // Obtener feedbacks ordenados por fecha y recuperar el nombre del tester
+    const [feedbackRows] = await connection.execute(
+      `SELECT f.id, f.correo, i.nombre AS nombre_usuario, f.texto, f.archivo_path, f.nombre_fichero, f.fecha_creacion 
+       FROM feedback f
+       LEFT JOIN inscripciones i ON f.correo = i.correo AND f.id_proyectos = i.id_proyectos
+       WHERE f.id_proyectos = ? 
+       ORDER BY f.fecha_creacion ASC`,
+      [proyectoId]
+    );
+    connection.release();
+
+    res.json(feedbackRows);
+  } catch (error) {
+    console.error('Error al obtener feedback:', error);
+    res.status(500).json({ error: 'Error al obtener feedback' });
+  }
+});
+
+// ===== 1. MANEJO DE 404 PARA LA API =====
+// Atrapa peticiones a /api/* que no coinciden con ninguna ruta definida
+// Movido a aquí en DT_5 como este orden impide los además a funcionar
 app.use('/api', notFoundHandler); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   setHeaders: (res, filePath) => {
