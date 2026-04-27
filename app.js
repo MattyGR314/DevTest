@@ -279,14 +279,13 @@ app.post('/api/inscripciones', async (req, res) => {
       throw new Error('La tabla "inscripciones" no existe. Ejecuta: node infra/setup_database.js');
     }
 
-    // Validación requerida por Dev: El proyecto y el usuario deben existir
+    // Validación requerida: solo el proyecto debe existir
     const [proyecto] = await connection.execute('SELECT id FROM proyectos WHERE id = ?', [id_proyectos]);
-    const [usuario] = await connection.execute('SELECT id FROM usuarios WHERE correo = ?', [correo.trim()]);
     
-    if (proyecto.length === 0 || usuario.length === 0) {
+    if (proyecto.length === 0) {
       connection.release();
-      console.warn('⚠️ Proyecto o usuario no encontrado');
-      return res.status(404).json({ error: 'Proyecto o usuario no encontrado' });
+      console.warn('⚠️ Proyecto no encontrado');
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
     }
 
     // Comprobación de inscripción duplicada
