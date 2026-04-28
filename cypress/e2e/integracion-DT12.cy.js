@@ -1,219 +1,65 @@
 /// <reference types="cypress" />
 
-describe('INTEGRACION: DT_12 - Añadir detalles a un proyecto', () => {
-  const proyectoId = '1201';
-  const usuarioCreador = 'creador.dt12@test.com';
-  const usuarioNoCreador = 'tester.dt12@test.com';
+describe('DT_12 - Pruebas de integración: API Backend y Base de Datos MySQL', () => {
+  // Configuración inicial. Se asume un estado preexistente (Proyecto ID: 1, dueño: 'creador@test.com').
+  const projectId = 1;
+  const ownerEmail = 'creador@test.com';
+  const intruderEmail = 'intruso@test.com';
 
-  const proyecto = {
-    id: Number(proyectoId),
-    nombre: 'Proyecto Integracion DT12',
-    correo: usuarioCreador,
-    descripcion: 'Proyecto de prueba para añadir detalles',
-    fecha_creacion: '2026-04-20T09:15:00Z',
-  };
+  it('Integración exitosa: Conexión Endpoint -> Lógica -> MySQL', () => {
+    // Se prueba la conexión entre las unidades (Petición -> Servidor -> BD) [cite: 196, 202]
+    cy.request({
+      method: 'PUT',
+      url: `/api/proyectos/${projectId}/detalles`,
+      body: {
+        correo: ownerEmail,
+        fecha_limite: '2099-12-31',
+        numero_testers: 10
+      }
+    }).then((response) => {
+      // 1. Verificación del controlador (Express)
+      expect(response.status).to.eq(200);
+      expect(response.body.message).to.eq('Detalles actualizados correctamente');
 
-  const detallesIniciales = {
-    version: '1.2.0',
-    plataforma: 'Windows',
-    instrucciones: 'Ejecutar el instalador y seguir el asistente.',
-  };
-
-  beforeEach(() => {
-    cy.clearLocalStorage();
-    cy.clearCookies();
-  });
-
-  const setUsuario = (correo) => {
-    cy.visit('/', {
-      onBeforeLoad(win) {
-        if (correo) {
-          win.localStorage.setItem('usuario_correo', correo);
-        } else {
-          win.localStorage.removeItem('usuario_correo');
-        }
-      },
-    });
-  };
-
-  const stubBusqueda = (body = [proyecto]) => {
-    cy.intercept('GET', '/api/proyectos', {
-      statusCode: 200,
-      body,
-    }).as('listarProyectos');
-  };
-
-  const stubDetalles = ({
-    proyectoStatus = 200,
-    proyectoBody = proyecto,
-    detallesStatus = 200,
-    detallesBody = detallesIniciales,
-    id = proyectoId,
-  } = {}) => {
-    cy.intercept('GET', `/api/proyectos/${id}`, {
-      statusCode: proyectoStatus,
-      body: proyectoBody,
-    }).as('getProyecto');
-
-    cy.intercept('GET', `/api/proyectos/${id}/detalles`, {
-      statusCode: detallesStatus,
-      body: detallesBody,
-    }).as('getDetalles');
-  };
-
-  const visitarDetallesDirecto = (correo = usuarioCreador, options = {}) => {
-    const id = options.id || proyectoId;
-    stubDetalles({ ...options, id });
-
-    cy.visit(`/detalles-proyecto/${id}`, {
-      onBeforeLoad(win) {
-        if (correo) {
-          win.localStorage.setItem('usuario_correo', correo);
-        } else {
-          win.localStorage.removeItem('usuario_correo');
-        }
-      },
-    });
-
-    cy.wait('@getProyecto');
-    cy.wait('@getDetalles');
-  };
-
-  it('IT_DT12_001: desde busqueda el creador ve el boton Añadir detalles y navega a la pantalla de detalles', () => {
-    stubBusqueda();
-    stubDetalles();
-    setUsuario(usuarioCreador);
-
-    cy.visit('/busqueda');
-    cy.wait('@listarProyectos');
-
-    cy.contains('.proyecto-tabla', proyecto.nombre).should('be.visible');
-    cy.contains('a.detalles-proyecto-boton', 'Añadir detalles').should('be.visible').click();
-
-    cy.wait('@getProyecto');
-    cy.wait('@getDetalles');
-
-    cy.url().should('include', `/detalles-proyecto/${proyectoId}`);
-    cy.contains('h2', 'Detalles del proyecto').should('be.visible');
-    cy.contains('.detalles-nombre-proyecto', proyecto.nombre).should('be.visible');
-    cy.get('input#version').should('have.value', detallesIniciales.version);
-    cy.get('select#plataforma').should('have.value', detallesIniciales.plataforma);
-    cy.get('textarea#instrucciones').should('have.value', detallesIniciales.instrucciones);
-  });
-
-  it('IT_DT12_002: carga un proyecto sin detalles previos y permite editar el formulario', () => {
-    visitarDetallesDirecto(usuarioCreador, {
-      detallesBody: {},
-    });
-
-    cy.contains('h2', 'Detalles del proyecto').should('be.visible');
-    cy.get('input#version').should('have.value', '');
-    cy.get('select#plataforma').should('have.value', '');
-    cy.get('textarea#instrucciones').should('have.value', '');
-
-    cy.get('input#version').type('2.0.1');
-    cy.get('select#plataforma').select('Linux');
-    cy.get('textarea#instrucciones').type('Arrancar con npm start y abrir el navegador.');
-
-    cy.get('input#version').should('have.value', '2.0.1');
-    cy.get('select#plataforma').should('have.value', 'Linux');
-    cy.get('textarea#instrucciones').should('contain.value', 'npm start');
-  });
-
-  it('IT_DT12_003: guardar detalles correctamente redirige a busqueda', () => {
-    stubBusqueda([proyecto]);
-    visitarDetallesDirecto(usuarioCreador, {
-      detallesBody: {},
-    });
-
-    cy.intercept('PUT', `/api/proyectos/${proyectoId}/detalles`, (req) => {
-      expect(req.body).to.deep.eq({
-        correo: usuarioCreador,
-        version: '3.0.0',
-        plataforma: 'Multiplataforma',
-        instrucciones: 'Seguir la guia de despliegue incluida.',
+      // 2. Verificación de lectura cruzada en la BD (Comprobación de persistencia real) 
+      cy.request('GET', `/api/proyectos/${projectId}/detalles`).then((resGet) => {
+        expect(resGet.status).to.eq(200);
+        // Validar que los módulos como grupo procesaron y guardaron el dato esperado 
+        expect(resGet.body.numero_testers).to.eq(10); 
       });
-
-      req.reply({
-        statusCode: 200,
-        body: { message: 'Detalles actualizados correctamente', id: Number(proyectoId) },
-      });
-    }).as('guardarDetalles');
-
-    cy.get('input#version').clear().type('3.0.0');
-    cy.get('select#plataforma').select('Multiplataforma');
-    cy.get('textarea#instrucciones').clear().type('Seguir la guia de despliegue incluida.');
-    cy.contains('button', 'Guardar detalles').click();
-
-    cy.wait('@guardarDetalles');
-    cy.url().should('include', '/busqueda');
-    cy.wait('@listarProyectos');
-    cy.contains('.proyecto-tabla', proyecto.nombre).should('be.visible');
+    });
   });
 
-  it('IT_DT12_004: una version demasiado larga bloquea el guardado', () => {
-    visitarDetallesDirecto(usuarioCreador, {
-      detallesBody: {},
+  it('Fallo de integración lógica: Middleware intercepta payload inválido', () => {
+    // Comprueba que los errores surgen correctamente en la conexión entre componentes [cite: 201]
+    cy.request({
+      method: 'PUT',
+      url: `/api/proyectos/${projectId}/detalles`,
+      failOnStatusCode: false,
+      body: {
+        correo: ownerEmail,
+        fecha_limite: '2020-01-01', // Fecha pasada (inválida)
+        numero_testers: -5
+      }
+    }).then((response) => {
+      expect(response.status).to.eq(400);
+      expect(response.body.error).to.exist;
     });
-
-    cy.intercept('PUT', `/api/proyectos/${proyectoId}/detalles`).as('guardarDetallesBloqueado');
-
-    cy.get('input#version').then(($input) => {
-      const input = $input[0];
-      const longVersion = 'X'.repeat(51);
-      const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-      nativeValueSetter.call(input, longVersion);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    cy.contains('button', 'Guardar detalles').click();
-
-    cy.contains('.detalles-error-texto', 'La versión no puede superar 50 caracteres').should('be.visible');
-    cy.get('@guardarDetallesBloqueado.all').should('have.length', 0);
   });
 
-  it('IT_DT12_005: si el proyecto no existe se muestra el error correspondiente', () => {
-    const idInexistente = '9999';
-
-    cy.intercept('GET', `/api/proyectos/${idInexistente}`, {
-      statusCode: 404,
-      body: { error: 'Proyecto no encontrado' },
-    }).as('getProyecto404');
-
-    cy.intercept('GET', `/api/proyectos/${idInexistente}/detalles`, {
-      statusCode: 200,
-      body: {},
-    }).as('getDetalles404');
-
-    cy.visit(`/detalles-proyecto/${idInexistente}`, {
-      onBeforeLoad(win) {
-        win.localStorage.setItem('usuario_correo', usuarioCreador);
-      },
+  it('Fallo de integración de reglas de negocio: BD rechaza usuario no propietario', () => {
+    // Evalúa la consulta MySQL (SELECT correo FROM proyectos) combinada con la lógica de autorización 
+    cy.request({
+      method: 'PUT',
+      url: `/api/proyectos/${projectId}/detalles`,
+      failOnStatusCode: false,
+      body: {
+        correo: intruderEmail, // Usuario no dueño
+        numero_testers: 5
+      }
+    }).then((response) => {
+      expect(response.status).to.eq(403);
+      expect(response.body.error).to.eq('Solo el dueño del proyecto puede añadir detalles');
     });
-
-    cy.wait('@getProyecto404');
-    cy.wait('@getDetalles404');
-
-    cy.contains('.detalles-error-general', 'Proyecto no encontrado').should('be.visible');
-    cy.get('form').should('be.visible');
-  });
-
-  it('IT_DT12_006: un usuario que no es el creador recibe error 403 al guardar', () => {
-    visitarDetallesDirecto(usuarioNoCreador, {
-      detallesBody: {},
-    });
-
-    cy.intercept('PUT', `/api/proyectos/${proyectoId}/detalles`, {
-      statusCode: 403,
-      body: { error: 'Solo el creador puede editar los detalles' },
-    }).as('guardarSinPermiso');
-
-    cy.get('input#version').type('1.0.1');
-    cy.get('select#plataforma').select('Windows');
-    cy.get('textarea#instrucciones').type('Texto de prueba sin permisos.');
-    cy.contains('button', 'Guardar detalles').click();
-
-    cy.wait('@guardarSinPermiso');
-    cy.contains('.detalles-error-general', 'Solo el creador puede editar los detalles').should('be.visible');
   });
 });
