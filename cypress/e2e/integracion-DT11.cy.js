@@ -108,7 +108,7 @@ describe('INTEGRACIÓN: Subir Código con Descripcion - Flujo Completo', () => {
       // Validar botón de regreso
       cy.contains('a', 'Volver')
         .should('be.visible')
-        .should('have.class', 'btn');
+        .should('have.class', 'confirmacion-btn');
     });
 
     it('IT_002: Subir proyecto CON Descripcion válida (100 caracteres)', () => {
