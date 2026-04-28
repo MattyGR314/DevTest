@@ -8,8 +8,6 @@ function ResultadoConsulta() {
   const { usuario, tipoUsuario } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  // Se obtiene el tipo de usuario de localStorage tal como se hace en Dev
-  const tipoUsuario = (localStorage.getItem('usuario_tipo') || '').toLowerCase();
 
   const [proyecto, setProyecto] = useState(null);
   const [cargando, setCargando] = useState(true);
