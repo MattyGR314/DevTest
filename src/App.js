@@ -6,6 +6,7 @@ import Inicio from './pages/Inicio';
 import SubirCodigo from './pages/SubirCodigo';
 import SeleccionarProyecto from './pages/SeleccionarProyecto';
 import ConfirmacionSubida from './pages/confirmacionSubida';
+import IniciarSesion from './pages/iniciarSesion';
 import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';

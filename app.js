@@ -417,12 +417,25 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     }
 
     const [result] = await connection.execute(
-      'INSERT INTO proyectos (nombre, correo, archivo_path, nombre_fichero, descripcion) VALUES (?, ?, ?, ?, ?)',
-      [nombre, correo, filePath, nombreFichero, descripcion]
+      'INSERT INTO proyectos (nombre, correo, archivo_path, nombre_fichero, descripcion, fecha_limite, num_testers) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [nombre, correo, filePath, nombreFichero, descripcion, fechaLimite, numTesters]
     );
     
     connection.release();
-    res.json({ message: 'Archivo subido correctamente', id: result.insertId, nombre, correo, archivo: archivo.filename, nombre_fichero: nombreFichero, descripcion, redirectTo: '/confirmacion' });
+
+    return res.json({ 
+      message: 'Archivo subido correctamente',
+      id: result.insertId,
+      nombre: nombre,
+      correo: correo,
+      archivo: archivo ? archivo.filename : null,
+      nombre_fichero: nombreFichero,
+      descripcion: descripcion,
+      fecha_limite: fechaLimite,
+      num_testers: numTesters,
+      redirectTo: '/confirmacion'
+      });
+    
   } catch (error) {
     console.error('❌ Error al guardar proyecto:', error);
     next(error);
@@ -517,6 +530,157 @@ app.get('/api/proyectos/:id/feedback', async (req, res) => {
   } catch (error) {
     console.error('Error al obtener feedback:', error);
     res.status(500).json({ error: 'Error al obtener feedback' });
+  }
+});
+
+// ===== RUTA PARA MODIFICAR DESCRIPCIÓN (via PUT /api/proyectos/:id) =====
+app.put('/api/proyectos/:id', async (req, res, next) => {
+  const { id } = req.params;
+  const { descripcion } = req.body;
+  try {
+    const connection = await pool.getConnection();
+    const [result] = await connection.query('UPDATE proyectos SET descripcion = ? WHERE id = ?', [descripcion, id]);
+    connection.release();
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Proyecto no encontrado' });
+    res.json({ message: 'Descripción actualizada correctamente', descripcion });
+  } catch (error) {
+    console.error('Error al actualizar proyecto:', error);
+    next(error);
+  }
+});
+
+// ===== RUTA PARA COMPROBAR SI UN USUARIO ESTÁ INSCRITO =====
+app.get('/api/inscripciones/check', async (req, res) => {
+  const { correo, id_proyectos } = req.query;
+  if (!correo || !id_proyectos || isNaN(id_proyectos)) {
+    return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      'SELECT id FROM inscripciones WHERE correo = ? AND id_proyectos = ?',
+      [correo.trim(), parseInt(id_proyectos)]
+    );
+    connection.release();
+    res.json({ inscrito: rows.length > 0 });
+  } catch (error) {
+    console.error('Error al comprobar inscripción:', error);
+    res.status(500).json({ error: 'Error al comprobar inscripción' });
+  }
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== RUTAS DE DETALLES DE PROYECTO =====
+
+// GET: Obtener fecha límite y número de testers actuales del proyecto
+app.get('/api/proyectos/:id/detalles', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  try {
+    const connection = await pool.getConnection();
+    
+    // Obtenemos los campos directamente de la tabla proyectos
+    const [rows] = await connection.execute(
+      'SELECT fecha_limite, num_testers as numero_testers FROM proyectos WHERE id = ?',
+      [id]
+    );
+    
+    connection.release();
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error al obtener detalles:', error);
+    res.status(500).json({ error: 'Error al obtener detalles' });
+  }
+});
+
+// PUT: Actualizar fecha límite y número de testers
+app.put('/api/proyectos/:id/detalles', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
+
+  const { correo, fecha_limite, numero_testers } = req.body;
+
+  // Validación: Inicio de sesión (DT_12_5)
+  if (!correo || !correo.trim()) {
+    return res.status(401).json({ error: 'El correo es obligatorio para verificar la sesión' });
+  }
+
+  // Validación: Al menos un campo debe tener valor (DT_12_5)
+  if (!fecha_limite && !numero_testers) {
+    return res.status(400).json({ error: 'Debes rellenar al menos la fecha límite o el número de testers' });
+  }
+
+  // Validación: Fecha posterior a la actual (DT_12_3)
+  if (fecha_limite) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaSeleccionada = new Date(`${fecha_limite}T00:00:00`); 
+    if (fechaSeleccionada <= hoy) {
+      return res.status(400).json({ error: 'La fecha debe ser posterior a la actual.' });
+    }
+  }
+
+  // Validación: Número de testers mayor a 0 (DT_12_4)
+  if (numero_testers) {
+    const num = Number(numero_testers);
+    if (!Number.isInteger(num) || num <= 0) {
+      return res.status(400).json({ error: 'El número de testers debe ser un entero positivo mayor que 0.' });
+    }
+  }
+
+  try {
+    const connection = await pool.getConnection();
+
+    // Verificamos si el proyecto existe y si el usuario es el creador
+    const [proyecto] = await connection.execute(
+      'SELECT correo FROM proyectos WHERE id = ?',
+      [id]
+    );
+
+    if (proyecto.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+
+    // Validación: Dueño del proyecto (DT_12_6)
+    if (proyecto[0].correo !== correo.trim()) {
+      connection.release();
+      return res.status(403).json({ error: 'Solo el dueño del proyecto puede añadir detalles' });
+    }
+
+    // Actualizamos dinámicamente los campos en la tabla proyectos
+    let queryUpdates = [];
+    let queryParams = [];
+
+    if (fecha_limite !== undefined) {
+      queryUpdates.push('fecha_limite = ?');
+      queryParams.push(fecha_limite);
+    }
+
+    if (numero_testers !== undefined) {
+      queryUpdates.push('num_testers = ?');
+      queryParams.push(numero_testers);
+    }
+
+    queryParams.push(id); // Para el WHERE id = ?
+
+    if (queryUpdates.length > 0) {
+      const updateQuery = `UPDATE proyectos SET ${queryUpdates.join(', ')} WHERE id = ?`;
+      await connection.execute(updateQuery, queryParams);
+    }
+
+    connection.release();
+    res.json({ message: 'Detalles actualizados correctamente', id });
+  } catch (error) {
+    console.error('Error al guardar detalles:', error);
+    res.status(500).json({ error: 'Error al guardar detalles' });
   }
 });
 

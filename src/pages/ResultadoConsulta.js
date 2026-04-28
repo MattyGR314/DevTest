@@ -5,7 +5,7 @@ import './ResultadoConsulta.css';
 
 function ResultadoConsulta() {
   const { id } = useParams();
-  const { usuario } = useAuth();
+  const { usuario, tipoUsuario } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   // Se obtiene el tipo de usuario de localStorage tal como se hace en Dev

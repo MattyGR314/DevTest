@@ -8,6 +8,8 @@ const INITIAL_STATE = {
   archivo: null,
   correo: '',
   descripcion: '',
+  fechaLimite: '',
+  numeroTesters: '',
 };
 
 function SubirCodigo() {
@@ -38,6 +40,30 @@ function SubirCodigo() {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(correo);
   };
+
+  const validarFechaLimite = (fechaLimite) => {
+    if (!fechaLimite) return true;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const fechaSeleccionada = new Date(`${fechaLimite}T00:00:00`);
+    return fechaSeleccionada > hoy;
+  };
+
+  const validarNumeroTesters = (numeroTesters) => {
+    if (numeroTesters === '' || numeroTesters === null || numeroTesters === undefined) return true;
+    const valor = String(numeroTesters).trim();
+    if (!/^\d+$/.test(valor)) return false;
+    const numero = Number.parseInt(valor, 10);
+    return numero > 0;
+  };
+
+  const fechaMinimaLimite = (() => {
+    const manana = new Date();
+    manana.setHours(0, 0, 0, 0);
+    manana.setDate(manana.getDate() + 1);
+    return manana.toISOString().split('T')[0];
+  })();
 
   const esEjecutable = (archivo) => {
     if (!archivo) return false;
@@ -124,6 +150,25 @@ function SubirCodigo() {
       return;
     }
 
+    if (!validarFechaLimite(formData.fechaLimite)) {
+      setErrores({ fechaLimite: 'La fecha límite debe ser posterior a la fecha actual' });
+      return;
+    }
+
+    const valorNumeroTesters = String(formData.numeroTesters ?? '').trim();
+    if (valorNumeroTesters !== '') {
+      const numeroTesters = Number(valorNumeroTesters);
+      if (!Number.isNaN(numeroTesters) && numeroTesters < 0) {
+        setErrores({ numeroTesters: 'El número de testers no puede ser un número negativo' });
+        return;
+      }
+    }
+
+    if (!validarNumeroTesters(formData.numeroTesters)) {
+      setErrores({ numeroTesters: 'El número de testers debe ser un entero positivo mayor que 0' });
+      return;
+    }
+
     const descripcionValue = formData.descripcion || '';
     if (descripcionValue && descripcionValue.length > 500) {
       setErrores({ descripcion: 'La descripción no puede exceder 500 caracteres' });
@@ -135,9 +180,11 @@ function SubirCodigo() {
     const data = new FormData();
     data.append('nombre', formData.nombre.trim());
     data.append('correo', formData.correo.trim());
-    data.append('descripcion', descripcionValue.trim());
-    if (archivoAUsar) {
-      data.append('archivo', archivoAUsar);
+    data.append('descripcion', formData.descripcion ? formData.descripcion.trim() : '');
+    data.append('fecha_limite', formData.fechaLimite || '');
+    data.append('num_testers', formData.numeroTesters || '');
+    if (formData.archivo) {
+      data.append('archivo', formData.archivo);
     }
 
     try {
@@ -245,52 +292,90 @@ function SubirCodigo() {
             )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="archivo">
-              Selecciona un archivo ejecutable: <span className="required">*</span>
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              name="archivo"
-              id="archivo"
-              accept=".exe, .bat"
-              inputMode="none"
-              onChange={handleFileChange}
-              className={errores.archivo ? 'error' : ''}
-            />
-            {errores.archivo && (
-              <span className="error-message" role="alert">
-                {errores.archivo}
-              </span>
-            )}
-            {formData.archivo && (
-              <small className="file-info">
-                📁 Archivo seleccionado: {formData.archivo.name} 
-                ({(formData.archivo.size / 1024).toFixed(2)} KB)
-              </small>
-            )}
-            <small>Formatos permitidos: .exe, .bat</small>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="descripcion">Descripción del proyecto:</label>
-            <textarea
-              name="descripcion"
-              id="descripcion"
-              placeholder="Cuéntanos un poco sobre tu proyecto..."
-              value={formData.descripcion}
-              onChange={handleInputChange}
-              maxLength={500}
-              className={descripcionClassName}
-            />
-            {descripcionError && (
-              <span className="error-message" role="alert">
-                ⚠️ {descripcionError}
-              </span>
-            )}
-            <small>Máximo 500 caracteres</small>
-          </div>
+        <div className="form-group">
+          <label htmlFor="archivo">
+            Selecciona un archivo ejecutable: <span className="required">*</span>
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="archivo"
+            id="archivo"
+            accept=".exe, .bat"
+            inputMode="none"
+            onChange={handleFileChange}
+            className={errores.archivo ? 'error' : ''}
+          />
+          {errores.archivo && (
+            <span className="error-message" role="alert">
+              {errores.archivo}
+            </span>
+          )}
+          {formData.archivo && (
+            <small className="file-info">
+              Archivo seleccionado: {formData.archivo.name}
+            </small>
+          )}
+          <small>Formatos permitidos: .exe, .bat</small>
+        </div>
+        <div className="form-group">
+          <label htmlFor="descripcion">Descripción del proyecto:</label>
+          <textarea
+            name="descripcion"
+            id="descripcion"
+            placeholder="Cuéntanos un poco sobre tu proyecto..."
+            value={formData.descripcion}
+            onChange={handleInputChange}
+            maxLength={500}
+            className={descripcionClassName}
+          />
+          {descripcionError && (
+            <span className="error-message" role="alert">
+              ⚠️ {descripcionError}
+            </span>
+          )}
+          <small>Máximo 500 caracteres</small>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="fechaLimite">Fecha límite:</label>
+          <input
+            type="date"
+            name="fechaLimite"
+            id="fechaLimite"
+            min={fechaMinimaLimite}
+            value={formData.fechaLimite}
+            onChange={handleInputChange}
+            className={errores.fechaLimite ? 'error' : ''}
+          />
+          {errores.fechaLimite && (
+            <span className="error-message" role="alert">
+              {errores.fechaLimite}
+            </span>
+          )}
+          <small>Debe ser posterior a la fecha actual</small>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="numeroTesters">Número de testers:</label>
+          <input
+            type="number"
+            name="numeroTesters"
+            id="numeroTesters"
+            placeholder="Ej: 10"
+            min="1"
+            step="1"
+            value={formData.numeroTesters}
+            onChange={handleInputChange}
+            className={errores.numeroTesters ? 'error' : ''}
+          />
+          {errores.numeroTesters && (
+            <span className="error-message" role="alert">
+              {errores.numeroTesters}
+            </span>
+          )}
+          <small>Solo enteros positivos mayores que 0</small>
+        </div>
 
           <div className="form-buttons">
             <button
