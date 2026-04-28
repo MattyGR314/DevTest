@@ -31,18 +31,18 @@ jobs:
         run: |
           RAMA="${{ github.ref_name }}"
           NUMERO=$(echo "$RAMA" | grep -oE '[0-9]+')
-          ARCHIVO="src/**/prueba-unitaria-DT${NUMERO}.cy.*"
+          # Se actualiza la ruta para buscar en cypress/e2e/ en lugar de src/
+          ARCHIVO="cypress/e2e/**/prueba-unitaria-DT${NUMERO}.cy.*"
           
           echo "La rama actual es: $RAMA"
           echo "Buscando pruebas en: $ARCHIVO"
           echo "test_file=$ARCHIVO" >> $GITHUB_OUTPUT
 
-      - name: Ejecutar prueba unitaria de la unidad (Component Testing)
+      - name: Ejecutar prueba unitaria de la unidad
         uses: cypress-io/github-action@v6
         with:
           install: false 
-          component: true
+          # Se elimina la línea "component: true"
           spec: ${{ steps.set-target.outputs.test_file }}
         env:
-          # Inyectamos la variable directamente en el contenedor de GitHub
           NODE_ENV: development
