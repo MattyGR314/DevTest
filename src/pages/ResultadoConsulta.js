@@ -167,6 +167,8 @@ function ResultadoConsulta() {
 
           <div className="resultado-meta">
             <p><strong>Fecha de creación:</strong> {formatearFecha(proyecto.fecha_creacion)}</p>
+            <p><strong>Fecha límite:</strong> {formatearFecha(proyecto.fecha_limite)}</p>
+            <p><strong>Número de testers:</strong> {proyecto.num_testers ?? 'No especificado'}</p>
             
             <div className="resultado-descripcion-container">
               <strong>Descripción:</strong> 

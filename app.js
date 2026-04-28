@@ -192,7 +192,7 @@ app.get('/api/proyectos/:id', async (req, res) => {
 
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
-      'SELECT id, nombre, correo, archivo_path, nombre_fichero, descripcion, fecha_creacion FROM proyectos WHERE id = ?',
+      'SELECT id, nombre, correo, archivo_path, nombre_fichero, descripcion, fecha_creacion, fecha_limite, num_testers FROM proyectos WHERE id = ?',
       [id]
     );
     connection.release();
