@@ -1,17 +1,61 @@
-.confirmacionSubida {
+.confirmacion-wrapper {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  border-radius: 5px;
-  background-color: #f0f0f0;
-  width: 380px;
-  height: 100px;
-  margin: 50px auto;
+  padding: 80px 24px;
 }
 
-.confirmacionSubida p {
-  font-size: 16px;
+.confirmacion-card {
+  background: #0f1724;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+}
+
+.confirmacion-icono {
+  width: 56px;
+  height: 56px;
+  background: rgba(40, 167, 69, 0.12);
+  border: 2px solid #28a745;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 1.6rem;
+  color: #28a745;
+}
+
+.confirmacion-card p {
+  color: #e6edf3;
+  font-size: 1rem;
   line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+.confirmacion-btn {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: #28a745;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.confirmacion-btn:hover {
+  background: #218838;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .confirmacion-wrapper { padding: 48px 16px; }
+  .confirmacion-card { padding: 2rem 1.25rem; }
 }

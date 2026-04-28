@@ -207,22 +207,30 @@ function ResultadoConsulta() {
             </Link>
 
             {esCreador ? (
-              <div className="edicion-botones">
-                {!editando ? (
-                  <button onClick={() => setEditando(true)} className="btn-modificar">
-                    Modificar Proyecto
-                  </button>
-                ) : (
-                  <div className="edicion-botones-acciones">
-                    <button onClick={handleGuardar} className="btn-guardar">
-                      Guardar Cambios
+              <>
+                <div className="edicion-botones">
+                  {!editando ? (
+                    <button onClick={() => setEditando(true)} className="btn-modificar">
+                      Modificar Proyecto
                     </button>
-                    <button onClick={() => { setEditando(false); setErrores({}); }} className="btn-cancelar">
-                      Cancelar
-                    </button>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="edicion-botones-acciones">
+                      <button onClick={handleGuardar} className="btn-guardar">
+                        Guardar Cambios
+                      </button>
+                      <button onClick={() => { setEditando(false); setErrores({}); }} className="btn-cancelar">
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <Link
+                  to={`/detalles-proyecto/${proyecto.id}`}
+                  className="detalles-proyecto-boton"
+                >
+                  Añadir detalles
+                </Link>
+              </>
             ) : yaInscrito ? (
               /* Integración DT07: Contenedor para acciones exclusivas de los testers inscritos */
               <div className="acciones-tester-container">

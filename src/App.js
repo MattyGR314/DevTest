@@ -12,6 +12,7 @@ import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
 import FeedbackProyecto from './pages/FeedbackProyecto';
 import VerFeedback from './pages/VerFeedback';
+import DetallesProyecto from './pages/DetallesProyecto';
 import './App.css';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/seleccionarproyecto/:id" element={<SeleccionarProyecto />} />
                 <Route path="/feedback/:id" element={<FeedbackProyecto />} />
                 <Route path="/proyecto/:id/ver-feedback" element={<VerFeedback />} />
+                <Route path="/detalles-proyecto/:id" element={<DetallesProyecto />} />
               </Routes>
             </Layout>
           } />

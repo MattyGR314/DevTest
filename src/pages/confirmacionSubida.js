@@ -4,11 +4,14 @@ import './confirmacionSubida.css';
 
 function ConfirmacionSubida() {
   return (
-    <div className="confirmacionSubida">
-      <p>Los archivos se han subido correctamente.</p>
-      <Link to="/" className="btn btn-primary">
-        Volver
-      </Link>
+    <div className="confirmacion-wrapper">
+      <div className="confirmacion-card">
+        <div className="confirmacion-icono">✓</div>
+        <p>Los archivos se han subido correctamente.</p>
+        <Link to="/" className="confirmacion-btn">
+          Volver
+        </Link>
+      </div>
     </div>
   );
 }

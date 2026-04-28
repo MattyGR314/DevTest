@@ -399,6 +399,8 @@ app.post('/subircodigo', uploadLimiter, upload.single('archivo'), async (req, re
     const filePath = archivo ? path.posix.join('uploads', archivo.filename) : null;
     const nombreFichero = archivo ? archivo.originalname : null;
     const descripcion = req.body.descripcion || null;
+    const fechaLimite = req.body.fecha_limite || null;
+    const numTesters = req.body.num_testers || null;
 
     if (!nombre) return res.status(400).json({ error: 'El nombre del proyecto es obligatorio' });
     if (!correo) return res.status(400).json({ error: 'El correo electrónico es obligatorio' });
