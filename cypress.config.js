@@ -1,4 +1,8 @@
 const { defineConfig } = require("cypress");
+// Asegura NODE_ENV para que react-scripts no falle al cargar webpack.
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'development';
+}
 // 1. Importamos la configuración interna de Webpack que usa Create React App
 // Esto es vital para que las pruebas de componentes entiendan los loaders de CRA
 const getWebpackConfig = require("react-scripts/config/webpack.config");
