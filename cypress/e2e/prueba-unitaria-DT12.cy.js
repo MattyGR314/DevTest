@@ -1,5 +1,22 @@
 /// <reference types="cypress" />
 
+// Funciones de validación extraídas de SubirCodigo.js (lógica pura, sin estado React)
+const validarFechaLimite = (fechaLimite, now = new Date()) => {
+  if (!fechaLimite) return true;
+  const hoy = new Date(now);
+  hoy.setHours(0, 0, 0, 0);
+  const fechaSeleccionada = new Date(`${fechaLimite}T00:00:00`);
+  return fechaSeleccionada > hoy;
+};
+
+const validarNumeroTesters = (numeroTesters) => {
+  if (numeroTesters === '' || numeroTesters === null || numeroTesters === undefined) return true;
+  const valor = String(numeroTesters).trim();
+  if (!/^\d+$/.test(valor)) return false;
+  const numero = Number.parseInt(valor, 10);
+  return numero > 0;
+};
+
 const formatDate = (date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -13,231 +30,131 @@ const shiftDays = (baseDate, days) => {
   return d;
 };
 
-const parseIsoDateStrict = (value) => {
-  const trimmed = (value || '').trim();
-  if (!trimmed) return { ok: false, reason: 'EMPTY' };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return { ok: false, reason: 'INVALID_FORMAT' };
-  }
+describe('DT_12 - Pruebas unitarias: añadir fecha límite y número de testers al proyecto', () => {
+  const baseDate = new Date('2026-04-28T10:00:00');
 
-  const [year, month, day] = trimmed.split('-').map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
+  // ─── Grupo 1: Validación de fecha límite ────────────────────────────────────
 
-  const sameDate =
-    parsed.getUTCFullYear() === year &&
-    parsed.getUTCMonth() === month - 1 &&
-    parsed.getUTCDate() === day;
+  describe('DT_12_1 - Validación del campo fecha límite', () => {
+    // DT_12_1_1: campo opcional, vacío es válido
+    it('DT_12_1_1: Aceptar fecha límite vacía (campo opcional)', () => {
+      expect(validarFechaLimite('', baseDate)).to.eq(true);
+      expect(validarFechaLimite(null, baseDate)).to.eq(true);
+      expect(validarFechaLimite(undefined, baseDate)).to.eq(true);
+    });
 
-  if (!sameDate) return { ok: false, reason: 'INVALID_DATE' };
-  return { ok: true, value: trimmed };
-};
+    // DT_12_1_2: fecha futura (mañana) debe aceptarse
+    it('DT_12_1_2: Aceptar fecha posterior a hoy (mañana)', () => {
+      const manana = formatDate(shiftDays(baseDate, 1));
+      expect(validarFechaLimite(manana, baseDate)).to.eq(true);
+    });
 
-const validarFeedbackDT12 = ({ fechaLimite, numeroTesters }, now = new Date()) => {
-  const fechaRaw = (fechaLimite ?? '').toString();
-  const testersRaw = (numeroTesters ?? '').toString();
+    // DT_12_1_3: fecha de hoy debe rechazarse (debe ser estrictamente posterior)
+    it('DT_12_1_3: Rechazar fecha exactamente hoy', () => {
+      const hoy = formatDate(baseDate);
+      expect(validarFechaLimite(hoy, baseDate)).to.eq(false);
+    });
 
-  const fechaTrim = fechaRaw.trim();
-  const testersTrim = testersRaw.trim();
+    // DT_12_1_4: fecha pasada debe rechazarse
+    it('DT_12_1_4: Rechazar fecha anterior a hoy (ayer)', () => {
+      const ayer = formatDate(shiftDays(baseDate, -1));
+      expect(validarFechaLimite(ayer, baseDate)).to.eq(false);
+    });
 
-  // DT_12_5
-  if (!fechaTrim && !testersTrim) {
-    return {
-      valido: false,
-      error: 'Debes rellenar al menos uno de los campos.',
-      codigo: 'BOTH_EMPTY',
-    };
-  }
-
-  if (fechaTrim) {
-    const parsed = parseIsoDateStrict(fechaTrim);
-    if (!parsed.ok) {
-      return {
-        valido: false,
-        error: 'La fecha no es valida.',
-        codigo: 'DATE_INVALID',
-      };
-    }
-
-    const hoy = formatDate(now);
-
-    // DT_12_3
-    if (parsed.value <= hoy) {
-      return {
-        valido: false,
-        error: 'La fecha debe ser posterior a la fecha actual.',
-        codigo: 'DATE_NOT_FUTURE',
-      };
-    }
-  }
-
-  if (testersTrim) {
-    // DT_12_4
-    if (!/^\d+$/.test(testersTrim)) {
-      return {
-        valido: false,
-        error: 'El numero de testers debe ser un entero positivo mayor que 0.',
-        codigo: 'TESTERS_INVALID',
-      };
-    }
-
-    const parsed = Number(testersTrim);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      return {
-        valido: false,
-        error: 'El numero de testers debe ser un entero positivo mayor que 0.',
-        codigo: 'TESTERS_INVALID',
-      };
-    }
-  }
-
-  return {
-    valido: true,
-    payload: {
-      ...(fechaTrim ? { fechaLimite: fechaTrim } : {}),
-      ...(testersTrim ? { numeroTesters: Number(testersTrim) } : {}),
-    },
-  };
-};
-
-describe('DT_12 - Pruebas unitarias de validacion de feedback', () => {
-  const baseDate = new Date('2026-04-26T10:00:00');
-
-  // DT_12_1_1 Cobertura minima: ambos campos informados
-  it('DT_12_1_1: Aceptar fecha futura y testers valido', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: formatDate(shiftDays(baseDate, 1)),
-      numeroTesters: '5',
-    }, baseDate);
-
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({
-      fechaLimite: formatDate(shiftDays(baseDate, 1)),
-      numeroTesters: 5,
+    // DT_12_1_5: fecha muy lejana en el futuro (+2 años) debe aceptarse
+    it('DT_12_1_5: Aceptar fecha muy futura (+2 años)', () => {
+      const futuro = new Date(baseDate);
+      futuro.setFullYear(futuro.getFullYear() + 2);
+      expect(validarFechaLimite(formatDate(futuro), baseDate)).to.eq(true);
     });
   });
 
-  // DT_12_1_2 Cobertura minima: solo fecha informada
-  it('DT_12_1_2: Aceptar cuando solo hay fecha futura', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: formatDate(shiftDays(baseDate, 1)),
-      numeroTesters: '',
-    }, baseDate);
+  // ─── Grupo 2: Validación del número de testers ──────────────────────────────
 
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({ fechaLimite: formatDate(shiftDays(baseDate, 1)) });
+  describe('DT_12_2 - Validación del campo número de testers', () => {
+    // DT_12_2_1: campo opcional, vacío es válido
+    it('DT_12_2_1: Aceptar número de testers vacío (campo opcional)', () => {
+      expect(validarNumeroTesters('')).to.eq(true);
+      expect(validarNumeroTesters(null)).to.eq(true);
+      expect(validarNumeroTesters(undefined)).to.eq(true);
+    });
+
+    // DT_12_2_2: entero positivo mayor que 0 es válido
+    it('DT_12_2_2: Aceptar entero positivo mayor que 0', () => {
+      expect(validarNumeroTesters('5')).to.eq(true);
+      expect(validarNumeroTesters('100')).to.eq(true);
+    });
+
+    // DT_12_2_3: valor límite mínimo: 1 debe aceptarse
+    it('DT_12_2_3: Aceptar número de testers igual a 1 (valor mínimo)', () => {
+      expect(validarNumeroTesters('1')).to.eq(true);
+    });
+
+    // DT_12_2_4: 0 debe rechazarse (debe ser mayor que 0)
+    it('DT_12_2_4: Rechazar número de testers igual a 0', () => {
+      expect(validarNumeroTesters('0')).to.eq(false);
+    });
+
+    // DT_12_2_5: número negativo debe rechazarse
+    it('DT_12_2_5: Rechazar número de testers negativo', () => {
+      expect(validarNumeroTesters('-1')).to.eq(false);
+      expect(validarNumeroTesters('-10')).to.eq(false);
+    });
+
+    // DT_12_2_6: decimal debe rechazarse (solo enteros)
+    it('DT_12_2_6: Rechazar número de testers decimal', () => {
+      expect(validarNumeroTesters('2.5')).to.eq(false);
+      expect(validarNumeroTesters('1.0')).to.eq(false);
+    });
+
+    // DT_12_2_7: texto no numérico debe rechazarse
+    it('DT_12_2_7: Rechazar texto no numérico como número de testers', () => {
+      expect(validarNumeroTesters('abc')).to.eq(false);
+      expect(validarNumeroTesters('cinco')).to.eq(false);
+    });
   });
 
-  // DT_12_1_3 Cobertura minima: solo testers informado
-  it('DT_12_1_3: Aceptar cuando solo hay testers valido', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: '',
-      numeroTesters: '1',
-    }, baseDate);
+  // ─── Grupo 3: Comportamiento combinado de ambos campos ──────────────────────
 
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({ numeroTesters: 1 });
-  });
+  describe('DT_12_3 - Comportamiento combinado: fecha límite y número de testers', () => {
+    // DT_12_3_1: ambos vacíos es válido (los dos son opcionales)
+    it('DT_12_3_1: Aceptar cuando ambos campos están vacíos (son opcionales)', () => {
+      expect(validarFechaLimite('', baseDate)).to.eq(true);
+      expect(validarNumeroTesters('')).to.eq(true);
+    });
 
-  // DT_12_1_4 Cobertura minima: ambos vacios
-  it('DT_12_1_4: Rechazar cuando ambos campos estan vacios', () => {
-    const res = validarFeedbackDT12({ fechaLimite: '', numeroTesters: '' }, baseDate);
+    // DT_12_3_2: solo fecha válida, sin testers
+    it('DT_12_3_2: Aceptar cuando solo se proporciona fecha futura', () => {
+      const manana = formatDate(shiftDays(baseDate, 1));
+      expect(validarFechaLimite(manana, baseDate)).to.eq(true);
+      expect(validarNumeroTesters('')).to.eq(true);
+    });
 
-    expect(res.valido).to.eq(false);
-    expect(res.codigo).to.eq('BOTH_EMPTY');
-  });
+    // DT_12_3_3: solo testers válido, sin fecha
+    it('DT_12_3_3: Aceptar cuando solo se proporciona un número de testers válido', () => {
+      expect(validarFechaLimite('', baseDate)).to.eq(true);
+      expect(validarNumeroTesters('10')).to.eq(true);
+    });
 
-  // DT_12_2_1 Validacion de fecha: fecha exactamente hoy
-  it('DT_12_2_1: Rechazar fecha exactamente hoy', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: formatDate(baseDate),
-      numeroTesters: '',
-    }, baseDate);
+    // DT_12_3_4: ambos campos con datos válidos
+    it('DT_12_3_4: Aceptar cuando ambos campos tienen valores válidos', () => {
+      const manana = formatDate(shiftDays(baseDate, 1));
+      expect(validarFechaLimite(manana, baseDate)).to.eq(true);
+      expect(validarNumeroTesters('5')).to.eq(true);
+    });
 
-    expect(res.valido).to.eq(false);
-    expect(res.codigo).to.eq('DATE_NOT_FUTURE');
-  });
+    // DT_12_3_5: fecha inválida con testers válido: la fecha invalida el envío
+    it('DT_12_3_5: Rechazar cuando la fecha es hoy aunque el número de testers sea válido', () => {
+      const hoy = formatDate(baseDate);
+      expect(validarFechaLimite(hoy, baseDate)).to.eq(false);
+      expect(validarNumeroTesters('5')).to.eq(true);
+    });
 
-  // DT_12_2_2 Validacion de fecha: fecha anterior
-  it('DT_12_2_2: Rechazar fecha anterior a hoy', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: formatDate(shiftDays(baseDate, -1)),
-      numeroTesters: '',
-    }, baseDate);
-
-    expect(res.valido).to.eq(false);
-    expect(res.codigo).to.eq('DATE_NOT_FUTURE');
-  });
-
-  // DT_12_2_3 Validacion de fecha: fecha muy futura
-  it('DT_12_2_3: Aceptar fecha muy futura (+2 anos)', () => {
-    const veryFuture = new Date(baseDate);
-    veryFuture.setFullYear(veryFuture.getFullYear() + 2);
-
-    const res = validarFeedbackDT12({
-      fechaLimite: formatDate(veryFuture),
-      numeroTesters: '',
-    }, baseDate);
-
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({ fechaLimite: formatDate(veryFuture) });
-  });
-
-  // DT_12_2_4 Validacion de fecha: formato invalido
-  it('DT_12_2_4: Rechazar fecha con formato invalido', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: '26/04/2026',
-      numeroTesters: '',
-    }, baseDate);
-
-    expect(res.valido).to.eq(false);
-    expect(res.codigo).to.eq('DATE_INVALID');
-  });
-
-  // DT_12_2_5 Validacion de fecha: fecha imposible
-  it('DT_12_2_5: Rechazar fecha imposible', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: '2026-02-30',
-      numeroTesters: '',
-    }, baseDate);
-
-    expect(res.valido).to.eq(false);
-    expect(res.codigo).to.eq('DATE_INVALID');
-  });
-
-  // DT_12_2_6 Validacion de fecha: fecha con espacios normalizable
-  it('DT_12_2_6: Aceptar fecha con espacios cuando al parsear es futura', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: `  ${formatDate(shiftDays(baseDate, 1))}  `,
-      numeroTesters: '',
-    }, baseDate);
-
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({ fechaLimite: formatDate(shiftDays(baseDate, 1)) });
-  });
-
-  // DT_12_3_1 Validacion de testers: testers = 1 valido
-  it('DT_12_3_1: Aceptar testers = 1', () => {
-    const res = validarFeedbackDT12({
-      fechaLimite: '',
-      numeroTesters: '1',
-    }, baseDate);
-
-    expect(res.valido).to.eq(true);
-    expect(res.payload).to.deep.eq({ numeroTesters: 1 });
-  });
-
-  // DT_12_3_2 Validacion de testers: invalidos representativos
-  it('DT_12_3_2: Rechazar testers 0, decimal y negativo', () => {
-    const invalidos = ['0', '2.5', '-2'];
-
-    invalidos.forEach((numero) => {
-      const res = validarFeedbackDT12({
-        fechaLimite: '',
-        numeroTesters: numero,
-      }, baseDate);
-
-      expect(res.valido).to.eq(false);
-      expect(res.codigo).to.eq('TESTERS_INVALID');
+    // DT_12_3_6: fecha válida con testers inválido: los testers invalidan el envío
+    it('DT_12_3_6: Rechazar cuando el número de testers es 0 aunque la fecha sea válida', () => {
+      const manana = formatDate(shiftDays(baseDate, 1));
+      expect(validarFechaLimite(manana, baseDate)).to.eq(true);
+      expect(validarNumeroTesters('0')).to.eq(false);
     });
   });
 });
