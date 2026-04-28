@@ -41,8 +41,9 @@ jobs:
       - name: Ejecutar prueba unitaria de la unidad
         uses: cypress-io/github-action@v6
         with:
-          install: false 
-          # Se elimina la línea "component: true"
+          install: false
+          start: node app.js # Comando para levantar tu servidor Express
+          wait-on: 'http://localhost:3000'
           spec: ${{ steps.set-target.outputs.test_file }}
         env:
           NODE_ENV: development
