@@ -63,10 +63,10 @@ function IniciarSesion() {
     }
   };
 
-  const handleReset = () => {
-    setFormData({ correo: '', contrasena: '' });
-    setErrores({});
-  };
+//  const handleReset = () => {
+//    setFormData({ correo: '', contrasena: '' });
+//    setErrores({});
+//  };
 
   return (
     <div className="iniciar-sesion-container">
