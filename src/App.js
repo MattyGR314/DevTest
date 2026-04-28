@@ -11,7 +11,6 @@ import Busqueda from './pages/Busqueda';
 import ResultadoConsulta from './pages/ResultadoConsulta';
 import Registro from './pages/Registro';
 import FeedbackProyecto from './pages/FeedbackProyecto';
-import IniciarSesion from './pages/iniciarSesion';
 import VerFeedback from './pages/VerFeedback';
 import './App.css';
 
