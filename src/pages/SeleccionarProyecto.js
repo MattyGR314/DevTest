@@ -43,7 +43,7 @@ function SeleccionarProyecto() {
     
     if (!formData.correo.trim()) {
       nuevosErrores.correo = 'El correo es obligatorio';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) {
+    } else if (!/^[A-Za-z0-9](?:[^\s@]*[A-Za-z0-9])?@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(formData.correo.trim())) {
       nuevosErrores.correo = 'El correo no es válido';
     }
     
