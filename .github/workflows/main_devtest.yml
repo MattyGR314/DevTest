@@ -43,15 +43,18 @@ jobs:
         uses: cypress-io/github-action@v6
         env:
           NODE_ENV: test # <-- SOLUCIÓN AL ERROR: Le dice a react-scripts que estamos probando
+          # Variables inyectadas para que app.js pueda conectar a la BD
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
         with:
           install: false
           start: npm start
           wait-on: 'http://localhost:3000'
           wait-on-timeout: 120
           browser: chrome
-          # Usamos wildcards (*) para ejecutar todos los archivos que empiecen con "integracion-"
-          spec: cypress/e2e/integracion-*.cy.js 
-
+          spec: cypress/e2e/integracion-*.cy.js
       # ==========================================
       # RECOMENDACIÓN DE CALIDAD (Evidencias)
       # ==========================================
