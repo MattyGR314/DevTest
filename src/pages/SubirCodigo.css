@@ -62,7 +62,9 @@
 
 /* ── Text inputs ── */
 .subir-codigo input[type="text"],
-.subir-codigo input[type="email"] {
+.subir-codigo input[type="email"],
+.subir-codigo input[type="date"],
+.subir-codigo input[type="number"] {
   width: 100%;
   padding: 0.7rem 0.85rem;
   background-color: #0b1220;
@@ -75,7 +77,8 @@
 }
 
 .subir-codigo input[type="text"]::placeholder,
-.subir-codigo input[type="email"]::placeholder {
+.subir-codigo input[type="email"]::placeholder,
+.subir-codigo input[type="number"]::placeholder {
   color: #4d5a6a;
 }
 
@@ -96,6 +99,8 @@
 /* ── Focus states ── */
 .subir-codigo input[type="text"]:focus,
 .subir-codigo input[type="email"]:focus,
+.subir-codigo input[type="date"]:focus,
+.subir-codigo input[type="number"]:focus,
 .subir-codigo input[type="file"]:focus {
   outline: none;
   border-color: #58a6ff;
