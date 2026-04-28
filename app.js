@@ -701,51 +701,73 @@ app.get('/api/inscripciones/check', async (req, res) => {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ===== RUTAS DE DETALLES DE PROYECTO =====
-const CREAR_TABLA_DETALLES = `
-  CREATE TABLE IF NOT EXISTS detalles_proyecto (
-    id_proyecto INT PRIMARY KEY,
-    version VARCHAR(50),
-    plataforma VARCHAR(100),
-    instrucciones TEXT,
-    CONSTRAINT fk_detalles_proyecto
-      FOREIGN KEY (id_proyecto) REFERENCES proyectos(id)
-      ON DELETE CASCADE ON UPDATE CASCADE
-  )
-`;
 
+// GET: Obtener fecha límite y número de testers actuales del proyecto
 app.get('/api/proyectos/:id/detalles', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
 
   try {
     const connection = await pool.getConnection();
-    await connection.query(CREAR_TABLA_DETALLES);
+    
+    // Obtenemos los campos directamente de la tabla proyectos
     const [rows] = await connection.execute(
-      'SELECT version, plataforma, instrucciones FROM detalles_proyecto WHERE id_proyecto = ?',
+      'SELECT fecha_limite, num_testers as numero_testers FROM proyectos WHERE id = ?',
       [id]
     );
+    
     connection.release();
-    res.json(rows[0] || {});
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
+    }
+    
+    res.json(rows[0]);
   } catch (error) {
     console.error('Error al obtener detalles:', error);
     res.status(500).json({ error: 'Error al obtener detalles' });
   }
 });
 
+// PUT: Actualizar fecha límite y número de testers
 app.put('/api/proyectos/:id/detalles', async (req, res) => {
   const id = parseInt(req.params.id, 10);
   if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
 
-  const { correo, version, plataforma, instrucciones } = req.body;
+  const { correo, fecha_limite, numero_testers } = req.body;
 
+  // Validación: Inicio de sesión (DT_12_5)
   if (!correo || !correo.trim()) {
-    return res.status(400).json({ error: 'El correo es obligatorio' });
+    return res.status(401).json({ error: 'El correo es obligatorio para verificar la sesión' });
+  }
+
+  // Validación: Al menos un campo debe tener valor (DT_12_5)
+  if (!fecha_limite && !numero_testers) {
+    return res.status(400).json({ error: 'Debes rellenar al menos la fecha límite o el número de testers' });
+  }
+
+  // Validación: Fecha posterior a la actual (DT_12_3)
+  if (fecha_limite) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fechaSeleccionada = new Date(`${fecha_limite}T00:00:00`); 
+    if (fechaSeleccionada <= hoy) {
+      return res.status(400).json({ error: 'La fecha debe ser posterior a la actual.' });
+    }
+  }
+
+  // Validación: Número de testers mayor a 0 (DT_12_4)
+  if (numero_testers) {
+    const num = Number(numero_testers);
+    if (!Number.isInteger(num) || num <= 0) {
+      return res.status(400).json({ error: 'El número de testers debe ser un entero positivo mayor que 0.' });
+    }
   }
 
   try {
     const connection = await pool.getConnection();
-    await connection.query(CREAR_TABLA_DETALLES);
 
+    // Verificamos si el proyecto existe y si el usuario es el creador
     const [proyecto] = await connection.execute(
       'SELECT correo FROM proyectos WHERE id = ?',
       [id]
@@ -756,17 +778,32 @@ app.put('/api/proyectos/:id/detalles', async (req, res) => {
       return res.status(404).json({ error: 'Proyecto no encontrado' });
     }
 
+    // Validación: Dueño del proyecto (DT_12_6)
     if (proyecto[0].correo !== correo.trim()) {
       connection.release();
-      return res.status(403).json({ error: 'Solo el creador puede editar los detalles' });
+      return res.status(403).json({ error: 'Solo el dueño del proyecto puede añadir detalles' });
     }
 
-    await connection.execute(
-      `INSERT INTO detalles_proyecto (id_proyecto, version, plataforma, instrucciones)
-       VALUES (?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE version = VALUES(version), plataforma = VALUES(plataforma), instrucciones = VALUES(instrucciones)`,
-      [id, version?.trim() || null, plataforma?.trim() || null, instrucciones?.trim() || null]
-    );
+    // Actualizamos dinámicamente los campos en la tabla proyectos
+    let queryUpdates = [];
+    let queryParams = [];
+
+    if (fecha_limite !== undefined) {
+      queryUpdates.push('fecha_limite = ?');
+      queryParams.push(fecha_limite);
+    }
+
+    if (numero_testers !== undefined) {
+      queryUpdates.push('num_testers = ?');
+      queryParams.push(numero_testers);
+    }
+
+    queryParams.push(id); // Para el WHERE id = ?
+
+    if (queryUpdates.length > 0) {
+      const updateQuery = `UPDATE proyectos SET ${queryUpdates.join(', ')} WHERE id = ?`;
+      await connection.execute(updateQuery, queryParams);
+    }
 
     connection.release();
     res.json({ message: 'Detalles actualizados correctamente', id });

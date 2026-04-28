@@ -3,18 +3,17 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './DetallesProyecto.css';
 
-const PLATAFORMAS = ['Windows', 'Linux', 'Mac', 'Multiplataforma', 'Android', 'iOS'];
-
 function DetallesProyecto() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth();
 
   const [nombreProyecto, setNombreProyecto] = useState('');
-  const [formData, setFormData] = useState({ version: '', plataforma: '', instrucciones: '' });
+  const [formData, setFormData] = useState({ fechaLimite: '', numeroTesters: '' });
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [errorGeneral, setErrorGeneral] = useState('');
+  const [exito, setExito] = useState('');
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -36,9 +35,8 @@ function DetallesProyecto() {
         if (resDetalles.ok) {
           const detalles = await resDetalles.json();
           setFormData({
-            version: detalles.version || '',
-            plataforma: detalles.plataforma || '',
-            instrucciones: detalles.instrucciones || '',
+            fechaLimite: detalles.fecha_limite ? detalles.fecha_limite.split('T')[0] : '',
+            numeroTesters: detalles.numero_testers || '',
           });
         }
       } catch {
@@ -56,26 +54,52 @@ function DetallesProyecto() {
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errores[name]) setErrores(prev => ({ ...prev, [name]: '' }));
     if (errorGeneral) setErrorGeneral('');
+    if (exito) setExito('');
   };
 
   const validar = () => {
     const nuevosErrores = {};
-    if (formData.version && formData.version.trim().length > 50) {
-      nuevosErrores.version = 'La versión no puede superar 50 caracteres';
+    const { fechaLimite, numeroTesters } = formData;
+
+    if (!fechaLimite && !numeroTesters) {
+      setErrorGeneral('Debes rellenar al menos uno de los campos.');
+      return false;
     }
-    if (formData.instrucciones && formData.instrucciones.trim().length > 2000) {
-      nuevosErrores.instrucciones = 'Las instrucciones no pueden superar 2000 caracteres';
+
+    if (fechaLimite) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const fechaSeleccionada = new Date(`${fechaLimite}T00:00:00`); 
+      
+      if (fechaSeleccionada <= hoy) {
+        nuevosErrores.fechaLimite = 'La fecha debe ser posterior a la actual. Vuelve a introducir una fecha.';
+      }
     }
+
+    if (numeroTesters) {
+      const num = Number(numeroTesters);
+      if (!Number.isInteger(num) || num <= 0) {
+        nuevosErrores.numeroTesters = 'El número de testers debe ser un entero positivo mayor que 0. Vuelve a introducir un número.';
+      }
+    }
+
     setErrores(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!usuario) {
+      setErrorGeneral('Inicia sesión para continuar.');
+      return;
+    }
+
     if (!validar()) return;
 
     setEnviando(true);
     setErrorGeneral('');
+    setExito('');
 
     try {
       const respuesta = await fetch(`/api/proyectos/${id}/detalles`, {
@@ -83,20 +107,26 @@ function DetallesProyecto() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           correo: usuario,
-          version: formData.version,
-          plataforma: formData.plataforma,
-          instrucciones: formData.instrucciones,
+          fecha_limite: formData.fechaLimite || null,
+          numero_testers: formData.numeroTesters ? parseInt(formData.numeroTesters, 10) : null,
         }),
       });
 
       const datos = await respuesta.json();
 
       if (!respuesta.ok) {
-        setErrorGeneral(datos.error || 'No se pudieron guardar los detalles');
+        if (respuesta.status === 403 || (datos.error && datos.error.toLowerCase().includes('dueño'))) {
+          setErrorGeneral('Solo el dueño del proyecto puede añadir detalles.');
+        } else {
+          setErrorGeneral(datos.error || 'No se pudieron guardar los detalles');
+        }
         return;
       }
 
-      navigate('/busqueda');
+      setExito('Operación exitosa: Detalles asociados al proyecto.');
+      // CORRECCIÓN 1: Redirigir a la ruta correcta tras guardar
+      setTimeout(() => navigate(`/resultado-consulta/${id}`), 2000);
+      
     } catch {
       setErrorGeneral('Error de conexión. Inténtalo de nuevo.');
     } finally {
@@ -115,69 +145,57 @@ function DetallesProyecto() {
   return (
     <section className="detalles-proyecto">
       <div className="detalles-header">
-        <Link to="/busqueda" className="detalles-volver">← Volver a búsqueda</Link>
-        <h2>Detalles del proyecto</h2>
-        {nombreProyecto && <p className="detalles-nombre-proyecto">{nombreProyecto}</p>}
+        <Link to={`/resultado-consulta/${id}`} className="detalles-volver">← Volver al proyecto</Link>
+        <p className="detalles-nombre-proyecto">Detalles del proyecto</p>
+        {nombreProyecto && <h2>{nombreProyecto}</h2>}
       </div>
 
       <div className="detalles-form-card">
         {errorGeneral && (
           <div className="detalles-error-general">{errorGeneral}</div>
         )}
+        
+        {exito && (
+          <div className="detalles-error-general" style={{ backgroundColor: 'rgba(40, 167, 69, 0.1)', borderLeftColor: '#28a745', color: '#28a745' }}>
+            {exito}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="detalles-group">
-            <label htmlFor="version">Versión</label>
+            <label htmlFor="fechaLimite">Fecha Límite</label>
             <input
-              type="text"
-              name="version"
-              id="version"
-              placeholder="Ej: 1.0.0"
-              value={formData.version}
+              type="date"
+              name="fechaLimite"
+              id="fechaLimite"
+              value={formData.fechaLimite}
               onChange={handleChange}
-              className={errores.version ? 'error' : ''}
+              className={errores.fechaLimite ? 'error' : ''}
               disabled={enviando}
-              maxLength={50}
             />
-            {errores.version && <span className="detalles-error-texto">{errores.version}</span>}
+            {errores.fechaLimite && <span className="detalles-error-texto">{errores.fechaLimite}</span>}
           </div>
 
           <div className="detalles-group">
-            <label htmlFor="plataforma">Plataforma</label>
-            <select
-              name="plataforma"
-              id="plataforma"
-              value={formData.plataforma}
+            <label htmlFor="numeroTesters">Número de Testers</label>
+            <input
+              type="number"
+              name="numeroTesters"
+              id="numeroTesters"
+              placeholder="Ej: 5"
+              value={formData.numeroTesters}
               onChange={handleChange}
+              className={errores.numeroTesters ? 'error' : ''}
               disabled={enviando}
-            >
-              <option value="">Sin especificar</option>
-              {PLATAFORMAS.map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="detalles-group">
-            <label htmlFor="instrucciones">Instrucciones de uso</label>
-            <textarea
-              name="instrucciones"
-              id="instrucciones"
-              placeholder="Explica cómo ejecutar o usar tu proyecto..."
-              value={formData.instrucciones}
-              onChange={handleChange}
-              className={errores.instrucciones ? 'error' : ''}
-              disabled={enviando}
-              maxLength={2000}
+              min="1"
+              step="1"
             />
-            {errores.instrucciones && (
-              <span className="detalles-error-texto">{errores.instrucciones}</span>
-            )}
-            <small>Máximo 2000 caracteres</small>
+            {errores.numeroTesters && <span className="detalles-error-texto">{errores.numeroTesters}</span>}
           </div>
 
           <div className="detalles-acciones">
-            <Link to="/busqueda" className="detalles-btn-cancelar">Cancelar</Link>
+            {/* CORRECCIÓN 3: Enlace del botón cancelar */}
+            <Link to={`/resultado-consulta/${id}`} className="detalles-btn-cancelar">Cancelar</Link>
             <button type="submit" className="detalles-btn-submit" disabled={enviando}>
               {enviando ? 'Guardando...' : 'Guardar detalles'}
             </button>

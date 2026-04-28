@@ -196,11 +196,6 @@ const Busqueda = () => {
               >
                 Modificar descripción
               </button>
-              {usuario && usuario === proyecto.correo && (
-                <Link to={`/detalles-proyecto/${proyecto.id}`} className="detalles-proyecto-boton">
-                  Añadir detalles
-                </Link>
-              )}
             </div>
           </div>
         ))}

@@ -198,7 +198,7 @@ function ResultadoConsulta() {
                   title={!esCreador ? 'Solo el creador del proyecto puede modificarlo' : ''}
                   style={{ backgroundColor: esCreador ? '#f39c12' : '#555', color: 'white', border: 'none', padding: '10px 20px', width: '100%', cursor: esCreador ? 'pointer' : 'not-allowed', opacity: esCreador ? 1 : 0.5 }}
                 >
-                  Modificar Proyecto
+                  Modificar Descripción
                 </button>
               ) : (
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -211,6 +211,29 @@ function ResultadoConsulta() {
                 </div>
               )}
             </div>
+            
+            <div className='detalles-boton' style={{ marginTop: '10px' }}> 
+              {usuario && usuario === proyecto.correo && (
+                <Link 
+                  to={`/detalles-proyecto/${proyecto.id}`} 
+                  className="detalles-proyecto-boton"
+                  style={{ 
+                    display: 'block', 
+                    width: '100%', 
+                    padding: '5px 20px', 
+                    color: 'white', 
+                    textAlign: 'center', 
+                    textDecoration: 'none', 
+                    border: 'none', 
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Añadir detalles
+                </Link>
+              )}
+            </div>
+              
 
             {!editando && (
               <div style={{ textAlign: 'center', marginTop: '10px' }}>
